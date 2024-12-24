@@ -1,32 +1,25 @@
-import CoreLocation
+import Charts
+import MapKit
 import SwiftUI
 
 struct ContentView: View {
-    @State private var weatherManager = WeatherManager()
-
-    let jakarta = CLLocation(latitude: -6.21462, longitude: 106.84513)
+    @State private var viewModel = WeatherViewModel.shared
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: weatherManager.icon)
-                .font(.largeTitle)
-                .shadow(radius: 2)
-                .padding()
-            Text("Temperature: \(weatherManager.temperature)")
-                .shadow(radius: 1)
-            Text("Apparent Temperature: \(weatherManager.apparentTemperature)")
-                .shadow(radius: 1)
-            Text("Humidity: \(weatherManager.humidity)")
-                .shadow(radius: 1)
+        HStack {
+            Text(String(format: "%@", viewModel.location?.name ?? "<Unknown>"))
+                .font(.headline)
         }
-        .onAppear {
-            Task {
-                await weatherManager.getWeather(
-                    lat: jakarta.coordinate.latitude,
-                    long: jakarta.coordinate.longitude)
-            }
-        }
-        .font(.title3)
+        .padding()
+        .frame(height: 34)
+        WeatherView()
+            .padding()
+        ForecastView()
+            .padding()
+        IncidenceView()
+            .padding()
+        RadiationView()
+            .padding()
     }
 }
 
