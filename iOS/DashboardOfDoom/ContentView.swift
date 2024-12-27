@@ -6,20 +6,27 @@ struct ContentView: View {
     @State private var viewModel = WeatherViewModel.shared
 
     var body: some View {
-        HStack {
-            Text(String(format: "%@", viewModel.location?.name ?? "<Unknown>"))
-                .font(.headline)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 10) {
+                    WeatherView()
+                        .padding()
+                        .frame(height: 200)
+                    ForecastView()
+                        .padding()
+                        .frame(height: 200)
+                    IncidenceView()
+                        .padding()
+                        .frame(height: 200)
+                    RadiationView()
+                        .padding()
+                        .frame(height: 200)
+                }
+                .frame(maxWidth: .infinity)
+                .navigationTitle(viewModel.location?.name ?? "<Unknown>")
+                .navigationBarTitleDisplayMode(.inline)
+            }
         }
-        .padding()
-        .frame(height: 34)
-        WeatherView()
-            .padding()
-        ForecastView()
-            .padding()
-        IncidenceView()
-            .padding()
-        RadiationView()
-            .padding()
     }
 }
 
