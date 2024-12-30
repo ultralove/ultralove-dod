@@ -32,7 +32,7 @@ class RadiationController {
                                         cosmic: Measurement(value: properties["value_cosmic"] as? Double ?? Double.nan, unit: UnitRadiation.microsieverts),
                                         terrestrial: Measurement(
                                             value: properties["value_terrestrial"] as? Double ?? Double.nan, unit: UnitRadiation.microsieverts))
-                                    radiationSensors.append(RadiationSensor(station: station, radiation: radiation))
+                                    radiationSensors.append(RadiationSensor(station: station, radiation: radiation, timestamp: Date.now))
                                 }
                             }
                         }
@@ -46,7 +46,7 @@ class RadiationController {
 
     private static func nearestSensor(radiationSensors: [RadiationSensor], location: Location) -> RadiationSensor? {
         var nearestSensor: RadiationSensor? = nil
-        var minDistance = 1000.0  // (km) This is more than the distance from List to Oberstdorf (960km)
+        var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
         for radiationSensor in radiationSensors {
             let distance = haversineDistance(location_0: radiationSensor.station, location_1: location)
             if distance < minDistance {
@@ -65,5 +65,3 @@ class RadiationController {
         completion(nil)
     }
 }
-
-

@@ -4,8 +4,7 @@ class IncidenceController {
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         if let district = try await self.fetchDistrict(for: location) {
             if let (incidence, name) = try await self.fetchIncidence(for: district) {
-                let location = Location(name: name, latitude: district.latitude, longitude: district.longitude)
-                let incidenceSensor = IncidenceSensor(location: location, incidence: incidence)
+                let incidenceSensor = IncidenceSensor(station: name, incidence: incidence, timestamp: Date.now)
                 return incidenceSensor
             }
         }
@@ -50,7 +49,7 @@ class IncidenceController {
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
         if let candidateDistricts: [District] = try Self.parseDistricts(data: data) {
             var nearestDistrict: District? = nil
-            var minDistance = 1000.0  // (km) This is more than the distance from List to Oberstdorf (960km)
+            var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
             for candidateDistrict in candidateDistricts {
                 let candidateLocation = Location(name: candidateDistrict.name, latitude: candidateDistrict.latitude, longitude: candidateDistrict.longitude)
                 let distance = haversineDistance(location_0: candidateLocation, location_1: location)
@@ -141,7 +140,7 @@ class IncidenceController {
         components.year = Calendar.current.component(.year, from: from)
         components.month = Calendar.current.component(.month, from: from)
         components.day = Calendar.current.component(.day, from: from)
-        components.hour = 0 // TimeZone.current.secondsFromGMT(for: Date.now) / 3600
+        components.hour = 0
         components.minute = 0
         components.second = 0
         components.timeZone = TimeZone(abbreviation: "UTC")

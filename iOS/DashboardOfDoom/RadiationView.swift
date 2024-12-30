@@ -2,7 +2,7 @@ import Charts
 import SwiftUI
 
 struct RadiationView: View {
-    @State private var viewModel = RadiationViewModel.shared
+    @Environment(RadiationViewModel.self) private var viewModel
 
     private let linearGradient = LinearGradient(
         gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
@@ -10,7 +10,7 @@ struct RadiationView: View {
         endPoint: .bottom)
 
     var body: some View {
-        if viewModel.lastUpdate == nil {
+        if viewModel.timestamp == nil {
             ActivityIndicator()
         }
         else {
@@ -21,7 +21,7 @@ struct RadiationView: View {
     func _view() -> some View {
         VStack {
             HStack {
-                Text(String(format: "Radiation at the nearest measurement station %@:", viewModel.station?.name ?? "<Unknown>"))
+                Text(String(format: "Radiation at station %@:", viewModel.station?.name ?? "<Unknown>"))
                     .font(.headline)
                 Spacer()
             }
@@ -50,7 +50,7 @@ struct RadiationView: View {
                     .alignsMarkStylesWithPlotArea()
             }
             HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.lastUpdate))")
+                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp ?? Date.now))")
                     .font(.footnote)
                 Spacer()
             }

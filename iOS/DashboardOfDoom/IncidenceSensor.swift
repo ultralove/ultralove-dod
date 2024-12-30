@@ -1,6 +1,7 @@
 import Foundation
 
-struct IncidenceSensor: Sendable {
-   let location: Location
-   let incidence: [Incidence]
+struct IncidenceSensor {
+    let station: String
+    let incidence: [Incidence]
+    let timestamp: Date?
 }

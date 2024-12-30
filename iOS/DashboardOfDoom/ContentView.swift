@@ -3,7 +3,7 @@ import MapKit
 import SwiftUI
 
 struct ContentView: View {
-    @State private var viewModel = WeatherViewModel.shared
+    @Environment(WeatherViewModel.self) private var viewModel
 
     var body: some View {
         NavigationStack {
@@ -11,11 +11,14 @@ struct ContentView: View {
                 VStack(spacing: 10) {
                     WeatherView()
                         .padding()
-                        .frame(height: 200)
+                        .frame(height: 300)
                     ForecastView()
                         .padding()
                         .frame(height: 200)
                     IncidenceView()
+                        .padding()
+                        .frame(height: 200)
+                    LevelView()
                         .padding()
                         .frame(height: 200)
                     RadiationView()
@@ -23,13 +26,22 @@ struct ContentView: View {
                         .frame(height: 200)
                 }
                 .frame(maxWidth: .infinity)
-                .navigationTitle(viewModel.location?.name ?? "<Unknown>")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack {
+                            Text(viewModel.placemark ?? "<Unknown>")
+                                .font(.footnote)
+                                .lineLimit(1)
+                            Spacer()
+                            Button(action: { }) {
+                                Image(systemName: "gear")
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-#Preview {
-    ContentView()
-}

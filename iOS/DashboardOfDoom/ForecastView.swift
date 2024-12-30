@@ -2,7 +2,7 @@ import Charts
 import SwiftUI
 
 struct ForecastView: View {
-    @State private var viewModel = ForecastViewModel.shared
+    @Environment(ForecastViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
     private let linearGradient = LinearGradient(
@@ -11,7 +11,7 @@ struct ForecastView: View {
         endPoint: .bottom)
 
     var body: some View {
-        if viewModel.lastUpdate == nil {
+        if viewModel.timestamp == nil {
             ActivityIndicator()
         }
         else {
@@ -48,21 +48,30 @@ struct ForecastView: View {
                     let currentTemperature = viewModel.forecast.first(where: { $0.date == currentDate })?.temperature
                 {
                     RuleMark(x: .value("Date", currentDate))
-                        .symbolSize(CGSize(width: 3, height: 3))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentDate),
                         y: .value("Temperature", currentTemperature.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topTrailing, spacing: 0) {
-                        HStack {
-                            Text(String(format: "%@ %.1f%@", currentDate.timeString(), currentTemperature.value, currentTemperature.unit.symbol))
-                            Image(systemName: viewModel.trendSymbol)
+                        VStack {
+                            Text(String(format: "%@ %@", currentDate.dateString(), currentDate.timeString()))
+                                .font(.footnote)
+                            HStack {
+                                Text(String(format: "%.1f%@", currentTemperature.value, currentTemperature.unit.symbol))
+                                Image(systemName: viewModel.trendSymbol)
+                            }
+                            .font(.headline)
                         }
-                        .font(.headline)
+                        .padding(7)
+                        .padding(.horizontal, 7)
+                        .background(.opacity(0.125))
+                        .foregroundStyle(.black)
+                        .clipShape(.capsule(style: .continuous))
                     }
                 }
-
+                #if os(macOS)
                 if let selectedDate, let selectedTemperature = viewModel.forecast.first(where: { $0.date == selectedDate })?.temperature {
                     RuleMark(x: .value("Date", selectedDate.nearestHour() ?? Date.now))
                         .symbolSize(CGSize(width: 3, height: 3))
@@ -78,29 +87,32 @@ struct ForecastView: View {
                         .font(.headline)
                     }
                 }
+                #endif
             }
             .chartYScale(domain: -20 ... 50)
+            #if os(macOS)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    if let plotFrame = geometryProxy.plotFrame {
-                                        let x = value.location.x - geometryReader[plotFrame].origin.x
-                                        if let date: Date = geometryProxy.value(atX: x), let roundedHour = date.nearestHour() {
-                                            self.selectedDate = roundedHour
-                                        }
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                if let plotFrame = geometryProxy.plotFrame {
+                                    let x = value.location.x - geometryReader[plotFrame].origin.x
+                                    if let date: Date = geometryProxy.value(atX: x), let roundedHour = date.nearestHour() {
+                                        self.selectedDate = roundedHour
                                     }
                                 }
-                                .onEnded { value in
-                                    self.selectedDate = nil
-                                }
-                        )
+                            }
+                            .onEnded { value in
+                                self.selectedDate = nil
+                            }
+                    )
                 }
             }
+            #endif
             HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.lastUpdate))")
+                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
                     .font(.footnote)
                 Spacer()
             }
@@ -108,6 +120,3 @@ struct ForecastView: View {
     }
 }
 
-#Preview {
-    ForecastView()
-}

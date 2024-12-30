@@ -1,6 +1,7 @@
 import Foundation
 
-struct WeatherSensor: Sendable {
-   var location: Location
-   var weather: Weather
+struct WeatherSensor {
+    var station: String
+    var weather: Weather
+    let timestamp: Date?
 }

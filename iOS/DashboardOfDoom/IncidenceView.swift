@@ -2,7 +2,7 @@ import Charts
 import SwiftUI
 
 struct IncidenceView: View {
-    @State private var viewModel = IncidenceViewModel.shared
+    @Environment(IncidenceViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
     private let linearGradient = LinearGradient(
@@ -12,7 +12,7 @@ struct IncidenceView: View {
 
     var body: some View {
         VStack {
-            if viewModel.lastUpdate == nil {
+            if viewModel.timestamp == nil {
                 ActivityIndicator()
             }
             else {
@@ -24,7 +24,7 @@ struct IncidenceView: View {
     func _view() -> some View {
         VStack {
             HStack {
-                Text(String(format: "COVID-19 Incidence forecast for %@:", viewModel.location?.name ?? "<Unknown>"))
+                Text(String(format: "COVID-19 Incidence forecast for %@:", viewModel.station ?? "<Unknown>"))
                     .font(.headline)
                 Spacer()
             }
@@ -45,23 +45,32 @@ struct IncidenceView: View {
                     .foregroundStyle(linearGradient)
                 }
 
-                if let currentIncidence = viewModel.incidence.first(where: { $0.date == IncidenceViewModel.nearestDataPoint(from: Date.now) }) {
+                if let currentIncidence = viewModel.incidence.first(where: { $0.date == Date.nearestDataPoint(from: Date.now) }) {
                     RuleMark(x: .value("Date", currentIncidence.date))
-                        .symbolSize(CGSize(width: 3, height: 3))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentIncidence.date),
                         y: .value("Incidence", currentIncidence.incidence)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0) {
-                        HStack {
-                            Text(String(format: "%@ %.1f", currentIncidence.date.dateString(), currentIncidence.incidence))
-                            Image(systemName: viewModel.trendSymbol)
+                        VStack {
+                            Text(String(format: "%@", currentIncidence.date.dateString()))
+                                .font(.footnote)
+                            HStack {
+                                Text(String(format: "%.1f", currentIncidence.incidence))
+                                Image(systemName: viewModel.trendSymbol)
+                            }
+                            .font(.headline)
                         }
-                        .font(.headline)
+                        .padding(7)
+                        .padding(.horizontal, 7)
+                        .background(.opacity(0.125))
+                        .foregroundStyle(.black)
+                        .clipShape(.capsule(style: .continuous))
                     }
                 }
-
+                #if os(macOS)
                 if let selectedDate, let selectedIncidence = viewModel.incidence.first(where: { $0.date == selectedDate })?.incidence {
                     RuleMark(x: .value("Date", selectedDate))
                         .symbolSize(CGSize(width: 3, height: 3))
@@ -77,37 +86,37 @@ struct IncidenceView: View {
                         .font(.headline)
                     }
                 }
+                #endif
             }
+            .chartYScale(domain: 0 ... viewModel.maxIncidence)
+            #if os(macOS)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    if let plotFrame = geometryProxy.plotFrame {
-                                        let x = value.location.x - geometryReader[plotFrame].origin.x
-                                        if let source: Date = geometryProxy.value(atX: x) {
-                                            if let target = IncidenceViewModel.nearestDataPoint(from: source) {
-                                                self.selectedDate = target
-                                            }
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                if let plotFrame = geometryProxy.plotFrame {
+                                    let x = value.location.x - geometryReader[plotFrame].origin.x
+                                    if let source: Date = geometryProxy.value(atX: x) {
+                                        if let target = IncidenceViewModel.nearestDataPoint(from: source) {
+                                            self.selectedDate = target
                                         }
                                     }
                                 }
-                                .onEnded { value in
-                                    self.selectedDate = nil
-                                }
-                        )
+                            }
+                            .onEnded { value in
+                                self.selectedDate = nil
+                            }
+                    )
                 }
             }
+            #endif
             HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.lastUpdate))")
+                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
                     .font(.footnote)
                 Spacer()
             }
         }
     }
-}
-
-#Preview {
-    IncidenceView()
 }
