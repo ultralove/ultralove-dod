@@ -21,7 +21,7 @@ struct RadiationView: View {
     func _view() -> some View {
         VStack {
             HStack {
-                Text(String(format: "Radiation at station %@:", viewModel.station?.name ?? "<Unknown>"))
+                Text(String(format: "Radiation at station %@:", viewModel.station ?? "<Unknown>"))
                     .font(.headline)
                 Spacer()
             }

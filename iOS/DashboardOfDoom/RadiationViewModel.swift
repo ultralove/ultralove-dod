@@ -3,7 +3,7 @@ import SwiftUI
 @Observable class RadiationViewModel: LocationViewModel {
     private let radiationController = RadiationController()
 
-    var station: Location?
+    var station: String?
     var radiation: Radiation?
     var timestamp: Date?
 

@@ -25,14 +25,14 @@ class RadiationController {
                             if let name = properties["name"] as? String {
                                 let siteStatus = properties["site_status"] as? Int
                                 if siteStatus == 1 {
-                                    let station = Location(name: name, latitude: coordinates[1], longitude: coordinates[0])
+                                    let location = Location(name: name, latitude: coordinates[1], longitude: coordinates[0])
                                     let radiation = Radiation(
                                         id: properties["kenn"] as? String ?? "<Unknown>",
                                         total: Measurement(value: properties["value"] as? Double ?? Double.nan, unit: UnitRadiation.microsieverts),
                                         cosmic: Measurement(value: properties["value_cosmic"] as? Double ?? Double.nan, unit: UnitRadiation.microsieverts),
                                         terrestrial: Measurement(
                                             value: properties["value_terrestrial"] as? Double ?? Double.nan, unit: UnitRadiation.microsieverts))
-                                    radiationSensors.append(RadiationSensor(station: station, radiation: radiation, timestamp: Date.now))
+                                    radiationSensors.append(RadiationSensor(station: name, location: location, radiation: radiation, timestamp: Date.now))
                                 }
                             }
                         }
@@ -48,7 +48,7 @@ class RadiationController {
         var nearestSensor: RadiationSensor? = nil
         var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
         for radiationSensor in radiationSensors {
-            let distance = haversineDistance(location_0: radiationSensor.station, location_1: location)
+            let distance = haversineDistance(location_0: radiationSensor.location, location_1: location)
             if distance < minDistance {
                 minDistance = distance
                 nearestSensor = radiationSensor

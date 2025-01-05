@@ -49,7 +49,7 @@ import SwiftUI
             self.placemark = await LocationController.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude)
             self.location = location
             self.updateRegion()
-            await self.onLocationUpdate()
+            await self.refreshData(location: location)
         }
     }
 
@@ -58,14 +58,6 @@ import SwiftUI
         let deadband = Measurement(value: 100.0, unit: UnitLength.meters)
         let distance = haversineDistance(location_0: previous, location_1: current)
         return distance > deadband
-    }
-
-
-    @MainActor private func onLocationUpdate() async -> Void {
-        if let location = self.location {
-            print("onLocationUpdate()")
-            await self.refreshData(location: location)
-        }
     }
 
     func refreshData(location: Location) async -> Void {
