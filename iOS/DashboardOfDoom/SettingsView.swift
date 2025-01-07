@@ -11,8 +11,11 @@ struct GeneralSettingsView: View {
 }
 
 struct WeatherSettingsView: View {
+    @AppStorage("showApparentTemperature") private var showApparentTemperature = false
+
     var body: some View {
         Form {
+            Toggle("Show apparent temperature", isOn: $showApparentTemperature)
         }
         Spacer()
     }

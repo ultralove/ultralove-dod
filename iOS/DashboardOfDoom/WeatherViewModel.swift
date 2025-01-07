@@ -9,12 +9,12 @@ import SwiftUI
     var humidity: Double = 0.0
     var pressure: Measurement<UnitPressure>?
 
-
+    var station: String?
     var conditionsSymbol: String = "questionmark.circle"
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let temperature = self.apparentTemperature?.value, let symbol = self.apparentTemperature?.unit.symbol {
+        if let temperature = self.actualTemperature?.value, let symbol = self.actualTemperature?.unit.symbol {
             return String(format: "%.1f%@", temperature, symbol)
         }
         return "n/a"
@@ -37,6 +37,7 @@ import SwiftUI
                 self.humidity = weatherSensor.weather.humidity
                 self.pressure = weatherSensor.weather.pressure
                 self.conditionsSymbol = weatherSensor.weather.conditionsSymbol
+                self.station = weatherSensor.station
                 self.timestamp = weatherSensor.timestamp
             }
         }

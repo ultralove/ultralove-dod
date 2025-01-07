@@ -55,7 +55,7 @@ import SwiftUI
 
     private func significantLocationChange(previous: Location?, current: Location) -> Bool {
         guard let previous = previous else { return true }
-        let deadband = Measurement(value: 100.0, unit: UnitLength.meters)
+        let deadband = Measurement(value: 10.0, unit: UnitLength.meters)
         let distance = haversineDistance(location_0: previous, location_1: current)
         return distance > deadband
     }

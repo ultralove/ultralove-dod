@@ -1,6 +1,5 @@
 import Foundation
 
-
 class UnitRadiation: Dimension {
    // Define units for radiation
    static let sieverts = UnitRadiation(symbol: "Sv/h", converter: UnitConverterLinear(coefficient: 1.0))

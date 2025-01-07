@@ -7,6 +7,7 @@ import SwiftUI
     private var timer: Timer?
     var updateInterval: Double = 60 * 10 // 10 minutes
     var location: Location?
+    var placemark: String?
     var region = MapCameraPosition.region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 54.1318, longitude: 8.8557), span: MKCoordinateSpan(latitudeDelta: 0.0167, longitudeDelta: 0.0167)))
@@ -23,7 +24,7 @@ import SwiftUI
 
         Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
             if let location = self.location {
-                print("<<<<< Timer update: \(location) >>>>>")
+                self.updateRegion()
                 Task {
                     await self.refreshData(location: location)
                 }
@@ -36,31 +37,47 @@ import SwiftUI
     }
 
     @MainActor func locationController(didUpdateLocation location: Location) async -> Void {
-        if self.location == nil || haversineDistance(location_0: self.location!, location_1: location) > 100 {
+        var needsUpdate = false
+        if(self.location == nil) {
+            needsUpdate = true
+        }
+        else if self.significantLocationChange(previous: self.location, current: location) {
+            needsUpdate = true
+        }
+
+        if needsUpdate == true {
+            self.placemark = await LocationController.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude)
             self.location = location
+            self.updateRegion()
+            await self.refreshData(location: location)
+        }
+    }
+
+    private func significantLocationChange(previous: Location?, current: Location) -> Bool {
+        guard let previous = previous else { return true }
+        let deadband = Measurement(value: 100.0, unit: UnitLength.meters)
+        let distance = haversineDistance(location_0: previous, location_1: current)
+        return distance > deadband
+    }
+
+    func refreshData(location: Location) async -> Void {
+        preconditionFailure("refreshData() must be implemented by subclass")
+    }
+
+    private func updateRegion() {
+        if let location = self.location {
             self.region = MapCameraPosition.region(
                 MKCoordinateRegion(
-                    center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+                    center: CLLocationCoordinate2D(latitude: location.latitude - 0.005, longitude: location.longitude + 0.0125),
                     span: MKCoordinateSpan(
                         latitudeDelta: 0.0167,
                         longitudeDelta: 0.0167
                     )
                 )
             )
-            await self.onLocationUpdate()
         }
     }
 
-    @MainActor private func onLocationUpdate() async -> Void {
-        if let location = self.location {
-            print("<<<<< Location update: \(location) >>>>>")
-            await self.refreshData(location: location)
-        }
-    }
-
-    func refreshData(location: Location) async -> Void {
-        preconditionFailure("refreshData() must be implemented by subclass")
-    }
 }
 
 extension LocationViewModel {

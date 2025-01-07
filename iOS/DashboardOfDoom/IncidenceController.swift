@@ -75,15 +75,14 @@ class IncidenceController {
                                     if let dateString = entry["date"] as? String {
                                         let dateFormatter = DateFormatter()
                                         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                                        dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-                                        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+                                        dateFormatter.timeZone = TimeZone.current
                                         if let date = dateFormatter.date(from: dateString) {
                                             incidence.append(Incidence(incidence: value, date: date))
                                         }
                                     }
                                 }
                             }
-                            if let forecast = nowCast(data: incidence, count: incidence.count - 1, alpha: 0.33) {
+                            if let forecast = Self.nowCast(data: incidence, count: incidence.count - 1, alpha: 0.33) {
                                 incidence += forecast
                             }
                             return (incidence, name)
@@ -99,5 +98,51 @@ class IncidenceController {
         guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(district.id)/history/incidence/100") else { return nil }
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
         return try Self.parseIncidence(data: data, district: district)
+    }
+
+    private static func nowCast(data: [Incidence]?, count: Int, alpha: Double) -> [Incidence]? {
+        guard let data = data, data.count > 0, count > 0, count < data.count, alpha >= 0.0, alpha <= 1.0 else {
+            return nil
+        }
+        let historicalData = [Incidence](data.reversed().prefix(count + 1))
+        if let start = historicalData.first?.date.addingTimeInterval(60 * 60 * 24) {
+            if var forecastData = Self.initializeForecast(from: start, count: count) {
+                forecastData[0].incidence = Self.nowCast(data: historicalData[1].incidence, previous: historicalData[0].incidence, alpha: alpha)
+                for i in 1 ..< count {
+                    forecastData[i].incidence = Self.nowCast(data: historicalData[i + 1].incidence, previous: forecastData[i - 1].incidence, alpha: alpha)
+                }
+                return forecastData
+            }
+        }
+        return nil
+    }
+
+    private static func nowCast(data: Double, previous: Double, alpha: Double) -> Double {
+        return alpha * data + (1 - alpha) * previous
+    }
+
+    private static func initializeForecast(from: Date, count: Int) -> [Incidence]? {
+        guard count > 0 else {
+            return nil
+        }
+        var forecast: [Incidence] = []
+        for i in 0 ..< count {
+            if let forecastDate = Self.initializeForecastDate(from: from.addingTimeInterval(60 * 60 * 24 * Double(i))) {
+                forecast.append(Incidence(incidence: -1, date: forecastDate))
+            }
+        }
+        return forecast
+    }
+
+    private static func initializeForecastDate(from: Date) -> Date? {
+        var components = DateComponents()
+        components.year = Calendar.current.component(.year, from: from)
+        components.month = Calendar.current.component(.month, from: from)
+        components.day = Calendar.current.component(.day, from: from)
+        components.hour = 0
+        components.minute = 0
+        components.second = 0
+        components.timeZone = TimeZone.current
+        return Calendar.current.date(from: components)
     }
 }

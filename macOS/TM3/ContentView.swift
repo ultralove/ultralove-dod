@@ -18,7 +18,7 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Text(String(format: "%@", viewModel.location?.name ?? "<Unknown>"))
+                Text(String(format: "%@", viewModel.station ?? "<Unknown>"))
                     .font(.headline)
                 Spacer()
                 HStack {
@@ -42,17 +42,25 @@ struct ContentView: View {
             }
             .padding()
             .frame(height: 34)
-            WeatherView()
-                .padding([.leading, .trailing, .bottom])
-            ForecastView()
-                .padding()
-                .frame(height: 200)
-            IncidenceView()
-                .padding()
-                .frame(height: 200)
-            RadiationView()
-                .padding()
-                .frame(height: 200)
+            ScrollView {
+                VStack {
+                    WeatherView()
+                        .padding()
+                        .frame(height: 300)
+                    ForecastView()
+                        .padding()
+                        .frame(height: 200)
+                    IncidenceView()
+                        .padding()
+                        .frame(height: 200)
+                    LevelView()
+                        .padding()
+                        .frame(height: 200)
+                    RadiationView()
+                        .padding()
+                        .frame(height: 200)
+                }
+            }
         }
         .frame(width: 768, height: 1024)
     }

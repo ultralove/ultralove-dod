@@ -24,10 +24,10 @@ struct WeatherView: View {
         VStack {
             HStack {
                 Text(String(format: "Current weather conditions:"))
-                    .font(.headline)
                 Spacer()
             }
-            Map(position: viewModel.binding(for: \.region), interactionModes: [.all]) {
+            let interactionModes: MapInteractionModes = []
+            Map(position: viewModel.binding(for: \.region), interactionModes: interactionModes) {
                 UserAnnotation()
                 Annotation(coordinate: viewModel.coordinate, anchor: .topLeading) {
                     VStack {
@@ -60,7 +60,7 @@ struct WeatherView: View {
                     .padding(5)
                     .padding(.horizontal, 5)
                     .background(
-                        RoundedRectangle(cornerRadius: 27)
+                        RoundedRectangle(cornerRadius: 13)
                             .opacity(0.125)
                     )
                     .foregroundStyle(.black)

@@ -45,16 +45,59 @@ extension Date {
         return calendar.date(from: nextHourDateComponents)
     }
 
-    static func nearestDataPoint(from: Date) -> Date? {
-        var components = DateComponents()
-        components.year = Calendar.current.component(.year, from: from)
-        components.month = Calendar.current.component(.month, from: from)
-        components.day = Calendar.current.component(.day, from: from)
-        components.hour = 0
-        components.minute = 0
-        components.second = 0
-        components.timeZone = TimeZone(abbreviation: "UTC")
-        return Calendar.current.date(from: components)
+    static func roundToPreviousQuarterHour(from: Date) -> Date? {
+        let calendar = Calendar.current
+
+        // Extract hour, minute, and second components from the input date
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: from)
+
+        guard let minute = components.minute else { return nil }
+
+        // Calculate the remainder when dividing minutes by 15
+        let remainder = minute % 15
+
+        // Adjust to the previous quarter hour
+        var adjustedComponents = components
+        adjustedComponents.minute = minute - remainder
+        adjustedComponents.second = 0  // Set seconds to 0 for clean rounding
+
+        // Create a new date using the adjusted components
+        return calendar.date(from: adjustedComponents)
+    }
+
+    static func roundToPreviousHour(from: Date) -> Date? {
+        let calendar = Calendar.current
+
+        // Extract year, month, day, hour components from the input date
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: from)
+
+        guard let hour = components.hour else { return nil }
+
+        // Adjust to the previous hour
+        var adjustedComponents = components
+        adjustedComponents.hour = hour
+        adjustedComponents.minute = 0 // Reset minutes to 0
+        adjustedComponents.second = 0 // Reset seconds to 0
+
+        // Create a new date using the adjusted components
+        return calendar.date(from: adjustedComponents)
+    }
+
+    static func roundToLastDayChange(from: Date) -> Date? {
+        let calendar = Calendar.current
+
+        // Extract year, month, day, hour components from the input date
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: from)
+
+        // Adjust to the previous hour
+        var adjustedComponents = components
+        adjustedComponents.hour = 0    // Reset hours to 0
+        adjustedComponents.minute = 0  // Reset minutes to 0
+        adjustedComponents.second = 0  // Reset seconds to 0
+        adjustedComponents.timeZone = TimeZone.current
+
+        // Create a new date using the adjusted components
+        return calendar.date(from: adjustedComponents)
     }
 
     private func absoluteString(fmtStr: String) -> String {

@@ -8,7 +8,7 @@ import Foundation
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let incidence = incidence.first(where: { $0.date == Date.nearestDataPoint(from: Date.now) })?.incidence {
+        if let incidence = incidence.first(where: { $0.date == Date.roundToLastDayChange(from: Date.now) })?.incidence {
             return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", incidence)
         }
         return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
@@ -16,30 +16,18 @@ import Foundation
 
     var maxIncidence: Double {
         if let maxValue = incidence.map({ $0.incidence }).max() {
-            if maxValue < 250 {
-                return 500
-            }
-            else if maxValue < 500 {
-                return 1000
-            }
-            else if maxValue < 2500 {
-                return 5000
-            }
-            else if maxValue < 5000 {
-                return 10000
+            return maxValue * 1.33
             }
             else {
-                return 100000
-            }
+            return 100.0
         }
-        return 1000.0
     }
 
     var trendSymbol: String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.nearestDataPoint(from: Date.now) {
+        if let currentDate = Date.roundToLastDayChange(from: Date.now) {
             if let currentIncidence = incidence.first(where: { $0.date == currentDate })?.incidence {
-                if let nextDate = Date.nearestDataPoint(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
+                if let nextDate = Date.roundToLastDayChange(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
                     if let nextIncidence = incidence.first(where: { $0.date == nextDate })?.incidence {
                         if currentIncidence > nextIncidence {
                             symbol = "arrow.down.forward.circle"

@@ -24,29 +24,46 @@ struct WeatherView: View {
         VStack {
             HStack {
                 Text(String(format: "Current weather conditions:"))
-                    .font(.headline)
                 Spacer()
             }
-            Map(position: viewModel.binding(for: \.region), interactionModes: []) {
-                Annotation(coordinate: viewModel.coordinate, anchor: .leading) {
+            let interactionModes: MapInteractionModes = []
+            Map(position: viewModel.binding(for: \.region), interactionModes: interactionModes) {
+                UserAnnotation()
+                Annotation(coordinate: viewModel.coordinate, anchor: .topLeading) {
                     VStack {
                         HStack {
                             Image(systemName: viewModel.conditionsSymbol)
-                                .font(.title)
-                            Spacer()
                             Text(String(format: "%.1f%@", viewModel.actualTemperature?.value ?? Double.nan, viewModel.actualTemperature?.unit.symbol ?? ""))
+                            Spacer()
+                        }
                                 .font(.title)
+                        HStack {
+                            Text("Feels like:")
                             Spacer()
                             Text(String(format: "%.1f%@", viewModel.apparentTemperature?.value ?? Double.nan, viewModel.apparentTemperature?.unit.symbol ?? ""))
-                                .font(.title3)
                         }
+                        .font(.footnote)
+                        HStack {
+                            Text("Humidity:")
+                            Spacer()
+                            Text(String(format: "%.1f%%", viewModel.humidity * 100))
+                        }
+                        .font(.footnote)
+                        HStack {
+                            Text("Pressure:")
+                            Spacer()
+                            Text(String(format: "%.1f%@", viewModel.pressure?.value ?? Double.nan, viewModel.pressure?.unit.symbol ?? ""))
+                        }
+                        .font(.footnote)
                     }
+                    .padding()
                     .padding(5)
                     .padding(.horizontal, 5)
-                    .background(.opacity(0.125))
+                    .background(
+                        RoundedRectangle(cornerRadius: 13)
+                            .opacity(0.125)
+                    )
                     .foregroundStyle(.black)
-                    .clipShape(.capsule(style: .continuous))
-
                 } label: {
                 }
             }
@@ -57,17 +74,5 @@ struct WeatherView: View {
             }
         }
     }
-
-    func updateCameraRegion() -> MKCoordinateRegion {
-        let mapPoint = MKMapPoint(viewModel.coordinate)
-        let mapRect = MKMapRect(x: mapPoint.x - 9_000, y: mapPoint.y - 9_000, width: 18_000, height: 18_000)
-        var newRegion = MKCoordinateRegion(mapRect)
-        newRegion.span.latitudeDelta *= 1.0
-        newRegion.span.longitudeDelta *= 1.0
-        return newRegion
-    }
 }
 
-#Preview {
-    WeatherView()
-}

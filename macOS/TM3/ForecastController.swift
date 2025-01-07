@@ -8,6 +8,6 @@ class ForecastController {
         let forecast = weather.hourlyForecast.forecast.map {
             Forecast(date: $0.date, temperature: $0.temperature, apparentTemperature: $0.apparentTemperature)
         }
-        return ForecastSensor(location: location, forecast: forecast, timestamp: Date.now)
+        return ForecastSensor(station: location.name, forecast: Array(forecast.prefix(7 * 24)), timestamp: Date.now)
     }
 }

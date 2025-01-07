@@ -2,30 +2,30 @@ import CoreLocation
 import SwiftUI
 
 @Observable class WeatherViewModel: LocationViewModel {
-    @AppStorage("showApparentTemperature") var showApparentTemperature
-
     private let weatherController = WeatherController()
 
     var actualTemperature: Measurement<UnitTemperature>?
     var apparentTemperature: Measurement<UnitTemperature>?
+    var humidity: Double = 0.0
+    var pressure: Measurement<UnitPressure>?
+
+    var station: String?
     var conditionsSymbol: String = "questionmark.circle"
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let temperature = self.temperature?.value, let symbol = self.temperature?.unit.symbol {
+        if let temperature = self.actualTemperature?.value, let symbol = self.actualTemperature?.unit.symbol {
             return String(format: "%.1f%@", temperature, symbol)
         }
         return "n/a"
     }
 
      var temperature: Measurement<UnitTemperature>? {
-//        self.showApparentTemperature = UserDefaults.standard.bool(forKey: "showApparentTemperature")
-//        if showApparentTemperature == true {
-//            return apparentTemperature
-//        }
-//        else {
+        let showPerceivedTemperature = UserDefaults.standard.bool(forKey: "showPerceivedTemperature")
+        guard showPerceivedTemperature == true else {
+            return apparentTemperature
+        }
             return actualTemperature
-//        }
     }
 
     @MainActor override func refreshData(location: Location) async -> Void {
@@ -34,7 +34,10 @@ import SwiftUI
             if let weatherSensor = try await weatherController.refreshWeather(for: location) {
                 self.actualTemperature = weatherSensor.weather.temperature
                 self.apparentTemperature = weatherSensor.weather.apparentTemperature
+                self.humidity = weatherSensor.weather.humidity
+                self.pressure = weatherSensor.weather.pressure
                 self.conditionsSymbol = weatherSensor.weather.conditionsSymbol
+                self.station = weatherSensor.station
                 self.timestamp = weatherSensor.timestamp
             }
         }

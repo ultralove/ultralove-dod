@@ -15,7 +15,11 @@ class LocationController: NSObject, CLLocationManagerDelegate {
 
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
+#if os(macOS)
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+#else
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+#endif
         locationManager.startUpdatingLocation()
     }
 
@@ -24,51 +28,63 @@ class LocationController: NSObject, CLLocationManagerDelegate {
             Task {
                 let latitude = lastLocation.coordinate.latitude
                 let longitude = lastLocation.coordinate.longitude
-                if let placemark = await Self.reverseGeocodeLocation(latitude: latitude, longitude: longitude) {
-                    let newLocation = Location(name: placemark, latitude: latitude, longitude: longitude)
-                    if self.location != newLocation {
-                        self.location = newLocation
-                        if let delegate = self.delegate {
-                            await delegate.locationController(didUpdateLocation: newLocation)
-                        }
-                    }
+                self.location = Location(name: "<Unknown>", latitude: latitude, longitude: longitude)
+                if let delegate = self.delegate, let location = self.location {
+                    await delegate.locationController(didUpdateLocation: location)
                 }
             }
         }
     }
 
-    private static func reverseGeocodeLocation(latitude: Double, longitude: Double) async -> String? {
-        var location: String?
+    static func reverseGeocodeLocation(latitude: Double, longitude: Double) async -> String? {
+        var formattedPlacemark: String?
         do {
             let geocoder = CLGeocoder()
             let coordinate = CLLocation(latitude: latitude, longitude: longitude)
             let placemarks = try await geocoder.reverseGeocodeLocation(coordinate)
             if let placemark = placemarks.first {
-                var str = ""
-                if let thoroughfare = placemark.thoroughfare, let subThoroughfare = placemark.subThoroughfare {
-                    str += thoroughfare + " " + subThoroughfare
-                }
-                if let postalCode = placemark.postalCode, let locality = placemark.locality {
-                    if str.isEmpty == false {
-                        str += ", "
-                    }
-                    str += postalCode + " " + locality
-                    if let subLocality = placemark.subLocality {
-                        if str.isEmpty == false {
-                            str += "-"
-                        }
-                        str += subLocality
-                    }
-                }
-                if str.isEmpty == false {
-                    location = str
-                }
+                formattedPlacemark = formatPlacemarkLong(placemark: placemark)
             }
         }
         catch {
             print("Failed to reverse geocode location: \(error)")
-            location = nil
+            formattedPlacemark = nil
         }
-        return location
+        return formattedPlacemark
+    }
+
+    static func reverseGeocodeLocation(location: Location) async -> String? {
+        return await self.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude)
+    }
+
+    static private func formatPlacemarkLong(placemark: CLPlacemark) -> String? {
+        var formattedPlacemark = ""
+                if let thoroughfare = placemark.thoroughfare, let subThoroughfare = placemark.subThoroughfare {
+            formattedPlacemark += thoroughfare + " " + subThoroughfare
+                }
+                if let postalCode = placemark.postalCode, let locality = placemark.locality {
+            if formattedPlacemark.isEmpty == false {
+                formattedPlacemark += ", "
+                    }
+            formattedPlacemark += postalCode + " " + locality
+                    if let subLocality = placemark.subLocality {
+                if formattedPlacemark.isEmpty == false {
+                    formattedPlacemark += "-"
+                        }
+                formattedPlacemark += subLocality
+                    }
+                }
+        return formattedPlacemark
+                }
+
+    static private func formatPlacemarkShort(placemark: CLPlacemark) -> String? {
+        var formattedPlacemark = ""
+        if let locality = placemark.locality {
+            formattedPlacemark += locality
+            }
+        if let subLocality = placemark.subLocality {
+            formattedPlacemark += "-" + subLocality
+        }
+        return formattedPlacemark
     }
 }

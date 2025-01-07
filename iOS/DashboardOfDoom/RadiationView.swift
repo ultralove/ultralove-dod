@@ -22,7 +22,6 @@ struct RadiationView: View {
         VStack {
             HStack {
                 Text(String(format: "Radiation at station %@:", viewModel.station ?? "<Unknown>"))
-                    .font(.headline)
                 Spacer()
             }
             Chart {
