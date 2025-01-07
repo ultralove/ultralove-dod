@@ -2,6 +2,6 @@ import Foundation
 
 struct LevelSensor {
     let station: String
-    let level: [Level]
+    let measurements: [Level]
     let timestamp: Date?
 }

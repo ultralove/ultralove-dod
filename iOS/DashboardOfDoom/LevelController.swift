@@ -1,6 +1,6 @@
 import Foundation
 
-struct Station {
+struct LevelStation {
     let id: String
     let name: String
     let water: String
@@ -12,14 +12,14 @@ class LevelController {
 
     func refreshLevel(for location: Location) async throws -> LevelSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
-            if let levels = try await fetchMeasurements(station: nearestStation) {
-                return LevelSensor(station: nearestStation.name, level: levels, timestamp: Date.now)
+            if let measurements = try await fetchMeasurements(station: nearestStation) {
+                return LevelSensor(station: nearestStation.name, measurements: measurements, timestamp: Date.now)
             }
         }
         return nil
     }
 
-    private func fetchNearestStation(location: Location) async throws -> Station? {
+    private func fetchNearestStation(location: Location) async throws -> LevelStation? {
         let endpoint = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json"
         guard let url = URL(string: endpoint) else { return nil }
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
@@ -40,9 +40,9 @@ class LevelController {
         return nil
     }
 
-    private static func parseStations(from data: Data) throws -> [Station]? {
+    private static func parseStations(from data: Data) throws -> [LevelStation]? {
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [[String: Any]] {
-            var stations: [Station] = []
+            var stations: [LevelStation] = []
             for item in json {
                 if let id = item["uuid"] as? String {
                     if let name = item["longname"] as? String {
@@ -51,7 +51,7 @@ class LevelController {
                                 if let longitude = item["longitude"] as? Double {
                                     if let water = item["water"] as? [String: Any] {
                                         if let river = water["longname"] as? String {
-                                            stations.append(Station(id: id, name: name, water: river, km: km,
+                                            stations.append(LevelStation(id: id, name: name, water: river, km: km,
                                                                     location: Location(name: name, latitude: latitude, longitude: longitude)))
                                         }
                                     }
@@ -67,8 +67,8 @@ class LevelController {
         return nil
     }
 
-    private static func nearestStation(stations: [Station], location: Location) -> Station? {
-        var nearestStation: Station? = nil
+    private static func nearestStation(stations: [LevelStation], location: Location) -> LevelStation? {
+        var nearestStation: LevelStation? = nil
         var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
         for station in stations {
             let distance = haversineDistance(location_0: station.location, location_1: location)
@@ -80,7 +80,7 @@ class LevelController {
         return nearestStation
     }
 
-    private func fetchMeasurements(station: Station) async throws -> [Level]? {
+    private func fetchMeasurements(station: LevelStation) async throws -> [Level]? {
         let endpoint = String(format: "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%@/W/measurements.json?start=P5D", station.id)
         guard let url = URL(string: endpoint) else { return nil }
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
@@ -94,7 +94,8 @@ class LevelController {
                 if let value = item["value"] as? Double {
                     if let timestamp = item["timestamp"] as? String {
                         if let date = Self.parseTimestamp(string: timestamp) {
-                            levels.append(Level(value: value / 100, date: date))
+                            let level = Measurement<UnitLength>(value: value, unit: .centimeters)
+                            levels.append(Level(measurement: level.converted(to: .meters) , timestamp: date))
                         }
                     }
                 }

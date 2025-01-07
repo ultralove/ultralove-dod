@@ -4,19 +4,19 @@ import SwiftUI
     private let levelController = LevelController()
 
     var station: String?
-    var level: [Level] = []
+    var measurements: [Level] = []
     var timestamp: Date?
 
     var maxLevel: Double {
-        return level.map({ $0.value }).max() ?? 0.0
+        return measurements.map({ $0.measurement.value }).max() ?? 0.0
     }
 
     var trendSymbol: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToLastDayChange(from: Date.now) {
-            if let currentIncidence = level.first(where: { $0.date == currentDate })?.value {
+            if let currentIncidence = measurements.first(where: { $0.timestamp == currentDate })?.measurement.value {
                 if let nextDate = Date.roundToLastDayChange(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
-                    if let nextIncidence = level.first(where: { $0.date == nextDate })?.value {
+                    if let nextIncidence = measurements.first(where: { $0.timestamp == nextDate })?.measurement.value {
                         if currentIncidence > nextIncidence {
                             symbol = "arrow.down.forward.circle"
                         }
@@ -38,7 +38,7 @@ import SwiftUI
             self.timestamp = nil
             if let levelSensor = try await levelController.refreshLevel(for: location) {
                 self.station = levelSensor.station
-                self.level = levelSensor.level
+                self.measurements = levelSensor.measurements
                 self.timestamp = levelSensor.timestamp
             }
         }

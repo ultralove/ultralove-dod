@@ -28,36 +28,36 @@ struct LevelView: View {
                 Spacer()
             }
             Chart {
-                ForEach(viewModel.level) { level in
+                ForEach(viewModel.measurements) { level in
                     LineMark(
-                        x: .value("Date", level.date),
-                        y: .value("Level", level.value)
+                        x: .value("Date", level.timestamp),
+                        y: .value("Level", level.measurement.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
-                        x: .value("Date", level.date),
-                        y: .value("Level", level.value)
+                        x: .value("Date", level.timestamp),
+                        y: .value("Level", level.measurement.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(linearGradient)
                 }
 
-                if let currentLevel = viewModel.level.first(where: { $0.date == Date.roundToPreviousQuarterHour(from: Date.now) }) {
-                    RuleMark(x: .value("Date", currentLevel.date))
+                if let currentLevel = viewModel.measurements.first(where: { $0.timestamp == Date.roundToPreviousQuarterHour(from: Date.now) }) {
+                    RuleMark(x: .value("Date", currentLevel.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
-                        x: .value("Date", currentLevel.date),
-                        y: .value("Lavel", currentLevel.value)
+                        x: .value("Date", currentLevel.timestamp),
+                        y: .value("Level", currentLevel.measurement.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
                         VStack {
-                            Text(String(format: "%@ %@", currentLevel.date.dateString(), currentLevel.date.timeString()))
+                            Text(String(format: "%@ %@", currentLevel.timestamp.dateString(), currentLevel.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.1f", currentLevel.value))
+                                Text(String(format: "%.2f%@", currentLevel.measurement.value, currentLevel.measurement.unit.symbol))
                                 Image(systemName: viewModel.trendSymbol)
                             }
                             .font(.headline)
@@ -71,12 +71,13 @@ struct LevelView: View {
                         .foregroundStyle(.black)
                     }
                 }
-                if let selectedDate, let selectedLevel = viewModel.level.first(where: { $0.date == selectedDate })?.value {
+
+                if let selectedDate, let selectedLevel = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
                     RuleMark(x: .value("Date", selectedDate))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", selectedDate),
-                        y: .value("Incidence", selectedLevel)
+                        y: .value("Level", selectedLevel.measurement.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -84,7 +85,7 @@ struct LevelView: View {
                             Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
                         HStack {
-                                Text(String(format: "%.1f", selectedLevel))
+                                Text(String(format: "%.2f%@", selectedLevel.measurement.value, selectedLevel.measurement.unit.symbol))
                                     .font(.headline)
                         }
                         }

@@ -18,7 +18,7 @@ class LocationController: NSObject, CLLocationManagerDelegate {
 #if os(macOS)
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
 #else
-        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
 #endif
         locationManager.startUpdatingLocation()
     }

@@ -1,8 +1,7 @@
 import Foundation
 
-struct Radiation {
-   let id: String
+struct Radiation: Identifiable {
+    let id = UUID()
    let total: Measurement<UnitRadiation>
-   let cosmic: Measurement<UnitRadiation>?
-   let terrestrial: Measurement<UnitRadiation>?
+    let timestamp: Date
 }

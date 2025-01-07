@@ -2,7 +2,7 @@ import Foundation
 
 struct Level: Identifiable {
     let id = UUID()
-    let value: Double
-    let date: Date
+    let measurement: Measurement<UnitLength>
+    let timestamp: Date
 }
 
