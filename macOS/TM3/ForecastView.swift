@@ -5,11 +5,6 @@ struct ForecastView: View {
     @Environment(ForecastViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
         if viewModel.timestamp == nil {
             ActivityIndicator()
@@ -40,7 +35,7 @@ struct ForecastView: View {
                         yEnd: .value("Temperature", forecast.temperature.value)
                     )
                     .interpolationMethod(.cardinal)
-                    .foregroundStyle(linearGradient)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentDate = Date.now.nextNearestHour(),

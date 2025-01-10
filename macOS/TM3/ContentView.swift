@@ -46,7 +46,7 @@ struct ContentView: View {
                 VStack {
                     WeatherView()
                         .padding()
-                        .frame(height: 300)
+                        .frame(height: 500)
                     ForecastView()
                         .padding()
                         .frame(height: 200)

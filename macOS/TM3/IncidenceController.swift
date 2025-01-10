@@ -1,10 +1,16 @@
 import Foundation
 
+struct District: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let location: Location
+}
+
 class IncidenceController {
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         if let district = try await self.fetchDistrict(for: location) {
             if let (incidence, name) = try await self.fetchIncidence(for: district) {
-                let incidenceSensor = IncidenceSensor(station: name, incidence: incidence, timestamp: Date.now)
+                let incidenceSensor = IncidenceSensor(id: name, location: district.location, incidence: incidence, timestamp: Date.now)
                 return incidenceSensor
             }
         }
@@ -22,7 +28,8 @@ class IncidenceController {
                                 if let name = tags["name"] as? String {
                                     if let id = tags["de:regionalschluessel"] as? String {
                                         if id.count >= 5 {
-                                            let district = District(id: String(id.prefix(5)), name: name, latitude: latitude, longitude: longitude)
+//                                            let district = District(id: String(id.prefix(5)), name: name, latitude: latitude, longitude: longitude)
+                                            let district = District(id: String(id.prefix(5)), name: name, location: Location(name: name, latitude: latitude, longitude: longitude))
                                             districts.append(district)
                                         }
                                     }
@@ -51,7 +58,7 @@ class IncidenceController {
             var nearestDistrict: District? = nil
             var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
             for candidateDistrict in candidateDistricts {
-                let candidateLocation = Location(name: candidateDistrict.name, latitude: candidateDistrict.latitude, longitude: candidateDistrict.longitude)
+                let candidateLocation = candidateDistrict.location
                 let distance = haversineDistance(location_0: candidateLocation, location_1: location)
                 if distance < minDistance {
                     minDistance = distance
@@ -77,7 +84,7 @@ class IncidenceController {
                                         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                                         dateFormatter.timeZone = TimeZone.current
                                         if let date = dateFormatter.date(from: dateString) {
-                                            incidence.append(Incidence(incidence: value, date: date))
+                                            incidence.append(Incidence(value: value, quality: .good, timestamp: date))
                                         }
                                     }
                                 }
@@ -105,12 +112,14 @@ class IncidenceController {
             return nil
         }
         let historicalData = [Incidence](data.reversed().prefix(count + 1))
-        if let start = historicalData.first?.date.addingTimeInterval(60 * 60 * 24) {
+        if let start = historicalData.first?.timestamp.addingTimeInterval(60 * 60 * 24) {
             if var forecastData = Self.initializeForecast(from: start, count: count) {
-                forecastData[0].incidence = Self.nowCast(data: historicalData[1].incidence, previous: historicalData[0].incidence, alpha: alpha)
-                for i in 1 ..< count {
-                    forecastData[i].incidence = Self.nowCast(data: historicalData[i + 1].incidence, previous: forecastData[i - 1].incidence, alpha: alpha)
-                }
+                let value = Self.nowCast(data: historicalData[1].value, previous: historicalData[0].value, alpha: alpha)
+                let incidence = Incidence(value: value, quality: .uncertain, timestamp: forecastData[0].timestamp)
+                forecastData[0] = incidence
+//                for i in 1 ..< count {
+//                    forecastData[i].incidence = Self.nowCast(data: historicalData[i + 1].incidence, previous: forecastData[i - 1].incidence, alpha: alpha)
+//                }
                 return forecastData
             }
         }
@@ -128,7 +137,7 @@ class IncidenceController {
         var forecast: [Incidence] = []
         for i in 0 ..< count {
             if let forecastDate = Self.initializeForecastDate(from: from.addingTimeInterval(60 * 60 * 24 * Double(i))) {
-                forecast.append(Incidence(incidence: -1, date: forecastDate))
+                forecast.append(Incidence(value: 0, quality: .unknown, timestamp: forecastDate))
             }
         }
         return forecast

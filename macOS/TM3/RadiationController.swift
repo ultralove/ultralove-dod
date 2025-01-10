@@ -10,7 +10,7 @@ class RadiationController {
     func refreshRadiation(for location: Location) async throws -> RadiationSensor? {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let measurements = try await Self.fetchMeasurements(station: nearestStation) {
-                return RadiationSensor(station: nearestStation.name, location: location, measurements: measurements, timestamp: Date.now)
+                return RadiationSensor(id: nearestStation.name, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
             }
         }
         return nil
@@ -93,13 +93,10 @@ class RadiationController {
                     if let properties = feature["properties"] as? [String: Any] {
                         if let dateString = properties["end_measure"] as? String {
                             let isoFormatter = ISO8601DateFormatter()
-//                            let dateFormatter = DateFormatter()
-//                            dateFormatter.dateFormat = "yyyy-MM-ddTHH:mm:ssZ"
-//                            dateFormatter.timeZone = TimeZone.current
-//                            if let timestamp = dateFormatter.date(from: dateString) {
                             if let timestamp = isoFormatter.date(from: dateString) {
-                                if let total = properties["value"] as? Double {
-                                    let measurement = Radiation(total: Measurement(value: total, unit: UnitRadiation.microsieverts), timestamp: timestamp)
+                                if let value = properties["value"] as? Double {
+                                    let measurement = Radiation(
+                                        value: Measurement(value: value, unit: UnitRadiation.microsieverts), quality: .good, timestamp: timestamp)
                                     measurements.append(measurement)
                                 }
                             }

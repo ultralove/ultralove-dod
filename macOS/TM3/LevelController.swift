@@ -13,7 +13,7 @@ class LevelController {
     func refreshLevel(for location: Location) async throws -> LevelSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
             if let measurements = try await fetchMeasurements(station: nearestStation) {
-                return LevelSensor(station: nearestStation.name, measurements: measurements, timestamp: Date.now)
+                return LevelSensor(id: nearestStation.name, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
             }
         }
         return nil
@@ -95,7 +95,7 @@ class LevelController {
                     if let timestamp = item["timestamp"] as? String {
                         if let date = Self.parseTimestamp(string: timestamp) {
                             let level = Measurement<UnitLength>(value: value, unit: .centimeters)
-                            levels.append(Level(measurement: level.converted(to: .meters) , timestamp: date))
+                            levels.append(Level(value: level.converted(to: .meters), quality: .good, timestamp: date))
                         }
                     }
                 }
@@ -108,5 +108,27 @@ class LevelController {
     private static func parseTimestamp(string: String) -> Date? {
         let formatter = ISO8601DateFormatter()
         return formatter.date(from: string)
+    }
+
+    private static func forecast(data: [Level]?, count: Int) -> [Level]? {
+        guard let data = data, data.count > 0, count > 0 else { return nil }
+        let historicalData = [Level](data.prefix(count))
+        if let latest = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
+            return Self.initializeForecast(from: latest.timestamp, count: count)
+        }
+        return nil
+    }
+
+    private static func initializeForecast(from: Date, count: Int) -> [Level]? {
+        guard count > 0 else {
+            return nil
+        }
+        var forecast: [Level] = []
+        for i in 1 ... count {
+            if let timestamp = Calendar.current.date(byAdding: .minute, value: i * 15, to: from) {
+                forecast.append(Level(value: Measurement<UnitLength>(value: 0, unit: .centimeters), quality: .unknown, timestamp: timestamp))
+            }
+        }
+        return forecast
     }
 }

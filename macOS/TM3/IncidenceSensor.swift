@@ -1,7 +1,8 @@
 import Foundation
 
 struct IncidenceSensor {
-    let station: String
+    let id: String?
+    let location: Location
     let incidence: [Incidence]
     let timestamp: Date?
 }
