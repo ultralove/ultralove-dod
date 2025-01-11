@@ -12,33 +12,54 @@ struct IncidenceView: View {
 
     var body: some View {
         VStack {
+            HStack(alignment: .bottom) {
+                Text(String(format: "COVID-19 Incidence in %@:", viewModel.sensor?.id ?? "<Unknown>"))
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                }
+                .font(.footnote)
+            }
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
+                    .font(.footnote)
+                Spacer()
+            }
         }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "COVID-19 Incidence forecast for %@:", viewModel.sensor?.id ?? "<Unknown>"))
-                Spacer()
-            }
             Chart {
                 ForEach(viewModel.incidence) { incidence in
                     LineMark(
                         x: .value("Date", incidence.timestamp),
-                        y: .value("Incidence", incidence.value)
+                        y: .value("Incidence", incidence.value.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", incidence.timestamp),
-                        y: .value("Incidence", incidence.value)
+                        y: .value("Incidence", incidence.value.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(Gradient.linear)
@@ -49,7 +70,7 @@ struct IncidenceView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentIncidence.timestamp),
-                        y: .value("Incidence", currentIncidence.value)
+                        y: .value("Incidence", currentIncidence.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -57,8 +78,8 @@ struct IncidenceView: View {
                             Text(String(format: "%@", currentIncidence.timestamp.dateString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.1f", currentIncidence.value))
-                                Image(systemName: viewModel.trendSymbol)
+                                Text(String(format: "%.1f", currentIncidence.value.value))
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
@@ -72,7 +93,7 @@ struct IncidenceView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", selectedDate),
-                        y: .value("Incidence", selectedIncidence.value)
+                        y: .value("Incidence", selectedIncidence.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -80,7 +101,7 @@ struct IncidenceView: View {
                             Text(String(format: "%@", selectedDate.dateString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.1f", selectedIncidence.value))
+                                Text(String(format: "%.1f", selectedIncidence.value.value))
                                     .font(.headline)
                             }
                         }
@@ -90,7 +111,7 @@ struct IncidenceView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0 ... viewModel.maxIncidence)
+            .chartYScale(domain: 0 ... viewModel.maxIncidence.value)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())
@@ -111,11 +132,6 @@ struct IncidenceView: View {
                                 }
                         )
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

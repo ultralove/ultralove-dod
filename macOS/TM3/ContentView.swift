@@ -18,7 +18,7 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Text(String(format: "%@", viewModel.station ?? "<Unknown>"))
+                Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
                     .font(.headline)
                 Spacer()
                 HStack {

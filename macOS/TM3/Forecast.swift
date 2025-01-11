@@ -2,8 +2,8 @@ import Foundation
 
 struct Forecast: Identifiable {
    let id = UUID()
-   var date: Date
-   var temperature: Measurement<UnitTemperature>
-   var apparentTemperature: Measurement<UnitTemperature>?
+   let date: Date
+   let temperature: Measurement<UnitTemperature>
+   let apparentTemperature: Measurement<UnitTemperature>?
 }
 

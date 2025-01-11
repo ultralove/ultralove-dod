@@ -9,15 +9,16 @@ struct District: Identifiable, Equatable {
 class IncidenceController {
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         if let district = try await self.fetchDistrict(for: location) {
-            if let (incidence, name) = try await self.fetchIncidence(for: district) {
-                let incidenceSensor = IncidenceSensor(id: name, location: district.location, incidence: incidence, timestamp: Date.now)
-                return incidenceSensor
+            if let (incidence, id) = try await self.fetchIncidence(for: district) {
+                if let placemark = await LocationController.reverseGeocodeLocation(location: district.location) {
+                    return IncidenceSensor(id: id, placemark: placemark, location: district.location, incidence: incidence, timestamp: Date.now)
+                }
             }
         }
         return nil
     }
 
-    static private func parseDistricts(data: Data) throws -> [District]? {
+    static private func parseDistricts(data: Data) async throws -> [District]? {
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["elements"] as? [[String: Any]] {
                 var districts: [District] = []
@@ -28,8 +29,8 @@ class IncidenceController {
                                 if let name = tags["name"] as? String {
                                     if let id = tags["de:regionalschluessel"] as? String {
                                         if id.count >= 5 {
-//                                            let district = District(id: String(id.prefix(5)), name: name, latitude: latitude, longitude: longitude)
-                                            let district = District(id: String(id.prefix(5)), name: name, location: Location(name: name, latitude: latitude, longitude: longitude))
+                                            let location = Location(latitude: latitude, longitude: longitude)
+                                            let district = District(id: String(id.prefix(5)), name: name, location: location)
                                             districts.append(district)
                                         }
                                     }
@@ -54,7 +55,7 @@ class IncidenceController {
         guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else { return nil }
 
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        if let candidateDistricts: [District] = try Self.parseDistricts(data: data) {
+        if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
             var nearestDistrict: District? = nil
             var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
             for candidateDistrict in candidateDistricts {
@@ -84,7 +85,7 @@ class IncidenceController {
                                         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                                         dateFormatter.timeZone = TimeZone.current
                                         if let date = dateFormatter.date(from: dateString) {
-                                            incidence.append(Incidence(value: value, quality: .good, timestamp: date))
+                                            incidence.append(Incidence(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k), quality: .good, timestamp: date))
                                         }
                                     }
                                 }
@@ -117,17 +118,18 @@ class IncidenceController {
                 let value = Self.nowCast(data: historicalData[1].value, previous: historicalData[0].value, alpha: alpha)
                 let incidence = Incidence(value: value, quality: .uncertain, timestamp: forecastData[0].timestamp)
                 forecastData[0] = incidence
-//                for i in 1 ..< count {
-//                    forecastData[i].incidence = Self.nowCast(data: historicalData[i + 1].incidence, previous: forecastData[i - 1].incidence, alpha: alpha)
-//                }
+                //                for i in 1 ..< count {
+                //                    forecastData[i].incidence = Self.nowCast(data: historicalData[i + 1].incidence, previous: forecastData[i - 1].incidence, alpha: alpha)
+                //                }
                 return forecastData
             }
         }
         return nil
     }
 
-    private static func nowCast(data: Double, previous: Double, alpha: Double) -> Double {
-        return alpha * data + (1 - alpha) * previous
+    private static func nowCast(data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double) -> Measurement<UnitIncidence> {
+        let value = alpha * data.value + (1 - alpha) * previous.value
+        return Measurement(value: value, unit: .casesper100k)
     }
 
     private static func initializeForecast(from: Date, count: Int) -> [Incidence]? {
@@ -137,7 +139,7 @@ class IncidenceController {
         var forecast: [Incidence] = []
         for i in 0 ..< count {
             if let forecastDate = Self.initializeForecastDate(from: from.addingTimeInterval(60 * 60 * 24 * Double(i))) {
-                forecast.append(Incidence(value: 0, quality: .unknown, timestamp: forecastDate))
+                forecast.append(Incidence(value: Measurement<UnitIncidence>(value: 0, unit: .casesper100k), quality: .unknown, timestamp: forecastDate))
             }
         }
         return forecast

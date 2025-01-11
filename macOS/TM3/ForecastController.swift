@@ -8,6 +8,9 @@ class ForecastController {
         let forecast = weather.hourlyForecast.forecast.map {
             Forecast(date: $0.date, temperature: $0.temperature, apparentTemperature: $0.apparentTemperature)
         }
-        return ForecastSensor(station: location.name, forecast: Array(forecast.prefix(7 * 24)), timestamp: Date.now)
+        if let placemark = await LocationController.reverseGeocodeLocation(location: location) {
+            return ForecastSensor(id: "<Unknown>", placemark: placemark, location: location, forecast: Array(forecast.prefix(7 * 24)), timestamp: Date.now)
+        }
+        return nil
     }
 }

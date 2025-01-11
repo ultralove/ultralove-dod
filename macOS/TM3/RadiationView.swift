@@ -5,26 +5,44 @@ struct RadiationView: View {
     @Environment(RadiationViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
-        if viewModel.sensor?.timestamp == nil {
-            ActivityIndicator()
-        }
-        else {
-            _view()
+        VStack {
+            HStack(alignment: .bottom) {
+                Text(String(format: "Radiation at %@:", viewModel.sensor?.id ?? "<Unknown>"))
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                }
+                .font(.footnote)
+            }
+            if viewModel.sensor?.timestamp == nil {
+                ActivityIndicator()
+            }
+            else {
+                _view()
+            }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
+                    .font(.footnote)
+                Spacer()
+            }
         }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "Radiation at station %@:", viewModel.sensor?.id ?? "<Unknown>"))
-                Spacer()
-            }
             Chart {
                 ForEach(viewModel.measurements) { measurement in
                     LineMark(
@@ -56,7 +74,7 @@ struct RadiationView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.3f%@", currentRadiation.value.value, currentRadiation.value.unit.symbol))
-                                Image(systemName: viewModel.trendSymbol)
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
@@ -110,11 +128,6 @@ struct RadiationView: View {
                                 }
                         )
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp ?? Date.now))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

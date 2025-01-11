@@ -8,6 +8,7 @@ import SwiftUI
     var updateInterval: Double = 60 * 10 // 10 minutes
     var location: Location?
     var placemark: String?
+
     var region = MapCameraPosition.region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 54.1318, longitude: 8.8557), span: MKCoordinateSpan(latitudeDelta: 0.0167, longitudeDelta: 0.0167)))
@@ -37,6 +38,10 @@ import SwiftUI
     }
 
     @MainActor func locationController(didUpdateLocation location: Location) async -> Void {
+        await self.updateLocation(location: location)
+    }
+
+    @MainActor func updateLocation(location: Location) async -> Void {
         var needsUpdate = false
         if(self.location == nil) {
             needsUpdate = true
@@ -53,6 +58,7 @@ import SwiftUI
         }
     }
 
+
     private func significantLocationChange(previous: Location?, current: Location) -> Bool {
         guard let previous = previous else { return true }
         let deadband = Measurement(value: 100.0, unit: UnitLength.meters)
@@ -64,7 +70,7 @@ import SwiftUI
         preconditionFailure("refreshData() must be implemented by subclass")
     }
 
-    private func updateRegion() {
+    private func updateRegion() -> Void {
         if let location = self.location {
             self.region = MapCameraPosition.region(
                 MKCoordinateRegion(
@@ -77,7 +83,6 @@ import SwiftUI
             )
         }
     }
-
 }
 
 extension LocationViewModel {

@@ -7,34 +7,58 @@ struct WeatherView: View {
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
 
-    //    private var cameraPosition: Binding<MapCameraPosition> {
-    //        Binding(
-    //            get: { self.viewModel.region },
-    //            set: { self.viewModel.region = $0 }
-    //        )
-    //    }
+//    private var cameraPosition: Binding<MapCameraPosition> {
+//        Binding(
+//            get: { self.viewModel.region },
+//            set: { self.viewModel.region = $0 }
+//        )
+//    }
 
     var body: some View {
-        if weather.timestamp == nil {
-            ActivityIndicator()
-        }
-        else {
-            _view()
+        VStack {
+            HStack(alignment: .bottom) {
+                Text(String(format: "Current weather conditions:"))
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", weather.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+
+                }
+                .font(.footnote)
+            }
+            if weather.sensor?.timestamp == nil {
+                ActivityIndicator()
+            }
+            else {
+                _view()
+            }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: weather.sensor?.timestamp))")
+                    .font(.footnote)
+                Spacer()
+            }
         }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "Current weather conditions:"))
-                Spacer()
-            }
             Map(position: weather.binding(for: \.region), interactionModes: [.all]) {
                 UserAnnotation()
-                Annotation(coordinate: weather.coordinate, anchor: .topLeading) {
+                Annotation("", coordinate: weather.coordinate, anchor: .topLeading) {
                     VStack {
                         HStack {
-                            Image(systemName: weather.conditionsSymbol)
+                            Image(systemName: weather.symbol)
                             Text(String(format: "%.1f%@", weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
                             Spacer()
                         }
@@ -65,17 +89,14 @@ struct WeatherView: View {
                             .opacity(0.125)
                     )
                     .foregroundStyle(.black)
-                } label: {
                 }
                 if let coordinate = incidence.sensor?.location.coordinate {
-                    Annotation(coordinate: coordinate, anchor: .center) {
+                    Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
                             .fill(.blue)
-//                            .opacity(0.67)
                             .frame(width: 11, height: 11)
-                    } label: {
                     }
-                    Annotation(coordinate: coordinate, anchor: .topLeading) {
+                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
                         Image(systemName: "facemask")
                             .font(.largeTitle)
                             .padding(5)
@@ -85,18 +106,15 @@ struct WeatherView: View {
                                     .opacity(0.125)
                             )
                             .foregroundStyle(.black)
-                    } label: {
                     }
                 }
                 if let coordinate = level.sensor?.location.coordinate {
-                    Annotation(coordinate: coordinate, anchor: .center) {
+                    Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
                             .fill(.blue)
-//                            .opacity(0.67)
                             .frame(width: 11, height: 11)
-                    } label: {
                     }
-                    Annotation(coordinate: coordinate, anchor: .topLeading) {
+                    Annotation("",coordinate: coordinate, anchor: .topLeading) {
                         Image(systemName: "water.waves")
                             .font(.largeTitle)
                             .padding(5)
@@ -106,18 +124,15 @@ struct WeatherView: View {
                                     .opacity(0.125)
                             )
                             .foregroundStyle(.black)
-                    } label: {
                     }
                 }
                 if let coordinate = radiation.sensor?.location.coordinate {
-                    Annotation(coordinate: coordinate, anchor: .center) {
+                    Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
                             .fill(.blue)
-//                            .opacity(0.67)
                             .frame(width: 11, height: 11)
-                    } label: {
                     }
-                    Annotation(coordinate: coordinate, anchor: .topLeading) {
+                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
                         Image(systemName: "atom")
                             .font(.largeTitle)
                             .padding(5)
@@ -127,14 +142,8 @@ struct WeatherView: View {
                                     .opacity(0.125)
                             )
                             .foregroundStyle(.black)
-                    } label: {
                     }
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: weather.timestamp ?? Date.now))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

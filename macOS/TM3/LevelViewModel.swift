@@ -6,12 +6,13 @@ import SwiftUI
     var sensor: LevelSensor?
     var measurements: [Level] = []
     var current: Level?
+    var timestamp: Date? = nil
 
     var maxLevel: Double {
         return measurements.map({ $0.value.value }).max() ?? 0.0
     }
 
-    var trendSymbol: String {
+    var trend: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToLastDayChange(from: Date.now) {
             if let currentIncidence = measurements.first(where: { $0.timestamp == currentDate })?.value.value {
@@ -45,6 +46,7 @@ import SwiftUI
                         self.measurements.append(contentsOf: forecast)
                     }
                 }
+                self.timestamp = sensor.timestamp
             }
         }
         catch {

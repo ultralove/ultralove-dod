@@ -9,8 +9,8 @@ import SwiftUI
     var humidity: Double = 0.0
     var pressure: Measurement<UnitPressure>?
 
-    var station: String?
-    var conditionsSymbol: String = "questionmark.circle"
+    var sensor: WeatherSensor?
+    var symbol: String = "questionmark.circle"
     var timestamp: Date? = nil
 
     var faceplate: String {
@@ -30,15 +30,15 @@ import SwiftUI
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-            self.timestamp = nil
-            if let weatherSensor = try await weatherController.refreshWeather(for: location) {
-                self.actualTemperature = weatherSensor.weather.temperature
-                self.apparentTemperature = weatherSensor.weather.apparentTemperature
-                self.humidity = weatherSensor.weather.humidity
-                self.pressure = weatherSensor.weather.pressure
-                self.conditionsSymbol = weatherSensor.weather.conditionsSymbol
-                self.station = weatherSensor.station
-                self.timestamp = weatherSensor.timestamp
+//            self.timestamp = nil
+            if let sensor = try await weatherController.refreshWeather(for: location) {
+                self.actualTemperature = sensor.weather.temperature
+                self.apparentTemperature = sensor.weather.apparentTemperature
+                self.humidity = sensor.weather.humidity
+                self.pressure = sensor.weather.pressure
+                self.symbol = sensor.weather.symbol
+                self.sensor = sensor
+                self.timestamp = sensor.timestamp
             }
         }
         catch {

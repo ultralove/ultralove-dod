@@ -6,12 +6,13 @@ import SwiftUI
     var sensor: RadiationSensor?
     var measurements: [Radiation] = []
     var current: Radiation?
+    var timestamp: Date? = nil
 
     var maxRadiation: Double {
         return measurements.map({ $0.value.value }).max() ?? 0.0
     }
 
-    var trendSymbol: String {
+    var trend: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToLastDayChange(from: Date.now) {
             if let currentRadiation = measurements.first(where: { $0.timestamp == currentDate })?.value.value {
@@ -36,15 +37,16 @@ import SwiftUI
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
 //            self.timestamp = nil
-            if let radiationSensor = try await radiationController.refreshRadiation(for: location) {
-                self.sensor = radiationSensor
-                self.measurements = radiationSensor.measurements
+            if let sensor = try await radiationController.refreshRadiation(for: location) {
+                self.sensor = sensor
+                self.measurements = sensor.measurements
                 if let current = self.measurements.max(by: { $0.timestamp < $1.timestamp }) {
                     self.current = current
                     if let forecast = await Self.forecast(data: self.measurements) {
                         self.measurements.append(contentsOf: forecast)
                     }
                 }
+                self.timestamp = sensor.timestamp
             }
         }
         catch {

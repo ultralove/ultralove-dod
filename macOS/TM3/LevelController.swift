@@ -5,7 +5,7 @@ struct LevelStation {
     let name: String
     let water: String
     let km: Double
-    let location: Location
+        let location: Location
 }
 
 class LevelController {
@@ -13,7 +13,9 @@ class LevelController {
     func refreshLevel(for location: Location) async throws -> LevelSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
             if let measurements = try await fetchMeasurements(station: nearestStation) {
-                return LevelSensor(id: nearestStation.name, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
+                    return LevelSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                }
             }
         }
         return nil
@@ -25,7 +27,6 @@ class LevelController {
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
         if let stations = try Self.parseStations(from: data) {
             if let nearestStation = Self.nearestStation(stations: stations, location: location) {
-                print("Nearest station: \(nearestStation.name), \(nearestStation.water), \(nearestStation.km)km")
 //                let associatedStations = stations.filter {
 //                    let distance = haversineDistance(location_0: location, location_1: $0.location)
 //                    return (distance) < Measurement(value: 10.0, unit: UnitLength.kilometers)
@@ -51,14 +52,14 @@ class LevelController {
                                 if let longitude = item["longitude"] as? Double {
                                     if let water = item["water"] as? [String: Any] {
                                         if let river = water["longname"] as? String {
+                                            let location = Location(latitude: latitude, longitude: longitude)
                                             stations.append(LevelStation(id: id, name: name, water: river, km: km,
-                                                                    location: Location(name: name, latitude: latitude, longitude: longitude)))
+                                                                    location: location))
                                         }
                                     }
                                 }
                             }
                         }
-
                     }
                 }
             }

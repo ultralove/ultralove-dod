@@ -10,7 +10,9 @@ class RadiationController {
     func refreshRadiation(for location: Location) async throws -> RadiationSensor? {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let measurements = try await Self.fetchMeasurements(station: nearestStation) {
-                return RadiationSensor(id: nearestStation.name, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
+                    return RadiationSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                }
             }
         }
         return nil
@@ -22,7 +24,7 @@ class RadiationController {
             "https://www.imis.bfs.de/ogc/opendata/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=opendata:odlinfo_odl_1h_latest&outputFormat=application/json"
         guard let url = URL(string: endpoint) else { return nil }
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        let stations = try Self.parseStations(from: data)
+        let stations = try await Self.parseStations(from: data)
         if stations.count > 0 {
             nearestStation = Self.nearestStation(stations: stations, location: location)
             if let nearestStation = nearestStation {
@@ -35,15 +37,13 @@ class RadiationController {
         return nearestStation
     }
 
-    private static func parseStations(from data: Data) throws -> [RadiationStation] {
+    private static func parseStations(from data: Data) async throws -> [RadiationStation] {
         var stations: [RadiationStation] = []
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let features = json["features"] as? [[String: Any]] {
                 for feature in features {
-                    if let geometry = feature["geometry"] as? [String: Any],
-                        let coordinates = geometry["coordinates"] as? [Double]
-                    {
-                        let location = Location(name: "<Unused>", latitude: coordinates[1], longitude: coordinates[0])
+                    if let geometry = feature["geometry"] as? [String: Any], let coordinates = geometry["coordinates"] as? [Double] {
+                        let location = Location(latitude: coordinates[1], longitude: coordinates[0])
                         if let properties = feature["properties"] as? [String: Any] {
                             if let id = properties["kenn"] as? String {
                                 if let name = properties["name"] as? String {

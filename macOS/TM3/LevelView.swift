@@ -5,28 +5,44 @@ struct LevelView: View {
     @Environment(LevelViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
         VStack {
+            HStack(alignment: .bottom) {
+                Text(String(format: "Level at %@:", viewModel.sensor?.id ?? "<Unknown>"))
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                }
+                .font(.footnote)
+            }
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
+                    .font(.footnote)
+                Spacer()
+            }
         }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "Level at station %@:", viewModel.sensor?.id ?? "<Unknown>"))
-                Spacer()
-            }
             Chart {
                 ForEach(viewModel.measurements) { level in
                     LineMark(
@@ -58,7 +74,7 @@ struct LevelView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.2f%@", currentLevel.value.value, currentLevel.value.unit.symbol))
-                                Image(systemName: viewModel.trendSymbol)
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
@@ -112,11 +128,6 @@ struct LevelView: View {
                             }
                     )
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

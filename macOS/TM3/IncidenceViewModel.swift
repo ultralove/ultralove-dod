@@ -6,24 +6,25 @@ import Foundation
     var sensor: IncidenceSensor?
     var incidence: [Incidence] = []
     var current: Incidence?
+    var timestamp: Date? = nil
 
         var faceplate: String {
-        if let incidence = incidence.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) })?.value {
+            if let incidence = incidence.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) })?.value.value {
             return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", incidence)
         }
         return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
     }
 
-    var maxIncidence: Double {
+    var maxIncidence: Measurement<UnitIncidence> {
         if let maxValue = incidence.map({ $0.value }).max() {
             return maxValue * 1.33
         }
         else {
-            return 100.0
+            return Measurement<UnitIncidence>(value: 100.0, unit: .casesper100k)
         }
     }
 
-    var trendSymbol: String {
+    var trend: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToLastDayChange(from: Date.now) {
             if let currentIncidence = incidence.first(where: { $0.timestamp == currentDate })?.value {
@@ -48,9 +49,10 @@ import Foundation
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
 //            self.timestamp = nil
-            if let incidenceSensor = try await incidenceController.refreshIncidence(for: location) {
-                self.sensor = incidenceSensor
-                self.incidence = incidenceSensor.incidence
+            if let sensor = try await incidenceController.refreshIncidence(for: location) {
+                self.sensor = sensor
+                self.incidence = sensor.incidence
+                self.timestamp = sensor.timestamp
             }
         }
         catch {

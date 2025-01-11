@@ -1,5 +1,4 @@
 import CoreLocation
-import Foundation
 
 protocol LocationControllerDelegate: NSObjectProtocol {
     func locationController(didUpdateLocation location: Location) async -> Void
@@ -15,11 +14,11 @@ class LocationController: NSObject, CLLocationManagerDelegate {
 
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
-#if os(macOS)
+        #if os(macOS)
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
-#else
+        #else
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
-#endif
+        #endif
         locationManager.startUpdatingLocation()
     }
 
@@ -28,7 +27,7 @@ class LocationController: NSObject, CLLocationManagerDelegate {
             Task {
                 let latitude = lastLocation.coordinate.latitude
                 let longitude = lastLocation.coordinate.longitude
-                self.location = Location(name: "<Unknown>", latitude: latitude, longitude: longitude)
+                self.location = Location(latitude: latitude, longitude: longitude)
                 if let delegate = self.delegate, let location = self.location {
                     await delegate.locationController(didUpdateLocation: location)
                 }
@@ -59,29 +58,39 @@ class LocationController: NSObject, CLLocationManagerDelegate {
 
     static private func formatPlacemarkLong(placemark: CLPlacemark) -> String? {
         var formattedPlacemark = ""
-                if let thoroughfare = placemark.thoroughfare, let subThoroughfare = placemark.subThoroughfare {
-            formattedPlacemark += thoroughfare + " " + subThoroughfare
-                }
-                if let postalCode = placemark.postalCode, let locality = placemark.locality {
+
+        if let name = placemark.name {
+            formattedPlacemark += name
+        }
+//        if let thoroughfare = placemark.thoroughfare {
+//            if formattedPlacemark.isEmpty == false {
+//                formattedPlacemark += ", "
+//            }
+//            formattedPlacemark += thoroughfare
+//            if let subThoroughfare = placemark.subThoroughfare {
+//                formattedPlacemark += " " + subThoroughfare
+//            }
+//        }
+        if let postalCode = placemark.postalCode, let locality = placemark.locality {
             if formattedPlacemark.isEmpty == false {
                 formattedPlacemark += ", "
-                    }
+            }
             formattedPlacemark += postalCode + " " + locality
-                    if let subLocality = placemark.subLocality {
+            if let subLocality = placemark.subLocality {
                 if formattedPlacemark.isEmpty == false {
                     formattedPlacemark += "-"
-                        }
+                }
                 formattedPlacemark += subLocality
-                    }
-                }
+            }
+        }
         return formattedPlacemark
-                }
+    }
 
     static private func formatPlacemarkShort(placemark: CLPlacemark) -> String? {
         var formattedPlacemark = ""
         if let locality = placemark.locality {
             formattedPlacemark += locality
-            }
+        }
         if let subLocality = placemark.subLocality {
             formattedPlacemark += "-" + subLocality
         }

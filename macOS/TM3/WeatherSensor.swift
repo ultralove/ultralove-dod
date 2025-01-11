@@ -1,7 +1,9 @@
 import Foundation
 
 struct WeatherSensor {
-    var station: String
+    var id: String?
+    var placemark: String?
+    var location: Location
     var weather: Weather
     let timestamp: Date?
 }
