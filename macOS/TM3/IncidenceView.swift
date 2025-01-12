@@ -49,7 +49,7 @@ struct IncidenceView: View {
     func _view() -> some View {
         VStack {
             Chart {
-                ForEach(viewModel.incidence) { incidence in
+                ForEach(viewModel.measurements) { incidence in
                     LineMark(
                         x: .value("Date", incidence.timestamp),
                         y: .value("Incidence", incidence.value.value)
@@ -65,7 +65,8 @@ struct IncidenceView: View {
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let currentIncidence = viewModel.incidence.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) }) {
+//                if let currentIncidence = viewModel.incidence.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) }) {
+                if let currentIncidence = viewModel.current {
                     RuleMark(x: .value("Date", currentIncidence.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
@@ -88,7 +89,7 @@ struct IncidenceView: View {
                         .qualityCode(qualityCode: currentIncidence.quality)
                     }
                 }
-                if let selectedDate, let selectedIncidence = viewModel.incidence.first(where: { $0.timestamp == selectedDate }) {
+                if let selectedDate, let selectedIncidence = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
                     RuleMark(x: .value("Date", selectedDate))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(

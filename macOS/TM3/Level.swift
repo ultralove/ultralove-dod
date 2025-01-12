@@ -13,7 +13,7 @@ struct Level: Identifiable {
     }
 
     init(value: Measurement<UnitLength>, quality: QualityCode) {
-        self.init(value: value, quality: quality, timestamp: Date())
+        self.init(value: value, quality: quality, timestamp: Date.now)
     }
 
     init() {

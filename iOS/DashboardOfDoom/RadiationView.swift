@@ -5,48 +5,60 @@ struct RadiationView: View {
     @Environment(RadiationViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
-        if viewModel.timestamp == nil {
+        VStack {
+            HStack(alignment: .bottom) {
+                Text(String(format: "Radiation at %@:", viewModel.sensor?.id ?? "<Unknown>"))
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                }
+                .font(.footnote)
+            }
+            if viewModel.sensor?.timestamp == nil {
             ActivityIndicator()
         }
         else {
             _view()
         }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
+                    .font(.footnote)
+                Spacer()
+            }
+        }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "Radiation at station %@:", viewModel.station ?? "<Unknown>"))
-                Spacer()
-            }
             Chart {
                 ForEach(viewModel.measurements) { measurement in
                     LineMark(
                         x: .value("Date", measurement.timestamp),
-                        y: .value("Radiation", measurement.total.value)
+                        y: .value("Radiation", measurement.value.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", measurement.timestamp),
-                        y: .value("Radiation", measurement.total.value))
+                        y: .value("Radiation", measurement.value.value)
+                    )
                     .interpolationMethod(.cardinal)
-                    .foregroundStyle(linearGradient)
+                    .foregroundStyle(Gradient.linear)
                 }
 
-                if let currentRadiation = viewModel.measurements.first(where: { $0.timestamp == Date.roundToPreviousHour(from: Date.now) }) {
+                if let currentRadiation = viewModel.current {
                     RuleMark(x: .value("Date", currentRadiation.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentRadiation.timestamp),
-                        y: .value("Radiation", currentRadiation.total.value)
+                        y: .value("Radiation", currentRadiation.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -54,18 +66,14 @@ struct RadiationView: View {
                             Text(String(format: "%@ %@", currentRadiation.timestamp.dateString(), currentRadiation.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.3f%@", currentRadiation.total.value, currentRadiation.total.unit.symbol))
-                                Image(systemName: viewModel.trendSymbol)
+                                Text(String(format: "%.3f%@", currentRadiation.value.value, currentRadiation.value.unit.symbol))
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                     }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .opacity(0.125)
-                        )
-                        .foregroundStyle(.black)
+                        .qualityCode(qualityCode: currentRadiation.quality)
                     }
                 }
 
@@ -74,7 +82,7 @@ struct RadiationView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", selectedDate),
-                        y: .value("Radiation", selectedRadiation.total.value)
+                        y: .value("Radiation", selectedRadiation.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -82,17 +90,13 @@ struct RadiationView: View {
                             Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.3f%@", selectedRadiation.total.value, selectedRadiation.total.unit.symbol))
+                                Text(String(format: "%.3f%@", selectedRadiation.value.value, selectedRadiation.value.unit.symbol))
                             .font(.headline)
                     }
                     }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .opacity(0.125)
-                        )
-                        .foregroundStyle(.black)
+                        .qualityCode(qualityCode: selectedRadiation.quality)
                     }
                 }
             }
@@ -117,11 +121,6 @@ struct RadiationView: View {
                                 }
                         )
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp ?? Date.now))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

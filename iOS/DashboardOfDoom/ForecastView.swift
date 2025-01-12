@@ -5,46 +5,57 @@ struct ForecastView: View {
     @Environment(ForecastViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
+        VStack {
+            HStack(alignment: .bottom) {
+                Text("Weather forecast:")
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                }
+                .font(.footnote)
+            }
         if viewModel.timestamp == nil {
             ActivityIndicator()
         }
         else {
             _view()
         }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
+                    .font(.footnote)
+                Spacer()
+            }
+        }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "Weather forecast:"))
-                Spacer()
-            }
             Chart {
-                ForEach(viewModel.forecast) { forecast in
+                ForEach(viewModel.measurements) { forecast in
                     LineMark(
-                        x: .value("Date", forecast.date.nearestHour() ?? Date.now),
+                        x: .value("Date", forecast.timestamp.nearestHour() ?? Date.now),
                         y: .value("Temperature", forecast.temperature.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(.blue.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
-                        x: .value("Date", forecast.date.nearestHour() ?? Date.now),
+                        x: .value("Date", forecast.timestamp.nearestHour() ?? Date.now),
                         yStart: .value("Temperature", -20),
                         yEnd: .value("Temperature", forecast.temperature.value)
                     )
                     .interpolationMethod(.cardinal)
-                    .foregroundStyle(linearGradient)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentDate = Date.now.nextNearestHour(),
-                    let currentTemperature = viewModel.forecast.first(where: { $0.date == currentDate })?.temperature
+                    let currentTemperature = viewModel.measurements.first(where: { $0.timestamp == currentDate })?.temperature
                 {
                     RuleMark(x: .value("Date", currentDate))
                         .lineStyle(StrokeStyle(lineWidth: 1))
@@ -59,7 +70,7 @@ struct ForecastView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.1f%@", currentTemperature.value, currentTemperature.unit.symbol))
-                                Image(systemName: viewModel.trendSymbol)
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
@@ -72,7 +83,7 @@ struct ForecastView: View {
                         .foregroundStyle(.black)
                     }
                 }
-                if let selectedDate, let selectedTemperature = viewModel.forecast.first(where: { $0.date == selectedDate })?.temperature {
+                if let selectedDate, let selectedTemperature = viewModel.measurements.first(where: { $0.timestamp == selectedDate })?.temperature {
                     RuleMark(x: .value("Date", selectedDate.nearestHour() ?? Date.now))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
@@ -118,11 +129,6 @@ struct ForecastView: View {
                                 }
                         )
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

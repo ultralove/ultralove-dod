@@ -1,7 +1,8 @@
 import Foundation
 
 struct RadiationSensor {
-    let station: String?
+    let id: String?
+    let placemark: String?
     let location: Location
     let measurements: [Radiation]
     let timestamp: Date?

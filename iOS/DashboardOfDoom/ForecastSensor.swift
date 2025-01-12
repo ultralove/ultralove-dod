@@ -1,7 +1,9 @@
 import Foundation
 
 struct ForecastSensor {
-    let station: String
-    let forecast: [Forecast]
+    let id: String?
+    let placemark: String?
+    let location: Location
+    let measurements: [Forecast]
     let timestamp: Date?
 }

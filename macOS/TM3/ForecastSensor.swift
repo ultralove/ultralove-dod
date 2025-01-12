@@ -4,6 +4,6 @@ struct ForecastSensor {
     let id: String?
     let placemark: String?
     let location: Location
-    let forecast: [Forecast]
+    let measurements: [Forecast]
     let timestamp: Date?
 }

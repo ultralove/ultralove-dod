@@ -3,15 +3,17 @@ import SwiftUI
 @Observable class ForecastViewModel: LocationViewModel {
     private let forecastController = ForecastController()
 
-    var forecast: [Forecast] = []
+    var sensor: ForecastSensor?
+    var measurements: [Forecast] = []
     var timestamp: Date? = nil
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-            self.timestamp = nil
-            if let forcastSensor = try await forecastController.refreshForecast(for: location) {
-                self.forecast = forcastSensor.forecast
-                self.timestamp = forcastSensor.timestamp 
+//            self.timestamp = nil
+            if let sensor = try await forecastController.refreshForecast(for: location) {
+                self.sensor = sensor
+                self.measurements = sensor.measurements
+                self.timestamp = sensor.timestamp
             }
         }
         catch {
@@ -19,16 +21,16 @@ import SwiftUI
         }
     }
 
-    var trendSymbol: String {
+    var trend: String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.now.nearestHour() {
-            if let currentTemperature = forecast.first(where: { $0.date == currentDate })?.temperature {
-                if let nextDate = currentDate.nextNearestHour() {
-                    if let nextTemperature = forecast.first(where: { $0.date == nextDate })?.temperature {
-                        if currentTemperature > nextTemperature {
+        if let currentDate = Date.roundToPreviousHour(from: Date.now) {
+            if let currentValue = self.measurements.first(where: { $0.timestamp == currentDate })?.temperature {
+                if let nextDate = Date.roundToNextHour(from: currentDate) {
+                    if let nextValue = self.measurements.first(where: { $0.timestamp == nextDate })?.temperature {
+                        if currentValue > nextValue {
                             symbol = "arrow.down.forward.circle"
                         }
-                        else if currentTemperature < nextTemperature {
+                        else if currentValue < nextValue {
                             symbol = "arrow.up.forward.circle"
                         }
                         else {

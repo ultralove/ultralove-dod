@@ -27,12 +27,6 @@ class RadiationController {
         let stations = try await Self.parseStations(from: data)
         if stations.count > 0 {
             nearestStation = Self.nearestStation(stations: stations, location: location)
-            if let nearestStation = nearestStation {
-                print("Nearest station: \(nearestStation.name), \(nearestStation.id)")
-            }
-            else {
-                print("Nearest station: none")
-            }
         }
         return nearestStation
     }

@@ -2,6 +2,22 @@ import Foundation
 
 struct Incidence: Identifiable {
     let id = UUID()
-    var incidence: Double
-    var date: Date
+    let value: Measurement<UnitIncidence>
+    let quality: QualityCode
+    let timestamp: Date
+
+    init(value: Measurement<UnitIncidence>, quality: QualityCode, timestamp: Date) {
+        self.value = value
+        self.quality = quality
+        self.timestamp = timestamp
+    }
+
+    init(value: Measurement<UnitIncidence>, quality: QualityCode) {
+        self.init(value: value, quality: quality, timestamp: Date.now)
+    }
+
+    init() {
+        self.init(value: Measurement<UnitIncidence>(value: 0, unit: .casesper100k), quality: .unknown)
+    }
+
 }

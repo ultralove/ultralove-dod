@@ -12,7 +12,7 @@ import SwiftUI
 //            self.timestamp = nil
             if let sensor = try await forecastController.refreshForecast(for: location) {
                 self.sensor = sensor
-                self.measurements = sensor.forecast
+                self.measurements = sensor.measurements
                 self.timestamp = sensor.timestamp
             }
         }
@@ -24,9 +24,9 @@ import SwiftUI
     var trend: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToPreviousHour(from: Date.now) {
-            if let currentValue = self.measurements.first(where: { $0.date == currentDate })?.temperature {
+            if let currentValue = self.measurements.first(where: { $0.timestamp == currentDate })?.temperature {
                 if let nextDate = Date.roundToNextHour(from: currentDate) {
-                    if let nextValue = self.measurements.first(where: { $0.date == nextDate })?.temperature {
+                    if let nextValue = self.measurements.first(where: { $0.timestamp == nextDate })?.temperature {
                         if currentValue > nextValue {
                             symbol = "arrow.down.forward.circle"
                         }

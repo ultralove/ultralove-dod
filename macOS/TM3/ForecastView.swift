@@ -46,14 +46,14 @@ struct ForecastView: View {
             Chart {
                 ForEach(viewModel.measurements) { forecast in
                     LineMark(
-                        x: .value("Date", forecast.date.nearestHour() ?? Date.now),
+                        x: .value("Date", forecast.timestamp.nearestHour() ?? Date.now),
                         y: .value("Temperature", forecast.temperature.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(.blue.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
-                        x: .value("Date", forecast.date.nearestHour() ?? Date.now),
+                        x: .value("Date", forecast.timestamp.nearestHour() ?? Date.now),
                         yStart: .value("Temperature", -20),
                         yEnd: .value("Temperature", forecast.temperature.value)
                     )
@@ -62,7 +62,7 @@ struct ForecastView: View {
                 }
 
                 if let currentDate = Date.now.nextNearestHour(),
-                    let currentTemperature = viewModel.measurements.first(where: { $0.date == currentDate })?.temperature
+                    let currentTemperature = viewModel.measurements.first(where: { $0.timestamp == currentDate })?.temperature
                 {
                     RuleMark(x: .value("Date", currentDate))
                         .lineStyle(StrokeStyle(lineWidth: 1))
@@ -90,7 +90,7 @@ struct ForecastView: View {
                         .foregroundStyle(.black)
                     }
                 }
-                if let selectedDate, let selectedTemperature = viewModel.measurements.first(where: { $0.date == selectedDate })?.temperature {
+                if let selectedDate, let selectedTemperature = viewModel.measurements.first(where: { $0.timestamp == selectedDate })?.temperature {
                     RuleMark(x: .value("Date", selectedDate.nearestHour() ?? Date.now))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(

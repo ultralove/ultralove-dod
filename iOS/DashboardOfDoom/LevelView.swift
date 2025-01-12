@@ -5,51 +5,60 @@ struct LevelView: View {
     @Environment(LevelViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
         VStack {
-            if viewModel.timestamp == nil {
+            HStack(alignment: .bottom) {
+                Text(String(format: "Level at %@:", viewModel.sensor?.id ?? "<Unknown>"))
+                Spacer()
+                HStack {
+                    Image(systemName: "globe")
+                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
+                        .foregroundColor(.blue)
+                        .underline()
+                        .onTapGesture {
+                        }
+                }
+                .font(.footnote)
+            }
+            if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
+            }
+            HStack {
+                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
+                    .font(.footnote)
+                Spacer()
             }
         }
     }
 
     func _view() -> some View {
         VStack {
-            HStack {
-                Text(String(format: "Level at station %@:", viewModel.station ?? "<Unknown>"))
-                Spacer()
-            }
             Chart {
                 ForEach(viewModel.measurements) { level in
                     LineMark(
                         x: .value("Date", level.timestamp),
-                        y: .value("Level", level.measurement.value)
+                        y: .value("Level", level.value.value)
                     )
                     .interpolationMethod(.cardinal)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", level.timestamp),
-                        y: .value("Level", level.measurement.value)
+                        y: .value("Level", level.value.value)
                     )
                     .interpolationMethod(.cardinal)
-                    .foregroundStyle(linearGradient)
+                    .foregroundStyle(Gradient.linear)
                 }
 
-                if let currentLevel = viewModel.measurements.first(where: { $0.timestamp == Date.roundToPreviousQuarterHour(from: Date.now) }) {
+                if let currentLevel = viewModel.current {
                     RuleMark(x: .value("Date", currentLevel.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentLevel.timestamp),
-                        y: .value("Level", currentLevel.measurement.value)
+                        y: .value("Level", currentLevel.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -57,18 +66,14 @@ struct LevelView: View {
                             Text(String(format: "%@ %@", currentLevel.timestamp.dateString(), currentLevel.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.2f%@", currentLevel.measurement.value, currentLevel.measurement.unit.symbol))
-                                Image(systemName: viewModel.trendSymbol)
+                                Text(String(format: "%.2f%@", currentLevel.value.value, currentLevel.value.unit.symbol))
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .opacity(0.125)
-                        )
-                        .foregroundStyle(.black)
+                        .qualityCode(qualityCode: currentLevel.quality)
                     }
                 }
 
@@ -77,7 +82,7 @@ struct LevelView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", selectedDate),
-                        y: .value("Level", selectedLevel.measurement.value)
+                        y: .value("Level", selectedLevel.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -85,17 +90,13 @@ struct LevelView: View {
                             Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
                         HStack {
-                                Text(String(format: "%.2f%@", selectedLevel.measurement.value, selectedLevel.measurement.unit.symbol))
+                                Text(String(format: "%.2f%@", selectedLevel.value.value, selectedLevel.value.unit.symbol))
                                     .font(.headline)
                         }
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .opacity(0.125)
-                        )
-                        .foregroundStyle(.black)
+                        .qualityCode(qualityCode: selectedLevel.quality)
                     }
                 }
             }
@@ -120,11 +121,6 @@ struct LevelView: View {
                             }
                     )
                 }
-            }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
-                    .font(.footnote)
-                Spacer()
             }
         }
     }

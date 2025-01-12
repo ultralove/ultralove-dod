@@ -13,6 +13,11 @@ struct Incidence: Identifiable {
     }
 
     init(value: Measurement<UnitIncidence>, quality: QualityCode) {
-        self.init(value: value, quality: quality, timestamp: Date())
+        self.init(value: value, quality: quality, timestamp: Date.now)
     }
+
+    init() {
+        self.init(value: Measurement<UnitIncidence>(value: 0, unit: .casesper100k), quality: .unknown)
+    }
+
 }

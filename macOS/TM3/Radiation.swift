@@ -13,7 +13,7 @@ struct Radiation: Identifiable {
     }
 
     init(value: Measurement<UnitRadiation>, quality: QualityCode) {
-        self.init(value: value, quality: quality, timestamp: Date())
+        self.init(value: value, quality: quality, timestamp: Date.now)
     }
 
     init() {
