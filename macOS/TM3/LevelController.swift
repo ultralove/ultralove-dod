@@ -1,5 +1,33 @@
 import Foundation
 
+//[out:json][timeout:25];
+//(
+//    way["waterway"="river"]["ref"~"."](around:50000,52.5186,13.3643);
+//    relation["waterway"="river"]["ref"~"."](around:50000,52.5186,13.3643);
+//    way["waterway"="canal"]["ref"~"."](around:50000,52.5186,13.3643);
+//    relation["waterway"="canal"]["ref"~"."](around:50000,52.5186,13.3643);
+//);
+//out center tags;
+
+//way["waterway"="dam"]["ref"~"."](around:300000,52.5186,13.3643);
+//relation["waterway"="dam"]["ref"~"."](around:300000,52.5186,13.3643);
+
+//way["waterway"~"^(river|canal|dam|fairway)$"]["ref"~"."](around:300000,52.5186,13.3643);
+//relation["waterway"~"^(river|canal|dam|fairway)$"]["ref"~"."](around:300000,52.5186,13.3643);
+
+//way["waterway"~"^(river|canal)$"]["ref"~"."](around:50000,52.5186,13.3643);
+//relation["waterway"~"^(river|cancel)$"]["ref"~"."](around:50000,52.5186,13.3643);
+
+//-------------------------------------------------------------------------------
+//[out:json][timeout:25];
+//(
+//    way["waterway"~"^(river|stream|canal)$"]["ref"~"."](around:50000,52.5186,13.3643);
+//    relation["waterway"~"^(river|stream|canal)$"]["ref"~"."](around:50000,52.5186,13.3643);
+//);
+//out center tags;
+//-------------------------------------------------------------------------------
+
+
 struct LevelStation {
     let id: String
     let name: String
@@ -9,7 +37,6 @@ struct LevelStation {
 }
 
 class LevelController {
-
     func refreshLevel(for location: Location) async throws -> LevelSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
             if let measurements = try await fetchMeasurements(station: nearestStation) {
@@ -22,23 +49,13 @@ class LevelController {
     }
 
     private func fetchNearestStation(location: Location) async throws -> LevelStation? {
-        let endpoint = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json"
-        guard let url = URL(string: endpoint) else { return nil }
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        if let stations = try Self.parseStations(from: data) {
-            if let nearestStation = Self.nearestStation(stations: stations, location: location) {
-//                let associatedStations = stations.filter {
-//                    let distance = haversineDistance(location_0: location, location_1: $0.location)
-//                    return (distance) < Measurement(value: 10.0, unit: UnitLength.kilometers)
-//                }
-//                print("Found \(associatedStations.count) associated stations")
-//                for associatedStation in associatedStations {
-//                    print("Associated station: \(associatedStation.name), \(associatedStation.water), \(associatedStation.km)km")
-//                }
-                return nearestStation
+        var nearestStation: LevelStation? = nil
+        if let data = try await WSVAPI.fetchStations() {
+            if let stations = try Self.parseStations(from: data) {
+                nearestStation = Self.nearestStation(stations: stations, location: location)
             }
         }
-        return nil
+        return nearestStation
     }
 
     private static func parseStations(from data: Data) throws -> [LevelStation]? {
@@ -82,10 +99,11 @@ class LevelController {
     }
 
     private func fetchMeasurements(station: LevelStation) async throws -> [Level]? {
-        let endpoint = String(format: "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%@/W/measurements.json?start=P5D", station.id)
-        guard let url = URL(string: endpoint) else { return nil }
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        return try Self.parseLevels(data: data)
+        var measurements: [Level]? = nil
+        if let data = try await WSVAPI.fetchMeasurements(for: station.id) {
+            measurements = try Self.parseLevels(data: data)
+        }
+        return measurements
     }
 
     private static func parseLevels(data: Data) throws -> [Level]? {
@@ -112,7 +130,9 @@ class LevelController {
     }
 
     private static func forecast(data: [Level]?, count: Int) -> [Level]? {
-        guard let data = data, data.count > 0, count > 0 else { return nil }
+        guard let data = data, data.count > 0, count > 0 else {
+            return nil
+        }
         let historicalData = [Level](data.prefix(count))
         if let latest = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
             return Self.initializeForecast(from: latest.timestamp, count: count)

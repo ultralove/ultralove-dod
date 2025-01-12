@@ -20,13 +20,11 @@ class RadiationController {
 
     private static func fetchNearestStation(location: Location) async throws -> RadiationStation? {
         var nearestStation: RadiationStation? = nil
-        let endpoint =
-            "https://www.imis.bfs.de/ogc/opendata/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=opendata:odlinfo_odl_1h_latest&outputFormat=application/json"
-        guard let url = URL(string: endpoint) else { return nil }
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        let stations = try await Self.parseStations(from: data)
-        if stations.count > 0 {
-            nearestStation = Self.nearestStation(stations: stations, location: location)
+        if let data = try await BfSAPI.fetchStations() {
+            let stations = try await Self.parseStations(from: data)
+            if stations.count > 0 {
+                nearestStation = Self.nearestStation(stations: stations, location: location)
+            }
         }
         return nearestStation
     }
@@ -70,13 +68,11 @@ class RadiationController {
     }
 
     private static func fetchMeasurements(station: RadiationStation) async throws -> [Radiation]? {
-        let endpoint = String(
-            format:
-                "https://www.imis.bfs.de/ogc/opendata/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=opendata:odlinfo_timeseries_odl_1h&outputFormat=application/json&viewparams=kenn:%@",
-            station.id)
-        guard let url = URL(string: endpoint) else { return nil }
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        return try Self.parseRadiation(data: data)
+        var radiation: [Radiation]? = nil
+        if let data = try await BfSAPI.fetchMeasurements(for: station.id) {
+            radiation = try Self.parseRadiation(data: data)
+        }
+        return radiation
     }
 
     private static func parseRadiation(data: Data) throws -> [Radiation] {
