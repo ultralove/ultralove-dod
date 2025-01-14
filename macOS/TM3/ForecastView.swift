@@ -7,37 +7,14 @@ struct ForecastView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text("Weather forecast:")
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-                        .onHover { hovering in
-                            if hovering {
-                                NSCursor.pointingHand.push()
-                            } else {
-                                NSCursor.pop()
-                            }
-                        }
-                }
-                .font(.footnote)
-            }
+            HeaderView(label: "Weather forecast for", sensor: viewModel.sensor)
             if viewModel.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: viewModel.sensor)
         }
     }
 

@@ -7,8 +7,8 @@ class WeatherController {
         let weather = try await WeatherService.shared.weather(for: CLLocation(latitude: location.latitude, longitude: location.longitude))
         if let placemark = await LocationController.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude) {
             return WeatherSensor(
-                id: "<Unknown>", placemark: placemark, location: location,
-                weather: Weather(
+                id: "current location", placemark: placemark, location: location,
+                measurements: Weather(
                     temperature: weather.currentWeather.temperature, apparentTemperature: weather.currentWeather.apparentTemperature,
                     humidity: weather.currentWeather.humidity, pressure: weather.currentWeather.pressure,
                     symbol: weather.currentWeather.symbolName), timestamp: Date.now)

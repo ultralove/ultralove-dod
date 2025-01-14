@@ -9,7 +9,7 @@ class ForecastController {
             Forecast(temperature: $0.temperature, apparentTemperature: $0.apparentTemperature, timestamp: $0.date)
         }
         if let placemark = await LocationController.reverseGeocodeLocation(location: location) {
-            return ForecastSensor(id: "<Unknown>", placemark: placemark, location: location, measurements: Array(forecast.prefix(7 * 24)), timestamp: Date.now)
+            return ForecastSensor(id: "current location", placemark: placemark, location: location, measurements: Array(forecast.prefix(7 * 24)), timestamp: Date.now)
         }
         return nil
     }

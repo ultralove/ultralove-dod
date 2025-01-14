@@ -1,39 +1,14 @@
 import Foundation
 
-//[out:json][timeout:25];
-//(
-//    way["waterway"="river"]["ref"~"."](around:50000,52.5186,13.3643);
-//    relation["waterway"="river"]["ref"~"."](around:50000,52.5186,13.3643);
-//    way["waterway"="canal"]["ref"~"."](around:50000,52.5186,13.3643);
-//    relation["waterway"="canal"]["ref"~"."](around:50000,52.5186,13.3643);
-//);
-//out center tags;
-
-//way["waterway"="dam"]["ref"~"."](around:300000,52.5186,13.3643);
-//relation["waterway"="dam"]["ref"~"."](around:300000,52.5186,13.3643);
-
-//way["waterway"~"^(river|canal|dam|fairway)$"]["ref"~"."](around:300000,52.5186,13.3643);
-//relation["waterway"~"^(river|canal|dam|fairway)$"]["ref"~"."](around:300000,52.5186,13.3643);
-
-//way["waterway"~"^(river|canal)$"]["ref"~"."](around:50000,52.5186,13.3643);
-//relation["waterway"~"^(river|cancel)$"]["ref"~"."](around:50000,52.5186,13.3643);
-
-//-------------------------------------------------------------------------------
-//[out:json][timeout:25];
-//(
-//    way["waterway"~"^(river|stream|canal)$"]["ref"~"."](around:50000,52.5186,13.3643);
-//    relation["waterway"~"^(river|stream|canal)$"]["ref"~"."](around:50000,52.5186,13.3643);
-//);
-//out center tags;
-//-------------------------------------------------------------------------------
-
-
 struct LevelStation {
     let id: String
     let name: String
-    let water: String
-    let km: Double
-        let location: Location
+    let location: Location
+}
+
+struct Waterway {
+    let name: String
+    let location: Location
 }
 
 class LevelController {
@@ -41,7 +16,8 @@ class LevelController {
         if let nearestStation = try await fetchNearestStation(location: location) {
             if let measurements = try await fetchMeasurements(station: nearestStation) {
                 if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
-                    return LevelSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                    return LevelSensor(
+                        id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
                 }
             }
         }
@@ -52,7 +28,15 @@ class LevelController {
         var nearestStation: LevelStation? = nil
         if let data = try await WSVAPI.fetchStations() {
             if let stations = try Self.parseStations(from: data) {
-                nearestStation = Self.nearestStation(stations: stations, location: location)
+                if let waterways = try await fetchNearestWaterways(for: location) {
+                    if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
+                        if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
+                            if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
+                                nearestStation = LevelStation(id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
+                            }
+                        }
+                    }
+                }
             }
         }
         return nearestStation
@@ -63,17 +47,12 @@ class LevelController {
             var stations: [LevelStation] = []
             for item in json {
                 if let id = item["uuid"] as? String {
-                    if let name = item["longname"] as? String {
-                        if let km = item["km"] as? Double {
-                            if let latitude = item["latitude"] as? Double {
-                                if let longitude = item["longitude"] as? Double {
-                                    if let water = item["water"] as? [String: Any] {
-                                        if let river = water["longname"] as? String {
-                                            let location = Location(latitude: latitude, longitude: longitude)
-                                            stations.append(LevelStation(id: id, name: name, water: river, km: km,
-                                                                    location: location))
-                                        }
-                                    }
+                    if let latitude = item["latitude"] as? Double {
+                        if let longitude = item["longitude"] as? Double {
+                            if let water = item["water"] as? [String: Any] {
+                                if let name = water["longname"] as? String {
+                                    let location = Location(latitude: latitude, longitude: longitude)
+                                    stations.append(LevelStation(id: id, name: name, location: location))
                                 }
                             }
                         }
@@ -96,6 +75,63 @@ class LevelController {
             }
         }
         return nearestStation
+    }
+
+    private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
+        var waterways: [Waterway]? = nil
+        if let data = try await OSMAPI.fetchWaterways(for: location, radius: 50000) {
+            waterways = try Self.parseWaterways(data: data)
+        }
+        return waterways
+    }
+
+    static private func synchronize(_ stations: [LevelStation], with waterway: Waterway) -> [LevelStation]? {
+        var synchronizedStations: [LevelStation]? = nil
+        var foundStations: [LevelStation] = []
+        for station in stations where station.name.lowercased().contains(waterway.name.lowercased()) {
+            foundStations.append(station)
+        }
+        if foundStations.count > 0 {
+            synchronizedStations = foundStations
+        }
+        return synchronizedStations
+    }
+
+    static private func parseWaterways(data: Data) throws -> [Waterway]? {
+        var waterways: [Waterway]? = nil
+        if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
+            if let elements = json["elements"] as? [[String: Any]] {
+                var foundWaterways: [Waterway] = []
+                for element in elements {
+                    if let center = element["center"] as? [String: Any] {
+                        if let latitude = center["lat"] as? Double, let longitude = center["lon"] as? Double {
+                            if let tags = element["tags"] as? [String: Any] {
+                                if let name = tags["name"] as? String {
+                                    foundWaterways.append(Waterway(name: name, location: Location(latitude: latitude, longitude: longitude)))
+                                }
+                            }
+                        }
+                    }
+                }
+                if foundWaterways.count > 0 {
+                    waterways = foundWaterways
+                }
+            }
+        }
+        return waterways
+    }
+
+    private static func nearestWaterway(waterways: [Waterway], location: Location) -> Waterway? {
+        var nearestWaterway: Waterway? = nil
+        var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
+        for waterway in waterways {
+            let distance = haversineDistance(location_0: waterway.location, location_1: location)
+            if distance < minDistance {
+                minDistance = distance
+                nearestWaterway = waterway
+            }
+        }
+        return nearestWaterway
     }
 
     private func fetchMeasurements(station: LevelStation) async throws -> [Level]? {

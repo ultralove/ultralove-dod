@@ -32,11 +32,11 @@ import SwiftUI
         do {
 //            self.timestamp = nil
             if let sensor = try await weatherController.refreshWeather(for: location) {
-                self.actualTemperature = sensor.weather.temperature
-                self.apparentTemperature = sensor.weather.apparentTemperature
-                self.humidity = sensor.weather.humidity
-                self.pressure = sensor.weather.pressure
-                self.symbol = sensor.weather.symbol
+                self.actualTemperature = sensor.measurements.temperature
+                self.apparentTemperature = sensor.measurements.apparentTemperature
+                self.humidity = sensor.measurements.humidity
+                self.pressure = sensor.measurements.pressure
+                self.symbol = sensor.measurements.symbol
                 self.sensor = sensor
                 self.timestamp = sensor.timestamp
             }

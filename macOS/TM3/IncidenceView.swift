@@ -12,37 +12,14 @@ struct IncidenceView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text(String(format: "COVID-19 Incidence in %@:", viewModel.sensor?.id ?? "<Unknown>"))
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-                        .onHover { hovering in
-                            if hovering {
-                                NSCursor.pointingHand.push()
-                            } else {
-                                NSCursor.pop()
-                            }
-                        }
-                }
-                .font(.footnote)
-            }
+            HeaderView(label: "COVID-19 Incidence in", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: viewModel.sensor)
         }
     }
 
@@ -65,7 +42,6 @@ struct IncidenceView: View {
                     .foregroundStyle(Gradient.linear)
                 }
 
-//                if let currentIncidence = viewModel.incidence.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) }) {
                 if let currentIncidence = viewModel.current {
                     RuleMark(x: .value("Date", currentIncidence.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
@@ -76,7 +52,7 @@ struct IncidenceView: View {
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
                         VStack {
-                            Text(String(format: "%@", currentIncidence.timestamp.dateString()))
+                            Text(String(format: "%@ %@", currentIncidence.timestamp.dateString(), currentIncidence.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.1f", currentIncidence.value.value))
@@ -99,7 +75,7 @@ struct IncidenceView: View {
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
                         VStack {
-                            Text(String(format: "%@", selectedDate.dateString()))
+                            Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.1f", selectedIncidence.value.value))

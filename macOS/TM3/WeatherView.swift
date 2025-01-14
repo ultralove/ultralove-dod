@@ -16,38 +16,14 @@ struct WeatherView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text(String(format: "Current weather conditions:"))
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", weather.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-                        .onHover { hovering in
-                            if hovering {
-                                NSCursor.pointingHand.push()
-                            } else {
-                                NSCursor.pop()
-                            }
-                        }
-
-                }
-                .font(.footnote)
-            }
-            if weather.sensor?.timestamp == nil {
+            HeaderView(label: "Weather conditions for", sensor: weather.sensor)
+            if weather.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: weather.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: weather.sensor)
         }
     }
 

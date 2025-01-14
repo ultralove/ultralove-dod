@@ -1,9 +1,10 @@
 import Foundation
 
-struct RadiationSensor {
-    let id: String?
-    let placemark: String?
-    let location: Location
+class RadiationSensor : Sensor {
     let measurements: [Radiation]
-    let timestamp: Date?
+
+    init(id: String?, placemark: String?, location: Location, measurements: [Radiation], timestamp: Date?) {
+        self.measurements = measurements
+        super.init(id: id, placemark: placemark, location: location, timestamp: timestamp)
+    }
 }

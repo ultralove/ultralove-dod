@@ -1,9 +1,10 @@
 import Foundation
 
-struct ForecastSensor {
-    let id: String?
-    let placemark: String?
-    let location: Location
+class ForecastSensor : Sensor {
     let measurements: [Forecast]
-    let timestamp: Date?
+
+    init(id: String?, placemark: String?, location: Location, measurements: [Forecast], timestamp: Date?) {
+        self.measurements = measurements
+        super.init(id: id, placemark: placemark, location: location, timestamp: timestamp)
+    }
 }

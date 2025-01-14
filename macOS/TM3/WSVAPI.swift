@@ -11,7 +11,7 @@ class WSVAPI {
     }
 
     static func fetchMeasurements(for id: String) async throws -> Data? {
-        let endpoint = String(format: "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%@/W/measurements.json?start=P5D", id)
+        let endpoint = String(format: "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%@/W/measurements.json?start=P3D", id)
         guard let url = URL(string: endpoint) else {
             return nil
         }
