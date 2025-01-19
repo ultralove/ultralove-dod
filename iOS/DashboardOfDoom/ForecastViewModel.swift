@@ -8,7 +8,7 @@ import SwiftUI
     var timestamp: Date? = nil
 
     var maxValue: Measurement<UnitTemperature> {
-        return measurements.map({ $0.temperature }).max() ?? Measurement<UnitTemperature>(value: -20.0, unit: .celsius)
+        return Measurement<UnitTemperature>(value: 47.0, unit: .celsius)
         }
 
     var minValue: Measurement<UnitTemperature> {
@@ -44,6 +44,7 @@ import SwiftUI
                 self.sensor = sensor
                 self.measurements = Self.sanitizeForecast(measurements: sensor.measurements)
                 self.timestamp = sensor.timestamp
+                self.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

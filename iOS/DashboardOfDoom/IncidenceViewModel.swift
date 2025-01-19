@@ -62,6 +62,7 @@ import Foundation
 
                 }
                 self.timestamp = sensor.timestamp
+                self.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

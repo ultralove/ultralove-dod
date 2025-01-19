@@ -2,12 +2,19 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-@Observable class LocationViewModel: NSObject, LocationControllerDelegate {
+@Observable class LocationViewModel: NSObject, Identifiable, LocationControllerDelegate {
     private let locationController = LocationController()
     private var timer: Timer?
-    var updateInterval: Double = 60 * 10 // 10 minutes
+    private var updateInterval: Double = 60 * 10 // 10 minutes
+
+    let id = UUID()
+
     var location: Location?
     var placemark: String?
+
+    static var visibleRegion: [UUID:Location] = [:]
+    static var visibleRectangle = MKMapRect.null
+
 
     var region = MapCameraPosition.region(
         MKCoordinateRegion(
@@ -25,7 +32,7 @@ import SwiftUI
 
         Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
             if let location = self.location {
-                self.updateRegion()
+//                self.updateRegion()
                 Task {
                     await self.refreshData(location: location)
                 }
@@ -53,11 +60,20 @@ import SwiftUI
         if needsUpdate == true {
             self.placemark = await LocationController.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude)
             self.location = location
-            self.updateRegion()
+//            self.updateRegion()
             await self.refreshData(location: location)
         }
     }
 
+    @MainActor func updateRegion(for id: UUID, with location: Location) -> Void {
+        Self.visibleRegion[id] = location
+        for location in Self.visibleRegion.values {
+            let mapPoint = MKMapPoint(location.coordinate)
+            let pointRect = MKMapRect(x: mapPoint.x - 100_000, y: mapPoint.y - 100_000, width: 200_000, height: 200_000)
+            Self.visibleRectangle = Self.visibleRectangle.union(pointRect)
+        }
+        self.region = MapCameraPosition.region(MKCoordinateRegion(Self.visibleRectangle))
+    }
 
     private func significantLocationChange(previous: Location?, current: Location) -> Bool {
         guard let previous = previous else { return true }

@@ -16,7 +16,7 @@ struct WeatherView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Weather conditions for", sensor: weather.sensor)
+            HeaderView(label: "Environmental conditions for", sensor: weather.sensor)
             if weather.timestamp == nil {
                 ActivityIndicator()
             }
@@ -34,7 +34,7 @@ struct WeatherView: View {
         VStack {
             Map(position: weather.binding(for: \.region), interactionModes: []) {
                 UserAnnotation()
-                Annotation("", coordinate: weather.coordinate, anchor: .topLeading) {
+                Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
                     VStack {
                         HStack {
                             Image(systemName: weather.symbol)
@@ -65,7 +65,8 @@ struct WeatherView: View {
                     .padding(.horizontal, 5)
                     .background(
                         RoundedRectangle(cornerRadius: 13)
-                            .opacity(0.125)
+                            .fill(.blue)
+                            .opacity(0.33)
                     )
                     .foregroundStyle(.black)
                 }
@@ -75,16 +76,20 @@ struct WeatherView: View {
                             .fill(.blue)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
-                        Image(systemName: "facemask")
-                            .font(.largeTitle)
-                            .padding(5)
-                            .padding(.horizontal, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 13)
-                                    .opacity(0.125)
-                            )
-                            .foregroundStyle(.black)
+                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
+                            Image(systemName: "facemask")
+                                .font(.largeTitle)
+                            Text(incidence.faceplate)
+                        }
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(.blue)
+                                .opacity(0.33)
+                        )
+                        .foregroundStyle(.black)
                     }
                 }
                 if let coordinate = level.sensor?.location.coordinate {
@@ -93,16 +98,20 @@ struct WeatherView: View {
                             .fill(.blue)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("",coordinate: coordinate, anchor: .topLeading) {
-                        Image(systemName: "water.waves")
-                            .font(.largeTitle)
-                            .padding(5)
-                            .padding(.horizontal, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 13)
-                                    .opacity(0.125)
-                            )
-                            .foregroundStyle(.black)
+                    Annotation("",coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
+                            Image(systemName: "water.waves")
+                                .font(.largeTitle)
+                            Text(level.faceplate)
+                        }
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(.blue)
+                                .opacity(0.33)
+                        )
+                        .foregroundStyle(.black)
                     }
                 }
                 if let coordinate = radiation.sensor?.location.coordinate {
@@ -111,16 +120,20 @@ struct WeatherView: View {
                             .fill(.blue)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
-                        Image(systemName: "atom")
-                            .font(.largeTitle)
-                            .padding(5)
-                            .padding(.horizontal, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 13)
-                                    .opacity(0.125)
-                            )
-                            .foregroundStyle(.black)
+                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
+                            Image(systemName: "atom")
+                                .font(.largeTitle)
+                            Text(radiation.faceplate)
+                        }
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(.blue)
+                                .opacity(0.33)
+                        )
+                        .foregroundStyle(.black)
                     }
                 }
             }
