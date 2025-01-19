@@ -8,20 +8,21 @@ import Foundation
     var current: Incidence?
     var timestamp: Date? = nil
 
-        var faceplate: String {
-            if let incidence = measurements.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) })?.value.value {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", incidence)
-        }
-        return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
-    }
-
-    var maxIncidence: Measurement<UnitIncidence> {
-        if let maxValue = measurements.map({ $0.value }).max() {
-            return maxValue * 1.33
+    var faceplate: String {
+        if let measurement = current?.value {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", measurement.value)
         }
         else {
-            return Measurement<UnitIncidence>(value: 100.0, unit: .casesper100k)
+            return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
         }
+    }
+
+    var maxValue: Measurement<UnitIncidence> {
+        return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
+    }
+
+    var minValue: Measurement<UnitIncidence> {
+        return Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
     }
 
     var trend: String {
@@ -48,7 +49,7 @@ import Foundation
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-//            self.timestamp = nil
+            //            self.timestamp = nil
             if let sensor = try await incidenceController.refreshIncidence(for: location) {
                 self.sensor = sensor
                 self.measurements = sensor.measurements
@@ -93,7 +94,7 @@ import Foundation
         }
         var forecast: [Incidence] = []
         if let max = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
-            for i in 0..<historicalData.count {
+            for i in 0 ..< historicalData.count {
                 if let timestamp = Calendar.current.date(byAdding: .day, value: i + 1, to: max.timestamp) {
                     let value = Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
                     forecast.append(Incidence(value: value, quality: .unknown, timestamp: timestamp))

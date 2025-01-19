@@ -1,9 +1,11 @@
 import Foundation
 
-struct IncidenceSensor {
-    let id: String?
-    let placemark: String?
-    let location: Location
+class IncidenceSensor : Sensor {
     let measurements: [Incidence]
-    let timestamp: Date?
+
+    init(id: String?, placemark: String?, location: Location, measurements: [Incidence], timestamp: Date?) {
+        self.measurements = measurements
+        super.init(id: id, placemark: placemark, location: location, timestamp: timestamp)
+    }
+
 }

@@ -10,19 +10,24 @@ struct ContentView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     WeatherView()
-                        .padding()
+                        .padding(.vertical, 5)
                         .frame(height: 300)
                     ForecastView()
-                        .padding()
+                        .padding(.vertical, 5)
                         .frame(height: 200)
                     IncidenceView()
-                        .padding()
+                        .padding(.vertical, 5)
                         .frame(height: 200)
                     LevelView()
-                        .padding()
+                        .padding(.vertical, 5)
                         .frame(height: 200)
                     RadiationView()
-                        .padding()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
+                        .frame(height: 200)
+                    FascismView()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .frame(height: 200)
                 }
                 .frame(maxWidth: .infinity)
@@ -31,11 +36,11 @@ struct ContentView: View {
                     ToolbarItem(placement: .principal) {
                         HStack {
                             Text(viewModel.placemark ?? "<Unknown>")
-                                .font(.footnote)
+                                .font(.headline)
                                 .lineLimit(1)
                             Spacer()
-                            Button(action: { }) {
-                                Image(systemName: "gear")
+                            Button(action: {}) {
+                                Image(systemName: "gearshape")
                             }
                         }
                     }
@@ -44,4 +49,3 @@ struct ContentView: View {
         }
     }
 }
-

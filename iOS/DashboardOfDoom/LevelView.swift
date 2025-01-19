@@ -7,31 +7,18 @@ struct LevelView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text(String(format: "Level at %@:", viewModel.sensor?.id ?? "<Unknown>"))
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-                }
-                .font(.footnote)
-            }
+            HeaderView(label: "Water level at the", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: viewModel.sensor)
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
     }
 
     func _view() -> some View {
@@ -42,14 +29,14 @@ struct LevelView: View {
                         x: .value("Date", level.timestamp),
                         y: .value("Level", level.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", level.timestamp),
                         y: .value("Level", level.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
@@ -100,7 +87,7 @@ struct LevelView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0 ... (viewModel.maxLevel + 10))
+            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value * 1.67))
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())

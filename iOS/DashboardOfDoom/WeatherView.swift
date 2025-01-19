@@ -16,37 +16,23 @@ struct WeatherView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text(String(format: "Current weather conditions:"))
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", weather.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-
-                }
-                .font(.footnote)
-            }
-            if weather.sensor?.timestamp == nil {
+            HeaderView(label: "Weather conditions for", sensor: weather.sensor)
+            if weather.timestamp == nil {
             ActivityIndicator()
         }
         else {
             _view()
         }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: weather.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: weather.sensor)
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
     }
 
     func _view() -> some View {
         VStack {
-            Map(position: weather.binding(for: \.region), interactionModes: [.all]) {
+            Map(position: weather.binding(for: \.region), interactionModes: []) {
                 UserAnnotation()
                 Annotation("", coordinate: weather.coordinate, anchor: .topLeading) {
                     VStack {
@@ -138,6 +124,7 @@ struct WeatherView: View {
                 }
             }
             }
+            .allowsHitTesting(false)
         }
     }
 }

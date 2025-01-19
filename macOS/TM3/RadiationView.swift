@@ -7,7 +7,7 @@ struct RadiationView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Radiation at", sensor: viewModel.sensor)
+            HeaderView(label: "Radiation in", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
@@ -16,7 +16,10 @@ struct RadiationView: View {
             }
             FooterView(sensor: viewModel.sensor)
         }
-    }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
+}
 
     func _view() -> some View {
         VStack {
@@ -26,14 +29,14 @@ struct RadiationView: View {
                         x: .value("Date", measurement.timestamp),
                         y: .value("Radiation", measurement.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", measurement.timestamp),
                         y: .value("Radiation", measurement.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
@@ -84,7 +87,7 @@ struct RadiationView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0 ... (viewModel.maxRadiation + 0.25))
+            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value * 1.67))
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())

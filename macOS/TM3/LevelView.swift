@@ -7,7 +7,7 @@ struct LevelView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Water level at", sensor: viewModel.sensor)
+            HeaderView(label: "Water level at the", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
@@ -16,7 +16,10 @@ struct LevelView: View {
             }
             FooterView(sensor: viewModel.sensor)
         }
-    }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
+}
 
     func _view() -> some View {
         VStack {
@@ -26,14 +29,14 @@ struct LevelView: View {
                         x: .value("Date", level.timestamp),
                         y: .value("Level", level.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", level.timestamp),
                         y: .value("Level", level.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
@@ -84,7 +87,7 @@ struct LevelView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0 ... (viewModel.maxLevel + 10))
+            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value * 1.67))
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())

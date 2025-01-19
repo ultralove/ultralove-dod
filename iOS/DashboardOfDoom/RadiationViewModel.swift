@@ -8,8 +8,21 @@ import SwiftUI
     var current: Radiation?
     var timestamp: Date? = nil
 
-    var maxRadiation: Double {
-        return measurements.map({ $0.value.value }).max() ?? 0.0
+    var faceplate: String {
+        if let measurement = current?.value {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalGamma.rawValue):%.3f", measurement.value)
+        }
+        else {
+            return "\(GreekLetters.mathematicalItalicCapitalGamma.rawValue):n/a"
+        }
+    }
+
+    var maxValue: Measurement<UnitRadiation> {
+        return measurements.map({ $0.value }).max() ?? Measurement<UnitRadiation>(value: 0.0, unit: .microsieverts)
+    }
+
+    var minValue: Measurement<UnitRadiation> {
+        return Measurement<UnitRadiation>(value: 0.0, unit: .microsieverts)
         }
 
     var trend: String {

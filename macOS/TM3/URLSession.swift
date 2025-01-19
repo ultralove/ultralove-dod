@@ -18,7 +18,6 @@ extension URLSession {
                 }
             }
         }
-
         throw lastError ?? URLError(.unknown)
     }
 }

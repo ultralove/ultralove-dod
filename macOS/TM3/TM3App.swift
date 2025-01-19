@@ -7,6 +7,7 @@ struct TM3App: App {
     @State var incidenceViewModel = IncidenceViewModel()
     @State var levelViewModel = LevelViewModel()
     @State var radiationViewModel = RadiationViewModel()
+    @State var fascismViewModel = FascismViewModel()
 
     var body: some Scene {
         MenuBarExtra {
@@ -16,6 +17,7 @@ struct TM3App: App {
                 .environment(incidenceViewModel)
                 .environment(levelViewModel)
                 .environment(radiationViewModel)
+                .environment(fascismViewModel)
         } label: {
             Text(weatherViewModel.faceplate)
                 .font(.system(.body, design: .monospaced))

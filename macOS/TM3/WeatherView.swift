@@ -25,11 +25,14 @@ struct WeatherView: View {
             }
             FooterView(sensor: weather.sensor)
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
     }
 
     func _view() -> some View {
         VStack {
-            Map(position: weather.binding(for: \.region), interactionModes: [.all]) {
+            Map(position: weather.binding(for: \.region), interactionModes: []) {
                 UserAnnotation()
                 Annotation("", coordinate: weather.coordinate, anchor: .topLeading) {
                     VStack {
@@ -121,6 +124,7 @@ struct WeatherView: View {
                     }
                 }
             }
+            .allowsHitTesting(false)
         }
     }
 }

@@ -22,19 +22,19 @@ struct ContentView: View {
                     .font(.headline)
                 Spacer()
                 HStack {
-                    Button {
-                        openSettings()
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .imageScale(.large)
-                    }
-                    .buttonStyle(GrowingButton())
-                    .focusable(false)
+//                    Button {
+//                        openSettings()
+//                    } label: {
+//                        Image(systemName: "slider.horizontal.3")
+//                            .imageScale(.large)
+//                    }
+//                    .buttonStyle(GrowingButton())
+//                    .focusable(false)
                     Button {
                         NSApplication.shared.terminate(nil)
                     } label: {
-                        Image(systemName: "power")
-                            .imageScale(.medium)
+                        Image(systemName: "ellipsis.circle")
+                            .imageScale(.large)
                     }
                     .buttonStyle(GrowingButton())
                     .focusable(false)
@@ -45,19 +45,28 @@ struct ContentView: View {
             ScrollView {
                 VStack {
                     WeatherView()
-                        .padding()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .frame(height: 500)
                     ForecastView()
-                        .padding()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .frame(height: 200)
                     IncidenceView()
-                        .padding()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .frame(height: 200)
                     LevelView()
-                        .padding()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .frame(height: 200)
                     RadiationView()
-                        .padding()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
+                        .frame(height: 200)
+                    FascismView()
+                        .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .frame(height: 200)
                 }
             }

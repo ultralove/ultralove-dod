@@ -8,8 +8,22 @@ import SwiftUI
     var current: Level?
     var timestamp: Date? = nil
 
-    var maxLevel: Double {
-        return measurements.map({ $0.value.value }).max() ?? 0.0
+    var faceplate: String {
+        if let measurement = current?.value {
+            return String(format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
+                          measurement.value, measurement.unit.symbol)
+        }
+        else {
+            return "\(GreekLetters.levelLeft.rawValue)n/a\(GreekLetters.levelRight.rawValue)"
+        }
+    }
+
+    var maxValue: Measurement<UnitLength> {
+        return measurements.map({ $0.value }).max() ?? Measurement<UnitLength>(value: 0, unit: .meters)
+    }
+
+    var minValue: Measurement<UnitLength> {
+        return Measurement<UnitLength>(value: 0, unit: .meters)
     }
 
     var trend: String {

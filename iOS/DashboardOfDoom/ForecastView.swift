@@ -7,31 +7,18 @@ struct ForecastView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text("Weather forecast:")
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-                }
-                .font(.footnote)
-            }
+            HeaderView(label: "Temperature (actual) forecast for", sensor: viewModel.sensor)
         if viewModel.timestamp == nil {
             ActivityIndicator()
         }
         else {
             _view()
         }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: viewModel.sensor)
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
     }
 
     func _view() -> some View {
@@ -39,29 +26,29 @@ struct ForecastView: View {
             Chart {
                 ForEach(viewModel.measurements) { forecast in
                     LineMark(
-                        x: .value("Date", forecast.timestamp.nearestHour() ?? Date.now),
+                        x: .value("Date", Date.roundToPreviousHour(from: forecast.timestamp) ?? Date.now),
                         y: .value("Temperature", forecast.temperature.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(.blue.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
-                        x: .value("Date", forecast.timestamp.nearestHour() ?? Date.now),
-                        yStart: .value("Temperature", -20),
+                        x: .value("Date", Date.roundToPreviousHour(from: forecast.timestamp) ?? Date.now),
+                        yStart: .value("Temperature", viewModel.minValue.value),
                         yEnd: .value("Temperature", forecast.temperature.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let currentDate = Date.now.nextNearestHour(),
-                    let currentTemperature = viewModel.measurements.first(where: { $0.timestamp == currentDate })?.temperature
+                if let currentDate = Date.roundToNextHour(from: Date.now),
+                    let currentTemperature = viewModel.measurements.first(where: { $0.timestamp == currentDate })
                 {
                     RuleMark(x: .value("Date", currentDate))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentDate),
-                        y: .value("Temperature", currentTemperature.value)
+                        y: .value("Temperature", currentTemperature.temperature.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -69,26 +56,22 @@ struct ForecastView: View {
                             Text(String(format: "%@ %@", currentDate.dateString(), currentDate.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.1f%@", currentTemperature.value, currentTemperature.unit.symbol))
+                                Text(String(format: "%.1f%@", currentTemperature.temperature.value, currentTemperature.temperature.unit.symbol))
                                 Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .opacity(0.125)
-                        )
-                        .foregroundStyle(.black)
+                        .qualityCode(qualityCode: currentTemperature.quality)
                     }
                 }
-                if let selectedDate, let selectedTemperature = viewModel.measurements.first(where: { $0.timestamp == selectedDate })?.temperature {
-                    RuleMark(x: .value("Date", selectedDate.nearestHour() ?? Date.now))
+                if let selectedDate, let selectedTemperature = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
+                    RuleMark(x: .value("Date", Date.roundToPreviousHour(from: selectedDate) ?? Date.now))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", selectedDate),
-                        y: .value("Temperature", selectedTemperature.value)
+                        y: .value("Temperature", selectedTemperature.temperature.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .bottomTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
@@ -96,21 +79,17 @@ struct ForecastView: View {
                             Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.1f%@", selectedTemperature.value, selectedTemperature.unit.symbol))
+                                Text(String(format: "%.1f%@", selectedTemperature.temperature.value, selectedTemperature.temperature.unit.symbol))
                                     .font(.headline)
                             }
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .opacity(0.125)
-                        )
-                        .foregroundStyle(.black)
+                        .qualityCode(qualityCode: selectedTemperature.quality)
                     }
                 }
             }
-            .chartYScale(domain: -20 ... 50)
+            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value + 10))
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())
@@ -119,7 +98,7 @@ struct ForecastView: View {
                                 .onChanged { value in
                                     if let plotFrame = geometryProxy.plotFrame {
                                         let x = value.location.x - geometryReader[plotFrame].origin.x
-                                        if let date: Date = geometryProxy.value(atX: x), let roundedHour = date.nearestHour() {
+                                    if let date: Date = geometryProxy.value(atX: x), let roundedHour = Date.roundToPreviousHour(from: date) {
                                             self.selectedDate = roundedHour
                                         }
                                     }

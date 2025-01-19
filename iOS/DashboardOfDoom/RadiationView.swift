@@ -7,31 +7,18 @@ struct RadiationView: View {
 
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text(String(format: "Radiation at %@:", viewModel.sensor?.id ?? "<Unknown>"))
-                Spacer()
-                HStack {
-                    Image(systemName: "globe")
-                    Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
-                        .foregroundColor(.blue)
-                        .underline()
-                        .onTapGesture {
-                        }
-                }
-                .font(.footnote)
-            }
+            HeaderView(label: "Radiation in", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
             ActivityIndicator()
         }
         else {
             _view()
         }
-            HStack {
-                Text("Last update: \(Date.absoluteString(date: viewModel.sensor?.timestamp))")
-                    .font(.footnote)
-                Spacer()
-            }
+            FooterView(sensor: viewModel.sensor)
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
     }
 
     func _view() -> some View {
@@ -42,14 +29,14 @@ struct RadiationView: View {
                         x: .value("Date", measurement.timestamp),
                         y: .value("Radiation", measurement.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", measurement.timestamp),
                         y: .value("Radiation", measurement.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
@@ -100,7 +87,7 @@ struct RadiationView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0 ... (viewModel.maxRadiation + 0.25))
+            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value * 1.67))
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())

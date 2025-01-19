@@ -48,16 +48,7 @@ class IncidenceController {
 
     private func fetchDistrict(for location: Location) async throws -> District? {
         var nearestDistrict: District? = nil
-        let query =
-            """
-            [out:json][timeout:100];
-            relation(around:30000,\(location.latitude),\(location.longitude))["boundary"="administrative"]["admin_level"~"4|6|9"];
-            out center tags;
-            """
-        guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
-            return nil
-        }
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        if let data = try await OSMAPI.fetchDistricts(for: location) {
         if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
             var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
             for candidateDistrict in candidateDistricts {
@@ -68,10 +59,10 @@ class IncidenceController {
                     nearestDistrict = candidateDistrict
                 }
             }
+            }
+        }
             return nearestDistrict
         }
-        return nil
-    }
 
     static private func parseIncidence(data: Data, district: District) throws -> ([Incidence], String)? {
         var result: ([Incidence], String)? = nil
@@ -103,10 +94,10 @@ class IncidenceController {
         }
 
     private func fetchIncidence(for district: District) async throws -> ([Incidence], String)? {
-        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(district.id)/history/incidence/100") else {
-        return nil
+        var incidence: ([Incidence], String)? = nil
+        if let data = try await RKIAPI.fetchIncidence(id: district.id) {
+            incidence = try Self.parseIncidence(data: data, district: district)
     }
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        return try Self.parseIncidence(data: data, district: district)
+        return incidence
     }
 }

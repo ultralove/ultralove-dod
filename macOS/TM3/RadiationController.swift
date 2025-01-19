@@ -8,14 +8,15 @@ struct RadiationStation {
 
 class RadiationController {
     func refreshRadiation(for location: Location) async throws -> RadiationSensor? {
+        var sensor: RadiationSensor? = nil
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let measurements = try await Self.fetchMeasurements(station: nearestStation) {
                 if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
-                    return RadiationSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                    sensor = RadiationSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
                 }
             }
         }
-        return nil
+        return sensor
     }
 
     private static func fetchNearestStation(location: Location) async throws -> RadiationStation? {

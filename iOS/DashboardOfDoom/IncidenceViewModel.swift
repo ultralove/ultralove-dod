@@ -9,19 +9,20 @@ import Foundation
     var timestamp: Date? = nil
 
     var faceplate: String {
-            if let incidence = measurements.first(where: { $0.timestamp == Date.roundToLastDayChange(from: Date.now) })?.value.value {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", incidence)
+        if let measurement = current?.value {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", measurement.value)
         }
+        else {
         return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
     }
+    }
 
-    var maxIncidence: Measurement<UnitIncidence> {
-        if let maxValue = measurements.map({ $0.value }).max() {
-            return maxValue * 1.33
-            }
-            else {
-            return Measurement<UnitIncidence>(value: 100.0, unit: .casesper100k)
+    var maxValue: Measurement<UnitIncidence> {
+        return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
         }
+
+    var minValue: Measurement<UnitIncidence> {
+        return Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
     }
 
     var trend: String {

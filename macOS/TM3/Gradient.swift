@@ -6,6 +6,11 @@ extension Gradient {
         startPoint: .top,
         endPoint: .bottom)
 
+    static let fascist = LinearGradient(
+        gradient: Gradient(colors: [Color.brown.opacity(1.0), Color.brown.opacity(0.33)]),
+        startPoint: .top,
+        endPoint: .bottom)
+
     static let rainbow = LinearGradient(
         stops: [
             Gradient.Stop(color: .blue, location: 0),

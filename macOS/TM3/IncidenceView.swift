@@ -21,6 +21,9 @@ struct IncidenceView: View {
             }
             FooterView(sensor: viewModel.sensor)
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(13)
     }
 
     func _view() -> some View {
@@ -31,14 +34,14 @@ struct IncidenceView: View {
                         x: .value("Date", incidence.timestamp),
                         y: .value("Incidence", incidence.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(.gray.opacity(0.0))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", incidence.timestamp),
                         y: .value("Incidence", incidence.value.value)
                     )
-                    .interpolationMethod(.cardinal)
+                    .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
@@ -88,7 +91,7 @@ struct IncidenceView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0 ... viewModel.maxIncidence.value)
+            .chartYScale(domain: viewModel.minValue.value ... viewModel.maxValue.value * 1.33)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())
