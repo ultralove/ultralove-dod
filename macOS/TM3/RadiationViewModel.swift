@@ -49,7 +49,6 @@ import SwiftUI
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-//            self.timestamp = nil
             if let sensor = try await radiationController.refreshRadiation(for: location) {
                 self.sensor = sensor
                 self.measurements = sensor.measurements

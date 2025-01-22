@@ -69,7 +69,7 @@ import SwiftUI
         Self.visibleRegion[id] = location
         for location in Self.visibleRegion.values {
             let mapPoint = MKMapPoint(location.coordinate)
-            let pointRect = MKMapRect(x: mapPoint.x - 100_000, y: mapPoint.y - 100_000, width: 200_000, height: 200_000)
+            let pointRect = MKMapRect(x: mapPoint.x - 125_000, y: mapPoint.y - 125_000, width: 250_000, height: 250_000)
             Self.visibleRectangle = Self.visibleRectangle.union(pointRect)
         }
         self.region = MapCameraPosition.region(MKCoordinateRegion(Self.visibleRectangle))
@@ -87,16 +87,10 @@ import SwiftUI
     }
 
     private func updateRegion() -> Void {
-        if let location = self.location {
-            self.region = MapCameraPosition.region(
-                MKCoordinateRegion(
-                    center: CLLocationCoordinate2D(latitude: location.latitude - 0.005, longitude: location.longitude + 0.0125),
-                    span: MKCoordinateSpan(
-                        latitudeDelta: 0.0167,
-                        longitudeDelta: 0.0167
-                    )
-                )
-            )
+        for location in Self.visibleRegion.values {
+            let mapPoint = MKMapPoint(location.coordinate)
+            let pointRect = MKMapRect(x: mapPoint.x - 100_000, y: mapPoint.y - 100_000, width: 200_000, height: 200_000)
+            Self.visibleRectangle = Self.visibleRectangle.union(pointRect)
         }
     }
 }

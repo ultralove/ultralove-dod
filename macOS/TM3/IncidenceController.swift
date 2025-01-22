@@ -10,9 +10,9 @@ class IncidenceController {
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         var sensor: IncidenceSensor? = nil
         if let district = try await self.fetchDistrict(for: location) {
-            if let (incidence, id) = try await self.fetchIncidence(for: district) {
+            if let incidence = try await self.fetchIncidence(for: district) {
                 if let placemark = await LocationController.reverseGeocodeLocation(location: district.location) {
-                    sensor = IncidenceSensor(id: id, placemark: placemark, location: district.location, measurements: incidence, timestamp: Date.now)
+                    sensor = IncidenceSensor(id: district.name, placemark: placemark, location: district.location, measurements: incidence, timestamp: Date.now)
                 }
             }
         }
@@ -64,28 +64,26 @@ class IncidenceController {
         return nearestDistrict
     }
 
-    static private func parseIncidence(data: Data, district: District) throws -> ([Incidence], String)? {
-        var result: ([Incidence], String)? = nil
+    static private func parseIncidence(data: Data, district: District) throws -> [Incidence]? {
+        var result: [Incidence]? = nil
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let data = json["data"] as? [String: Any] {
                 if let district = data[district.id] as? [String: Any] {
-                    if let name = district["name"] as? String {
-                        if let history = district["history"] as? [[String: Any]] {
-                            var incidence: [Incidence] = []
-                            for entry in history {
-                                if let value = entry["weekIncidence"] as? Double {
-                                    if let dateString = entry["date"] as? String {
-                                        let dateFormatter = DateFormatter()
-                                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                                        dateFormatter.timeZone = TimeZone.current
-                                        if let date = dateFormatter.date(from: dateString) {
-                                            incidence.append(Incidence(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k), quality: .good, timestamp: date))
-                                        }
+                    if let history = district["history"] as? [[String: Any]] {
+                        var incidence: [Incidence] = []
+                        for entry in history {
+                            if let value = entry["weekIncidence"] as? Double {
+                                if let dateString = entry["date"] as? String {
+                                    let dateFormatter = DateFormatter()
+                                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+                                    dateFormatter.timeZone = TimeZone.current
+                                    if let date = dateFormatter.date(from: dateString) {
+                                        incidence.append(Incidence(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k), quality: .good, timestamp: date))
                                     }
                                 }
                             }
-                            result = (incidence, name)
                         }
+                        result = incidence
                     }
                 }
             }
@@ -93,8 +91,8 @@ class IncidenceController {
         return result
     }
 
-    private func fetchIncidence(for district: District) async throws -> ([Incidence], String)? {
-        var incidence: ([Incidence], String)? = nil
+    private func fetchIncidence(for district: District) async throws -> [Incidence]? {
+        var incidence: [Incidence]? = nil
         if let data = try await RKIAPI.fetchIncidence(id: district.id) {
             incidence = try Self.parseIncidence(data: data, district: district)
         }

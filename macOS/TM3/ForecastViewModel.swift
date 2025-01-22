@@ -39,7 +39,6 @@ import SwiftUI
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-            //            self.timestamp = nil
             if let sensor = try await forecastController.refreshForecast(for: location) {
                 self.sensor = sensor
                 self.measurements = Self.sanitizeForecast(measurements: sensor.measurements)
