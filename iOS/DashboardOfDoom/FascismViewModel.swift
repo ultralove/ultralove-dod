@@ -49,7 +49,6 @@ import Foundation
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-//            self.timestamp = nil
             if let sensor = try await fascismController.refreshFascism(for: location) {
                 self.sensor = sensor
                 if let measurements = await Self.sanitizeMeasurements(measurements: sensor.measurements) {

@@ -30,7 +30,6 @@ import SwiftUI
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-//            self.timestamp = nil
             if let sensor = try await weatherController.refreshWeather(for: location) {
                 self.actualTemperature = sensor.measurements.temperature
                 self.apparentTemperature = sensor.measurements.apparentTemperature
@@ -39,6 +38,7 @@ import SwiftUI
                 self.symbol = sensor.measurements.symbol
                 self.sensor = sensor
                 self.timestamp = sensor.timestamp
+                self.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

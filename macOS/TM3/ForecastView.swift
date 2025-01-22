@@ -89,7 +89,7 @@ struct ForecastView: View {
                     }
                 }
             }
-            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value + 10))
+            .chartYScale(domain: viewModel.minValue.value ... viewModel.maxValue.value)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle().fill(.clear).contentShape(Rectangle())

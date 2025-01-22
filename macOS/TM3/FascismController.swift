@@ -116,7 +116,7 @@ class FascismController {
         // 25: WerteUnion
         // 101: Christlich Demokratische Union
         // 102: Christlich-Soziale Union
-        let fascists = [7, 8, 9, 11, 14, 16, 17, 22, 23, 25]
+        let fascists = [1, 7, 8, 9, 11, 14, 16, 17, 22, 23, 25, 101, 102]
         for fascist in fascists {
             if let result = poll.results[fascist] {
                 score += result

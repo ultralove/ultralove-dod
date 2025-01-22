@@ -16,7 +16,7 @@ struct WeatherView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Weather conditions for", sensor: weather.sensor)
+            HeaderView(label: "Environmental conditions for", sensor: weather.sensor)
             if weather.timestamp == nil {
             ActivityIndicator()
         }
@@ -34,38 +34,19 @@ struct WeatherView: View {
         VStack {
             Map(position: weather.binding(for: \.region), interactionModes: []) {
                 UserAnnotation()
-                Annotation("", coordinate: weather.coordinate, anchor: .topLeading) {
+                Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
                     VStack {
-                        HStack {
                             Image(systemName: weather.symbol)
+                            .font(.largeTitle)
                             Text(String(format: "%.1f%@", weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
-                            Spacer()
-                        }
-                        .font(.title)
-                        HStack {
-                            Text("Feels like:")
-                            Spacer()
-                            Text(String(format: "%.1f%@", weather.apparentTemperature?.value ?? Double.nan, weather.apparentTemperature?.unit.symbol ?? ""))
-                        }
-                        .font(.footnote)
-                        HStack {
-                            Text("Humidity:")
-                            Spacer()
-                            Text(String(format: "%.1f%%", weather.humidity * 100))
-                        }
-                        .font(.footnote)
-                        HStack {
-                            Text("Pressure:")
-                            Spacer()
-                            Text(String(format: "%.1f%@", weather.pressure?.value ?? Double.nan, weather.pressure?.unit.symbol ?? ""))
-                        }
-                        .font(.footnote)
                     }
+                    .frame(width: 57, height: 57)
                     .padding(5)
                     .padding(.horizontal, 5)
                     .background(
                         RoundedRectangle(cornerRadius: 13)
-                            .opacity(0.125)
+                            .fill(.blue)
+                            .opacity(0.33)
                     )
                     .foregroundStyle(.black)
                 }
@@ -75,14 +56,19 @@ struct WeatherView: View {
                             .fill(.blue)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
+                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
                         Image(systemName: "facemask")
-                            .font(.largeTitle)
+                                .font(.title)
+                            Text(incidence.faceplate)
+                        }
+                        .frame(width: 57, height: 57)
                             .padding(5)
                             .padding(.horizontal, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 13)
-                                    .opacity(0.125)
+                                .fill(.blue)
+                                .opacity(0.33)
                             )
                             .foregroundStyle(.black)
                     }
@@ -93,14 +79,19 @@ struct WeatherView: View {
                             .fill(.blue)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("",coordinate: coordinate, anchor: .topLeading) {
+                    Annotation("",coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
                         Image(systemName: "water.waves")
-                            .font(.largeTitle)
+                                .font(.title)
+                            Text(level.faceplate)
+                        }
+                        .frame(width: 57, height: 57)
                             .padding(5)
                             .padding(.horizontal, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 13)
-                                    .opacity(0.125)
+                                .fill(.blue)
+                                .opacity(0.33)
                             )
                             .foregroundStyle(.black)
                     }
@@ -111,14 +102,19 @@ struct WeatherView: View {
                             .fill(.blue)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
+                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
                         Image(systemName: "atom")
-                            .font(.largeTitle)
+                                .font(.title)
+                            Text(radiation.faceplate)
+                        }
+                        .frame(width: 57, height: 57)
                             .padding(5)
                             .padding(.horizontal, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 13)
-                                    .opacity(0.125)
+                                .fill(.blue)
+                                .opacity(0.33)
                             )
                             .foregroundStyle(.black)
                 }

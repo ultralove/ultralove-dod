@@ -49,7 +49,6 @@ import Foundation
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-//            self.timestamp = nil
             if let sensor = try await incidenceController.refreshIncidence(for: location) {
                 self.sensor = sensor
                 self.measurements = sensor.measurements
@@ -62,6 +61,7 @@ import Foundation
 
                 }
                 self.timestamp = sensor.timestamp
+                self.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {
