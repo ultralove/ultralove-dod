@@ -15,7 +15,6 @@ import SwiftUI
     static var visibleRegion: [UUID:Location] = [:]
     static var visibleRectangle = MKMapRect.null
 
-
     var region = MapCameraPosition.region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 54.1318, longitude: 8.8557), span: MKCoordinateSpan(latitudeDelta: 0.0167, longitudeDelta: 0.0167)))
@@ -30,9 +29,18 @@ import SwiftUI
         self.updateInterval = updateInterval
         self.locationController.delegate = self
 
+        // Handle periodic updates
         Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
             if let location = self.location {
-//                self.updateRegion()
+                Task {
+                    await self.refreshData(location: location)
+                }
+            }
+        }
+
+        // Handle wake from sleep
+        NotificationCenter.default.addObserver(forName: NSWorkspace.didWakeNotification, object: NSWorkspace.shared, queue: .main ) { notification in
+            if let location = self.location {
                 Task {
                     await self.refreshData(location: location)
                 }
@@ -60,7 +68,6 @@ import SwiftUI
         if needsUpdate == true {
             self.placemark = await LocationController.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude)
             self.location = location
-//            self.updateRegion()
             await self.refreshData(location: location)
         }
     }
@@ -84,14 +91,6 @@ import SwiftUI
 
     func refreshData(location: Location) async -> Void {
         preconditionFailure("refreshData() must be implemented by subclass")
-    }
-
-    private func updateRegion() -> Void {
-        for location in Self.visibleRegion.values {
-            let mapPoint = MKMapPoint(location.coordinate)
-            let pointRect = MKMapRect(x: mapPoint.x - 100_000, y: mapPoint.y - 100_000, width: 200_000, height: 200_000)
-            Self.visibleRectangle = Self.visibleRectangle.union(pointRect)
-        }
     }
 }
 

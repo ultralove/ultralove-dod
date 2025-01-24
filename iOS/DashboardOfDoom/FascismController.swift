@@ -23,19 +23,48 @@ class FascismController {
 
     func refreshFascism(for location: Location) async throws -> FascismSensor? {
         var sensor: FascismSensor? = nil
+        let sensorName = germany.name
+        let sensorLocation = germany.location
+        let parliamentId = 0  // Bundestag
+        if let data = try await DAWUMAPI.fetchPolls() {
+            if let polls = try await parsePolls(from: data, for: parliamentId) {
+                let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
+                if sortedPolls.count > 0 {
+                    let significantPolls = Array(sortedPolls.reversed())
+                    var measurements: [Fascism] = []
+                    for poll in significantPolls {
+                        let measurement = Measurement<UnitPercentage>(value: computeFascism(from: poll), unit: .percent)
+                        let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        measurements.append(fascism)
+                    }
+                    if measurements.count > 0 {
+                        if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
+                            sensor = FascismSensor(
+                                id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
+                        }
+                    }
+                }
+            }
+        }
+
+        return sensor
+    }
+
+    func refreshLocalFascism(for location: Location) async throws -> FascismSensor? {
+        var sensor: FascismSensor? = nil
         var sensorName = germany.name
         var sensorLocation = germany.location
         var parliamentId = 0  // Bundestag
         if let constituency = try await Self.fetchConstituency(location: location) {
             if let data = try await DAWUMAPI.fetchPolls() {
-//                if let parliaments = try await parseParliaments(from: data) {
-//                    for parliament in parliaments where parliament.name.contains(constituency.name) {
-//                        sensorName = constituency.name
-//                        sensorLocation = constituency.location
-//                        parliamentId = parliament.id
-//                        break
-//                    }
-//                }
+                if let parliaments = try await parseParliaments(from: data) {
+                    for parliament in parliaments where parliament.name.contains(constituency.name) {
+                        sensorName = constituency.name
+                        sensorLocation = constituency.location
+                        parliamentId = parliament.id
+                        break
+                    }
+                }
                 if let polls = try await parsePolls(from: data, for: parliamentId) {
                     let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                     if sortedPolls.count > 0 {
@@ -55,11 +84,10 @@ class FascismController {
                     }
                 }
             }
-
         }
-
         return sensor
     }
+
     private static func parseConstituencies(data: Data) async throws -> [Constituency]? {
         var constituencies: [Constituency]? = nil
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {

@@ -22,14 +22,6 @@ struct ContentView: View {
                     .font(.headline)
                 Spacer()
                 HStack {
-//                    Button {
-//                        openSettings()
-//                    } label: {
-//                        Image(systemName: "slider.horizontal.3")
-//                            .imageScale(.large)
-//                    }
-//                    .buttonStyle(GrowingButton())
-//                    .focusable(false)
                     Button {
                         NSApplication.shared.terminate(nil)
                     } label: {
