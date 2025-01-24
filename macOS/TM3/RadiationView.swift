@@ -37,7 +37,7 @@ struct RadiationView: View {
                         y: .value("Radiation", measurement.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linear)
+                    .foregroundStyle(Gradient.linearBlue)
                 }
 
                 if let currentRadiation = viewModel.current {

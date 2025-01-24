@@ -38,7 +38,7 @@ struct ForecastView: View {
                         yEnd: .value("Temperature", forecast.temperature.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linear)
+                    .foregroundStyle(Gradient.linearBlue)
                 }
 
                 if let currentDate = Date.roundToNextHour(from: Date.now),

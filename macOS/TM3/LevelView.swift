@@ -37,7 +37,7 @@ struct LevelView: View {
                         y: .value("Level", level.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linear)
+                    .foregroundStyle(Gradient.linearBlue)
                 }
 
                 if let currentLevel = viewModel.current {
