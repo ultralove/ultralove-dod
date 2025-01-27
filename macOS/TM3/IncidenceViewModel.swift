@@ -94,7 +94,8 @@ import Foundation
         }
         var forecast: [Incidence] = []
         if let max = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
-            for i in 0 ..< historicalData.count {
+            let valueCount = Int(Double(historicalData.count) * 0.33)
+            for i in 0..<valueCount {
                 if let timestamp = Calendar.current.date(byAdding: .day, value: i + 1, to: max.timestamp) {
                     let value = Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
                     forecast.append(Incidence(value: value, quality: .unknown, timestamp: timestamp))

@@ -17,7 +17,6 @@ struct FascismView: View {
             FooterView(sensor: viewModel.sensor)
         }
         .padding()
-        .background(Color.white)
         .cornerRadius(13)
     }
 
@@ -37,7 +36,7 @@ struct FascismView: View {
                         y: .value("Fascism", measurement.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.fascist)
+                    .foregroundStyle(Gradient.fascists)
                 }
 
                 if let currentValue = viewModel.current {

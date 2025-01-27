@@ -10,8 +10,6 @@ import SwiftUI
     let id = UUID()
 
     var location: Location?
-    var placemark: String?
-
     static var visibleRegion: [UUID:Location] = [:]
     static var visibleRectangle = MKMapRect.null
 
@@ -39,6 +37,7 @@ import SwiftUI
         }
 
         // Handle wake from sleep
+#if os(macOS)
         NotificationCenter.default.addObserver(forName: NSWorkspace.didWakeNotification, object: NSWorkspace.shared, queue: .main ) { notification in
             if let location = self.location {
                 Task {
@@ -46,6 +45,7 @@ import SwiftUI
                 }
             }
         }
+#endif
     }
 
     override convenience init() {
@@ -66,7 +66,6 @@ import SwiftUI
         }
 
         if needsUpdate == true {
-            self.placemark = await LocationController.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude)
             self.location = location
             await self.refreshData(location: location)
         }
@@ -76,7 +75,7 @@ import SwiftUI
         Self.visibleRegion[id] = location
         for location in Self.visibleRegion.values {
             let mapPoint = MKMapPoint(location.coordinate)
-            let pointRect = MKMapRect(x: mapPoint.x - 125_000, y: mapPoint.y - 125_000, width: 250_000, height: 250_000)
+            let pointRect = MKMapRect(x: mapPoint.x - 167_000, y: mapPoint.y - 167_000, width: 333_000, height: 333_000)
             Self.visibleRectangle = Self.visibleRectangle.union(pointRect)
         }
         self.region = MapCameraPosition.region(MKCoordinateRegion(Self.visibleRectangle))
@@ -91,6 +90,12 @@ import SwiftUI
 
     func refreshData(location: Location) async -> Void {
         preconditionFailure("refreshData() must be implemented by subclass")
+    }
+
+    func refreshData() async -> Void {
+        if let location = self.location {
+            await self.refreshData(location: location)
+        }
     }
 }
 

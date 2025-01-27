@@ -14,11 +14,7 @@ class LocationController: NSObject, CLLocationManagerDelegate {
 
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
-#if os(macOS)
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
-#else
-        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
-#endif
         locationManager.startUpdatingLocation()
     }
 
@@ -62,15 +58,6 @@ class LocationController: NSObject, CLLocationManagerDelegate {
         if let name = placemark.name {
             formattedPlacemark += name
         }
-//        if let thoroughfare = placemark.thoroughfare {
-//            if formattedPlacemark.isEmpty == false {
-//                formattedPlacemark += ", "
-//            }
-//            formattedPlacemark += thoroughfare
-//            if let subThoroughfare = placemark.subThoroughfare {
-//                formattedPlacemark += " " + subThoroughfare
-//            }
-//        }
         if let postalCode = placemark.postalCode, let locality = placemark.locality {
             if formattedPlacemark.isEmpty == false {
                 formattedPlacemark += ", "

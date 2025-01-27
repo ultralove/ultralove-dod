@@ -72,7 +72,7 @@ import SwiftUI
     private static func forecast(data: [Level]?) async -> [Level]? {
         guard let data = data, data.count > 0 else { return nil }
         if let latest = data.max(by: { $0.timestamp < $1.timestamp }) {
-            return await Self.initializeForecast(from: latest.timestamp, count: data.count)
+            return await Self.initializeForecast(from: latest.timestamp, count: Int(Double(data.count) * 0.33))
         }
         return nil
     }

@@ -22,7 +22,6 @@ struct IncidenceView: View {
             FooterView(sensor: viewModel.sensor)
         }
         .padding()
-        .background(Color.white)
         .cornerRadius(13)
     }
 
@@ -42,7 +41,7 @@ struct IncidenceView: View {
                         y: .value("Incidence", incidence.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linearBlue)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentIncidence = viewModel.current {

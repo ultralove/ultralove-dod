@@ -8,16 +8,15 @@ struct ForecastView: View {
     var body: some View {
         VStack {
             HeaderView(label: "Temperature (actual) forecast for", sensor: viewModel.sensor)
-        if viewModel.timestamp == nil {
-            ActivityIndicator()
-        }
-        else {
-            _view()
-        }
+            if viewModel.timestamp == nil {
+                ActivityIndicator()
+            }
+            else {
+                _view()
+            }
             FooterView(sensor: viewModel.sensor)
         }
         .padding()
-        .background(Color.white)
         .cornerRadius(13)
     }
 
@@ -38,7 +37,7 @@ struct ForecastView: View {
                         yEnd: .value("Temperature", forecast.temperature.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linearBlue)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentDate = Date.roundToNextHour(from: Date.now),
@@ -56,6 +55,7 @@ struct ForecastView: View {
                             Text(String(format: "%@ %@", currentDate.dateString(), currentDate.timeString()))
                                 .font(.footnote)
                             HStack {
+                                Image(systemName: currentTemperature.symbol)
                                 Text(String(format: "%.1f%@", currentTemperature.temperature.value, currentTemperature.temperature.unit.symbol))
                                 Image(systemName: viewModel.trend)
                             }
@@ -79,6 +79,7 @@ struct ForecastView: View {
                             Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
                             HStack {
+                                Image(systemName: selectedTemperature.symbol)
                                 Text(String(format: "%.1f%@", selectedTemperature.temperature.value, selectedTemperature.temperature.unit.symbol))
                                     .font(.headline)
                             }
@@ -98,7 +99,7 @@ struct ForecastView: View {
                                 .onChanged { value in
                                     if let plotFrame = geometryProxy.plotFrame {
                                         let x = value.location.x - geometryReader[plotFrame].origin.x
-                                    if let date: Date = geometryProxy.value(atX: x), let roundedHour = Date.roundToPreviousHour(from: date) {
+                                        if let date: Date = geometryProxy.value(atX: x), let roundedHour = Date.roundToPreviousHour(from: date) {
                                             self.selectedDate = roundedHour
                                         }
                                     }

@@ -10,7 +10,6 @@ class WeatherController {
                 id: "current location", placemark: placemark, location: location,
                 measurements: Weather(
                 temperature: weather.currentWeather.temperature, apparentTemperature: weather.currentWeather.apparentTemperature,
-                humidity: weather.currentWeather.humidity, pressure: weather.currentWeather.pressure,
                     symbol: weather.currentWeather.symbolName), timestamp: Date.now)
         }
         return nil

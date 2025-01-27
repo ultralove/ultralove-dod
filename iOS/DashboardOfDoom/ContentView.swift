@@ -10,42 +10,62 @@ struct ContentView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     WeatherView()
-                        .padding(.vertical, 5)
-                        .frame(height: 300)
+                        .frame(height: 333)
+                    Divider()
                     ForecastView()
-                        .padding(.vertical, 5)
-                        .frame(height: 200)
+                        .frame(height: 267)
+                    Divider()
                     IncidenceView()
-                        .padding(.vertical, 5)
-                        .frame(height: 200)
+                        .frame(height: 267)
+                    Divider()
                     LevelView()
-                        .padding(.vertical, 5)
-                        .frame(height: 200)
+                        .frame(height: 267)
+                    Divider()
                     RadiationView()
-                        .padding(.vertical, 5)
-                        .padding(.horizontal)
-                        .frame(height: 200)
+                        .frame(height: 267)
+                    Divider()
                     FascismView()
-                        .padding(.vertical, 5)
-                        .padding(.horizontal)
-                        .frame(height: 200)
+                        .frame(height: 267)
                 }
                 .frame(maxWidth: .infinity)
-                .navigationBarTitleDisplayMode(.inline)
+                .ignoresSafeArea()
                 .toolbar {
-                    ToolbarItem(placement: .principal) {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: {}) {
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                    ToolbarItem(placement: .bottomBar) {
                         HStack {
-                            Text(viewModel.placemark ?? "<Unknown>")
-                                .font(.headline)
-                                .lineLimit(1)
+                            Button(action: {}) {
+                                Image(systemName: "map")
+                            }
                             Spacer()
                             Button(action: {}) {
-                                Image(systemName: "gearshape")
+                                Image(systemName: "stethoscope")
+                            }
+                            Spacer()
+                            Button(action: {}) {
+                                Image(systemName: "water.waves")
+                            }
+                            Spacer()
+                            Button(action: {}) {
+                                Image(systemName: "atom")
+                            }
+                            Spacer()
+                            Button(action: {}) {
+                                Image(systemName: "popcorn")
                             }
                         }
                     }
                 }
             }
+            .accentColor(.cyan)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.black, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(.black, for: .bottomBar)
+            .toolbarBackground(.visible, for: .bottomBar)
         }
     }
 }

@@ -42,7 +42,7 @@ struct IncidenceView: View {
                         y: .value("Incidence", incidence.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linearBlue)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentIncidence = viewModel.current {

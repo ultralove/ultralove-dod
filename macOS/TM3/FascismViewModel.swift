@@ -101,7 +101,7 @@ import Foundation
     private static func forecast(data: [Fascism]?) async -> [Fascism]? {
         guard let data = data, data.count > 0 else { return nil }
         if let latest = data.max(by: { $0.timestamp < $1.timestamp }) {
-            return await Self.initializeForecast(from: latest.timestamp, count: Int(Double(data.count) * 0.5))
+            return await Self.initializeForecast(from: latest.timestamp, count: Int(Double(data.count) * 0.33))
         }
         return nil
     }

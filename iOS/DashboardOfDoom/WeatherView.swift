@@ -26,34 +26,39 @@ struct WeatherView: View {
             FooterView(sensor: weather.sensor)
         }
         .padding()
-        .background(Color.white)
         .cornerRadius(13)
     }
 
     func _view() -> some View {
         VStack {
             Map(position: weather.binding(for: \.region), interactionModes: []) {
-                UserAnnotation()
-                Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
-                    VStack {
-                            Image(systemName: weather.symbol)
-                            .font(.largeTitle)
-                            Text(String(format: "%.1f%@", weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
+                if let coordinate = weather.sensor?.location.coordinate {
+                    Annotation("", coordinate: coordinate, anchor: .center) {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 11, height: 11)
                     }
-                    .frame(width: 57, height: 57)
-                    .padding(5)
-                    .padding(.horizontal, 5)
-                    .background(
-                        RoundedRectangle(cornerRadius: 13)
-                            .fill(.blue)
-                            .opacity(0.33)
-                    )
-                    .foregroundStyle(.black)
+                    Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
+                        VStack {
+                            Image(systemName: weather.symbol)
+                                .font(.largeTitle)
+                            Text(String(format: "%.1f%@", weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
+                        }
+                        .frame(width: 57, height: 57)
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(Color.accentColor)
+                                .opacity(0.33)
+                        )
+                        .foregroundStyle(.black)
+                    }
                 }
                 if let coordinate = incidence.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(.blue)
+                            .fill(Color.accentColor)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
@@ -67,7 +72,7 @@ struct WeatherView: View {
                             .padding(.horizontal, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 13)
-                                .fill(.blue)
+                                .fill(Color.accentColor)
                                 .opacity(0.33)
                             )
                             .foregroundStyle(.black)
@@ -76,7 +81,7 @@ struct WeatherView: View {
                 if let coordinate = level.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(.blue)
+                            .fill(Color.accentColor)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("",coordinate: coordinate, anchor: .bottomLeading) {
@@ -90,7 +95,7 @@ struct WeatherView: View {
                             .padding(.horizontal, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 13)
-                                .fill(.blue)
+                                .fill(Color.accentColor)
                                 .opacity(0.33)
                             )
                             .foregroundStyle(.black)
@@ -99,7 +104,7 @@ struct WeatherView: View {
                 if let coordinate = radiation.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(.blue)
+                            .fill(Color.accentColor)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
@@ -113,7 +118,7 @@ struct WeatherView: View {
                             .padding(.horizontal, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 13)
-                                .fill(.blue)
+                                .fill(Color.accentColor)
                                 .opacity(0.33)
                             )
                             .foregroundStyle(.black)

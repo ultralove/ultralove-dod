@@ -17,7 +17,6 @@ struct RadiationView: View {
             FooterView(sensor: viewModel.sensor)
         }
         .padding()
-        .background(Color.white)
         .cornerRadius(13)
     }
 
@@ -37,7 +36,7 @@ struct RadiationView: View {
                         y: .value("Radiation", measurement.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linearBlue)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentRadiation = viewModel.current {

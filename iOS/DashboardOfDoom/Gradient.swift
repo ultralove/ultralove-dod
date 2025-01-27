@@ -1,20 +1,45 @@
 import SwiftUI
 
 extension Gradient {
-    static let linearBlue = LinearGradient(
+
+#if os(iOS)
+    static let linear = LinearGradient(
+        gradient: Gradient(colors: [Color.accentColor.opacity(0.67), Color.accentColor.opacity(0.0)]),
+        startPoint: .top,
+        endPoint: .bottom)
+
+    static let fascists = LinearGradient(
+        gradient: Gradient(colors: [
+            Color(red: 0.4, green: 0.2, blue: 0.1),
+            Color(red: 0.3, green: 0.15, blue: 0.05)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    static let clowns = LinearGradient(
+        gradient: Gradient(colors: [
+            Color(red: 0.8, green: 0.6, blue: 0.0),
+            Color(red: 0.6, green: 0.4, blue: 0.0)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+#else
+    static let linear = LinearGradient(
         gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
         startPoint: .top,
         endPoint: .bottom)
 
-    static let linearBlack = LinearGradient(
-        gradient: Gradient(colors: [Color.black.opacity(0.66), Color.black.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
-    static let fascist = LinearGradient(
+    static let fascists = LinearGradient(
         gradient: Gradient(colors: [Color.brown.opacity(1.0), Color.brown.opacity(0.33)]),
         startPoint: .top,
         endPoint: .bottom)
+
+    static let clowns = LinearGradient(
+        gradient: Gradient(colors: [Color.yellow.opacity(1.0), Color.yellow.opacity(0.33)]),
+        startPoint: .top,
+        endPoint: .bottom)
+#endif
 
     static let rainbow = LinearGradient(
         stops: [

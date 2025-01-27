@@ -30,10 +30,10 @@ class FascismController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.reversed())
+                    let significantPolls = Array(sortedPolls.prefix(33).reversed())
                     var measurements: [Fascism] = []
                     for poll in significantPolls {
-                        let measurement = Measurement<UnitPercentage>(value: computeFascism(from: poll), unit: .percent)
+                        let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
                         let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         measurements.append(fascism)
                     }
@@ -71,7 +71,7 @@ class FascismController {
                         let significantPolls = Array(sortedPolls.reversed())
                         var measurements: [Fascism] = []
                         for poll in significantPolls {
-                            let measurement = Measurement<UnitPercentage>(value: computeFascism(from: poll), unit: .percent)
+                            let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
                             let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                             measurements.append(fascism)
                         }
@@ -129,7 +129,7 @@ class FascismController {
         return nearestConstituency
     }
 
-    func computeFascism(from poll: Poll) -> Double {
+    func computeFascismShare(from poll: Poll) -> Double {
         var score = 0.0
         //  1: Christlich Demokratische Union / Christlich-Soziale Union
         //  7: Alternative für Deutschland
@@ -138,15 +138,33 @@ class FascismController {
         // 11: Bayernpartei e.V.
         // 14: Brandenburger Vereinigte Bürgerbewegungen/Freie Wähler
         // 16: Bürger in Wut
-        // 17: Familienpartei Deutschlands
         // 22: Bürger für Thüringen
         // 23: Bündnis Sahra Wagenknecht
         // 25: WerteUnion
         // 101: Christlich Demokratische Union
         // 102: Christlich-Soziale Union
-        let fascists = [1, 7, 8, 9, 11, 14, 16, 17, 22, 23, 25, 101, 102]
+        let officialFascists = [7, 9, 11, 14, 16, 22, 25]
+//        let realFascists = [1, 7, 8, 9, 11, 14, 16, 22, 23, 25, 101, 102]
+        let fascists = officialFascists
         for fascist in fascists {
             if let result = poll.results[fascist] {
+                score += result
+            }
+        }
+        return score
+    }
+
+    func computeClownShare(from poll: Poll) -> Double {
+        var score = 0.0
+        //  3: Freie Demokratische Partei
+        //  8: Freie Wähler
+        // 18: Volt Deutschland
+        // 23: Bündnis Sahra Wagenknecht
+        let officialClowns = [3]
+//        let realClowns = [3, 8, 18, 23]
+        let clowns = officialClowns
+        for clown in clowns {
+            if let result = poll.results[clown] {
                 score += result
             }
         }

@@ -57,7 +57,7 @@ import SwiftUI
             let quality = (measurement.timestamp < Date.now) ? QualityCode.good : QualityCode.uncertain
             sanitizedForecast.append(
                     Forecast(temperature: measurement.temperature, apparentTemperature: measurement.apparentTemperature,
-                             quality: quality, timestamp: measurement.timestamp))
+                             symbol: measurement.symbol, quality: quality, timestamp: measurement.timestamp))
         }
         return sanitizedForecast
     }

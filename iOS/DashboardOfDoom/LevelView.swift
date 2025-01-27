@@ -17,7 +17,6 @@ struct LevelView: View {
             FooterView(sensor: viewModel.sensor)
         }
         .padding()
-        .background(Color.white)
         .cornerRadius(13)
     }
 
@@ -37,7 +36,7 @@ struct LevelView: View {
                         y: .value("Level", level.value.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linearBlue)
+                    .foregroundStyle(Gradient.linear)
                 }
 
                 if let currentLevel = viewModel.current {
