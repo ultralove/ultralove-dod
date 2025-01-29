@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4282FC3B2D47803100309E3F /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 4282FC3A2D47803100309E3F /* GRDB */; };
 		42C9FDDC2CBC6471006ED565 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 42C9FDDB2CBC6471006ED565 /* LaunchAtLogin */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				42C9FDDC2CBC6471006ED565 /* LaunchAtLogin in Frameworks */,
+				4282FC3B2D47803100309E3F /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = TM3;
 			packageProductDependencies = (
 				42C9FDDB2CBC6471006ED565 /* LaunchAtLogin */,
+				4282FC3A2D47803100309E3F /* GRDB */,
 			);
 			productName = TM3;
 			productReference = 42564B402C835480001F465D /* TM3.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				42C9FDDA2CBC6471006ED565 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
+				4282FC392D47803100309E3F /* XCRemoteSwiftPackageReference "GRDB.swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 42564B412C835480001F465D /* Products */;
@@ -344,6 +348,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		4282FC392D47803100309E3F /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		42C9FDDA2CBC6471006ED565 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
@@ -355,6 +367,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4282FC3A2D47803100309E3F /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4282FC392D47803100309E3F /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
 		42C9FDDB2CBC6471006ED565 /* LaunchAtLogin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 42C9FDDA2CBC6471006ED565 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;

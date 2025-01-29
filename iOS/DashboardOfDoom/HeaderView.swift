@@ -30,8 +30,14 @@ struct HeaderView: View {
             #else
             VStack() {
                 HStack {
-                    Text(String(format: "%@ %@:", label, sensor?.id ?? "<Unknown>"))
-                        .font(.headline)
+                    if let id = sensor?.id {
+                        Text(String(format: "%@ %@:", label, id))
+                            .font(.headline)
+                    }
+                    else {
+                        Text(String(format: "%@:", label))
+                            .font(.headline)
+                    }
                     Spacer()
                 }
                 HStack {

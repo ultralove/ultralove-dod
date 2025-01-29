@@ -28,13 +28,7 @@ struct ContentView: View {
                         .frame(height: 267)
                 }
                 .frame(maxWidth: .infinity)
-                .ignoresSafeArea()
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(action: {}) {
-                            Image(systemName: "gearshape")
-                        }
-                    }
                     ToolbarItem(placement: .bottomBar) {
                         HStack {
                             Button(action: {}) {
@@ -56,16 +50,25 @@ struct ContentView: View {
                             Button(action: {}) {
                                 Image(systemName: "popcorn")
                             }
+                            Spacer()
+                            Button(action: {}) {
+                                Image(systemName: "ellipsis.circle")
+                            }
                         }
                     }
                 }
             }
-            .accentColor(.cyan)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.black, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(.black, for: .bottomBar)
+            .toolbar(.hidden, for: .navigationBar)
             .toolbarBackground(.visible, for: .bottomBar)
+            .toolbarBackground(
+                Color(
+                    uiColor: UIColor { traitCollection in
+                        traitCollection.userInterfaceStyle == .dark ? .black : .white
+                    }), for: .bottomBar
+            )
+            .refreshable {
+                await viewModel.refreshData()
+            }
         }
     }
 }

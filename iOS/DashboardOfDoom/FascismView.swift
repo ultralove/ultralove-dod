@@ -7,7 +7,7 @@ struct FascismView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Fascist vote share in", sensor: viewModel.sensor)
+            HeaderView(label: "Fascists vote share in", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }

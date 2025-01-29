@@ -143,9 +143,9 @@ class FascismController {
         // 25: WerteUnion
         // 101: Christlich Demokratische Union
         // 102: Christlich-Soziale Union
-        let officialFascists = [7, 9, 11, 14, 16, 22, 25]
-//        let realFascists = [1, 7, 8, 9, 11, 14, 16, 22, 23, 25, 101, 102]
-        let fascists = officialFascists
+//        let officialFascists = [7, 9, 11, 14, 16, 22, 25]
+        let realFascists = [1, 7, 8, 9, 11, 14, 16, 22, 23, 25, 101, 102]
+        let fascists = realFascists
         for fascist in fascists {
             if let result = poll.results[fascist] {
                 score += result
@@ -159,7 +159,6 @@ class FascismController {
         //  3: Freie Demokratische Partei
         //  8: Freie Wähler
         // 18: Volt Deutschland
-        // 23: Bündnis Sahra Wagenknecht
         let officialClowns = [3]
 //        let realClowns = [3, 8, 18, 23]
         let clowns = officialClowns

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct GeneralSettingsView: View {
-    @AppStorage("startAtLogin") private var startAtLogin = false
+//    @AppStorage("startAtLogin") private var startAtLogin = false
 
     var body: some View {
         Form {
@@ -81,15 +81,18 @@ struct SettingsView: View {
             Tab("Weather", systemImage: "cloud.sun") {
                 WeatherSettingsView()
             }
-            Tab("COVID-19", systemImage: "facemask") {
+            Tab("COVID-19", systemImage: "stethoscope") {
                 IncidenceSettingsView()
             }
-            Tab("Radiation", systemImage: "bonjour") {
+            Tab("Water Level", systemImage: "water.waves") {
                 RadiationSettingsView()
             }
-//            Tab("Radiation", systemImage: "stethoscope") {
-//                RadiationSettingsView()
-//            }
+            Tab("Radiation", systemImage: "atom") {
+                RadiationSettingsView()
+            }
+            Tab("Fascism", systemImage: "popcorn") {
+                RadiationSettingsView()
+            }
             Tab("About", systemImage: "info.bubble") {
                 AboutView()
             }

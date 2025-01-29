@@ -2,44 +2,57 @@ import SwiftUI
 
 extension Gradient {
 
-#if os(iOS)
+    #if os(iOS)
     static let linear = LinearGradient(
-        gradient: Gradient(colors: [Color.accentColor.opacity(0.67), Color.accentColor.opacity(0.0)]),
+        gradient: Gradient(colors: [
+            Color.accentColor.opacity(0.67),
+            Color.accentColor.opacity(0.0)
+        ]),
         startPoint: .top,
         endPoint: .bottom)
 
     static let fascists = LinearGradient(
         gradient: Gradient(colors: [
-            Color(red: 0.4, green: 0.2, blue: 0.1),
-            Color(red: 0.3, green: 0.15, blue: 0.05)
+            Color(red: 0.4, green: 0.2, blue: 0.1).opacity(1.0),
+            Color(red: 0.4, green: 0.2, blue: 0.1).opacity(0.33)
         ]),
         startPoint: .top,
         endPoint: .bottom
     )
+
     static let clowns = LinearGradient(
         gradient: Gradient(colors: [
-            Color(red: 0.8, green: 0.6, blue: 0.0),
-            Color(red: 0.6, green: 0.4, blue: 0.0)
+            Color(red: 0.8, green: 0.6, blue: 0.0).opacity(1.0),
+            Color(red: 0.8, green: 0.6, blue: 0.0).opacity(0.33)
         ]),
         startPoint: .top,
         endPoint: .bottom
     )
-#else
+    #else
     static let linear = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
+        gradient: Gradient(colors: [
+            Color.blue.opacity(0.66),
+            Color.blue.opacity(0.0)
+        ]),
         startPoint: .top,
         endPoint: .bottom)
 
     static let fascists = LinearGradient(
-        gradient: Gradient(colors: [Color.brown.opacity(1.0), Color.brown.opacity(0.33)]),
+        gradient: Gradient(colors: [
+            Color.brown.opacity(1.0),
+            Color.brown.opacity(0.33)
+        ]),
         startPoint: .top,
         endPoint: .bottom)
 
     static let clowns = LinearGradient(
-        gradient: Gradient(colors: [Color.yellow.opacity(1.0), Color.yellow.opacity(0.33)]),
+        gradient: Gradient(colors: [
+            Color.yellow.opacity(1.0),
+            Color.yellow.opacity(0.33)
+        ]),
         startPoint: .top,
         endPoint: .bottom)
-#endif
+    #endif
 
     static let rainbow = LinearGradient(
         stops: [

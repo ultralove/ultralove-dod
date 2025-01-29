@@ -7,7 +7,7 @@ struct ForecastView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Temperature (actual) forecast for", sensor: viewModel.sensor)
+            HeaderView(label: "Temperature forecast (actual)", sensor: viewModel.sensor)
             if viewModel.timestamp == nil {
                 ActivityIndicator()
             }

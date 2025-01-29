@@ -12,6 +12,7 @@ struct DashboardOfDoomApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark) 
                 .environment(weatherViewModel)
                 .environment(forecastViewModel)
                 .environment(incidenceViewModel)

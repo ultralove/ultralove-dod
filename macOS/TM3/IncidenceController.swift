@@ -93,7 +93,7 @@ class IncidenceController {
 
     private func fetchIncidence(for district: District) async throws -> [Incidence]? {
         var incidence: [Incidence]? = nil
-        if let data = try await RKIAPI.fetchIncidence(id: district.id) {
+        if let data = try await RKIAPI.fetchIncidence(id: district.id, count: 100) {
             incidence = try Self.parseIncidence(data: data, district: district)
         }
         return incidence
