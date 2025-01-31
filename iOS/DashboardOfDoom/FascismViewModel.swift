@@ -51,7 +51,7 @@ import Foundation
         do {
             if let sensor = try await fascismController.refreshFascism(for: location) {
                 self.sensor = sensor
-                if let measurements = await Self.sanitizeMeasurements(measurements: sensor.measurements) {
+                if let measurements = await Self.sanitizeMeasurements(measurements: sensor.measurements["fascism"] ?? []) {
                     self.measurements = measurements
                     if let current = self.measurements.max(by: { $0.timestamp < $1.timestamp }) {
                         self.current = current

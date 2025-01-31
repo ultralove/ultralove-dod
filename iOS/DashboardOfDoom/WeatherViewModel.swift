@@ -6,8 +6,6 @@ import SwiftUI
 
     var actualTemperature: Measurement<UnitTemperature>?
     var apparentTemperature: Measurement<UnitTemperature>?
-    var humidity: Double = 0.0
-    var pressure: Measurement<UnitPressure>?
 
     var sensor: WeatherSensor?
     var symbol: String = "questionmark.circle"

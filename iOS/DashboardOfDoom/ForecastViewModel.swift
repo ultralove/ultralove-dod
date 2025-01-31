@@ -9,7 +9,7 @@ import SwiftUI
 
     var maxValue: Measurement<UnitTemperature> {
         return Measurement<UnitTemperature>(value: 47.0, unit: .celsius)
-        }
+    }
 
     var minValue: Measurement<UnitTemperature> {
         return Measurement<UnitTemperature>(value: -20.0, unit: .celsius)

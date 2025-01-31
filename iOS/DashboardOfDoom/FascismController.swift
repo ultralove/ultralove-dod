@@ -31,17 +31,32 @@ class FascismController {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(33).reversed())
-                    var measurements: [Fascism] = []
+                    var measurements: [String:[Fascism]] = [:]
+
+                    var values: [Fascism] = []
                     for poll in significantPolls {
                         let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
                         let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
-                        measurements.append(fascism)
+                        values.append(fascism)
                     }
-                    if measurements.count > 0 {
-                        if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
-                            sensor = FascismSensor(
-                                id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
-                        }
+                    if values.count > 0 {
+                        measurements["fascism"] = values
+                    }
+
+                    values.removeAll(keepingCapacity: true)
+                    for poll in significantPolls {
+                        let measurement = Measurement<UnitPercentage>(value: computeClownShare(from: poll), unit: .percent)
+                        let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        values.append(fascism)
+                    }
+
+                    if values.count > 0 {
+                        measurements["clowns"] = values
+                    }
+
+                    if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
+                        sensor = FascismSensor(
+                            id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
                     }
                 }
             }
@@ -50,43 +65,43 @@ class FascismController {
         return sensor
     }
 
-    func refreshLocalFascism(for location: Location) async throws -> FascismSensor? {
-        var sensor: FascismSensor? = nil
-        var sensorName = germany.name
-        var sensorLocation = germany.location
-        var parliamentId = 0  // Bundestag
-        if let constituency = try await Self.fetchConstituency(location: location) {
-            if let data = try await DAWUMAPI.fetchPolls() {
-                if let parliaments = try await parseParliaments(from: data) {
-                    for parliament in parliaments where parliament.name.contains(constituency.name) {
-                        sensorName = constituency.name
-                        sensorLocation = constituency.location
-                        parliamentId = parliament.id
-                        break
-                    }
-                }
-                if let polls = try await parsePolls(from: data, for: parliamentId) {
-                    let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
-                    if sortedPolls.count > 0 {
-                        let significantPolls = Array(sortedPolls.reversed())
-                        var measurements: [Fascism] = []
-                        for poll in significantPolls {
-                            let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
-                            let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
-                            measurements.append(fascism)
-                        }
-                        if measurements.count > 0 {
-                            if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
-                                sensor = FascismSensor(
-                                    id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return sensor
-    }
+//    func refreshLocalFascism(for location: Location) async throws -> FascismSensor? {
+//        var sensor: FascismSensor? = nil
+//        var sensorName = germany.name
+//        var sensorLocation = germany.location
+//        var parliamentId = 0  // Bundestag
+//        if let constituency = try await Self.fetchConstituency(location: location) {
+//            if let data = try await DAWUMAPI.fetchPolls() {
+//                if let parliaments = try await parseParliaments(from: data) {
+//                    for parliament in parliaments where parliament.name.contains(constituency.name) {
+//                        sensorName = constituency.name
+//                        sensorLocation = constituency.location
+//                        parliamentId = parliament.id
+//                        break
+//                    }
+//                }
+//                if let polls = try await parsePolls(from: data, for: parliamentId) {
+//                    let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
+//                    if sortedPolls.count > 0 {
+//                        let significantPolls = Array(sortedPolls.reversed())
+//                        var measurements: [Fascism] = []
+//                        for poll in significantPolls {
+//                            let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
+//                            let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+//                            measurements.append(fascism)
+//                        }
+//                        if measurements.count > 0 {
+//                            if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
+//                                sensor = FascismSensor(
+//                                    id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return sensor
+//    }
 
     private static func parseConstituencies(data: Data) async throws -> [Constituency]? {
         var constituencies: [Constituency]? = nil

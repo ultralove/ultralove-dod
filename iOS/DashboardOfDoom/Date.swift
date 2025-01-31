@@ -124,10 +124,13 @@ extension Date {
         components.second = 0 // Reset seconds to zero
 
         // Handle day rollover
-        if components.hour == 23 {
+        if components.hour == 24 {
             components.hour = 0
             if let nextDay = calendar.date(byAdding: .day, value: 1, to: date) {
-                components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: nextDay)
+                let nextComponents = calendar.dateComponents([.year, .month, .day], from: nextDay)
+                components.year = nextComponents.year
+                components.month = nextComponents.month
+                components.day = nextComponents.day
             }
         }
 
