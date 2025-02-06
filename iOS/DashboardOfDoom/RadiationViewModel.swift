@@ -5,16 +5,13 @@ import SwiftUI
 
     var sensor: RadiationSensor?
     var measurements: [Radiation] = []
-    var current: Radiation?
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let measurement = current?.value {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalGamma.rawValue):%.3f", measurement.value)
-        }
-        else {
+        guard let measurement = current?.value else {
             return "\(GreekLetters.mathematicalItalicCapitalGamma.rawValue):n/a"
         }
+        return String(format: "\(GreekLetters.mathematicalBoldCapitalGamma.rawValue):%.3f", measurement.value)
     }
 
     var maxValue: Measurement<UnitRadiation> {
@@ -23,24 +20,26 @@ import SwiftUI
 
     var minValue: Measurement<UnitRadiation> {
         return Measurement<UnitRadiation>(value: 0.0, unit: .microsieverts)
-        }
+    }
+
+    var current: Radiation? {
+        return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) } )
+    }
 
     var trend: String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.roundToLastDayChange(from: Date.now) {
-            if let currentRadiation = measurements.first(where: { $0.timestamp == currentDate })?.value.value {
-                if let nextDate = Date.roundToLastDayChange(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
-                    if let nextRadiation = measurements.first(where: { $0.timestamp == nextDate })?.value.value {
-                        if currentRadiation > nextRadiation {
-                            symbol = "arrow.down.forward.circle"
-                        }
-                        else if currentRadiation < nextRadiation {
-                            symbol = "arrow.up.forward.circle"
-                        }
-                        else {
-                            symbol = "arrow.right.circle"
-                        }
-                    }
+        if let currentRadiation =  self.current {
+            if let previousRadiation = measurements.last(where: { $0.timestamp < currentRadiation.timestamp }) {
+                let currentValue = currentRadiation.value
+                let previousValue = previousRadiation.value
+                if currentValue < previousValue {
+                    symbol = "arrow.down.forward.circle"
+                }
+                else if currentValue > previousValue {
+                    symbol = "arrow.up.forward.circle"
+                }
+                else {
+                    symbol = "arrow.right.circle"
                 }
             }
         }
@@ -51,12 +50,9 @@ import SwiftUI
         do {
             if let sensor = try await radiationController.refreshRadiation(for: location) {
                 self.sensor = sensor
-                self.measurements = sensor.measurements
-                if let current = self.measurements.max(by: { $0.timestamp < $1.timestamp }) {
-                    self.current = current
-                    if let forecast = await Self.forecast(data: self.measurements) {
-                        self.measurements.append(contentsOf: forecast)
-                    }
+                self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
+                if let forecast = await Self.forecast(data: self.measurements) {
+                    self.measurements.append(contentsOf: forecast)
                 }
                 self.timestamp = sensor.timestamp
                 self.updateRegion(for: self.id, with: sensor.location)

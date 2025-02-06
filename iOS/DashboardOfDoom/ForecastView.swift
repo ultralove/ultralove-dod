@@ -32,7 +32,6 @@ struct ForecastView: View {
 
     var body: some View {
         VStack {
-//            HeaderView(label: "Temperature forecast (actual)", sensor: viewModel.sensor)
             HeaderView(label: header, sensor: viewModel.sensor)
             if viewModel.timestamp == nil {
                 ActivityIndicator()
@@ -52,7 +51,7 @@ struct ForecastView: View {
                 ForEach(viewModel.measurements) { forecast in
                     LineMark(
                         x: .value("Date", Date.roundToPreviousHour(from: forecast.timestamp) ?? Date.now),
-                        y: .value("Temperature", forecast.temperature.value)
+                        y: .value("Temperature", selectValue(type, from: forecast))
                     )
                     .interpolationMethod(.catmullRom)
                     .foregroundStyle(.blue.opacity(0.0))
@@ -60,7 +59,7 @@ struct ForecastView: View {
                     AreaMark(
                         x: .value("Date", Date.roundToPreviousHour(from: forecast.timestamp) ?? Date.now),
                         yStart: .value("Temperature", viewModel.minValue.value),
-                        yEnd: .value("Temperature", forecast.temperature.value)
+                        yEnd: .value("Temperature", selectValue(type, from: forecast))
                     )
                     .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
@@ -70,7 +69,6 @@ struct ForecastView: View {
                     if let currentTemperature = viewModel.measurements.first(where: { $0.timestamp == currentDate }) {
                         let value = selectValue(type, from: currentTemperature)
                         let symbol = selectSymbol(type, from: currentTemperature)
-
                         RuleMark(x: .value("Date", currentDate))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
@@ -100,7 +98,6 @@ struct ForecastView: View {
                     if let selectedTemperature = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
                         let value = selectValue(type, from: selectedTemperature)
                         let symbol = selectSymbol(type, from: selectedTemperature)
-
                         RuleMark(x: .value("Date", Date.roundToPreviousHour(from: selectedDate) ?? Date.now))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(

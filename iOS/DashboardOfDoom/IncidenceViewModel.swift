@@ -5,42 +5,41 @@ import Foundation
 
     var sensor: IncidenceSensor?
     var measurements: [Incidence] = []
-    var current: Incidence?
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let measurement = current?.value {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", measurement.value)
+        guard let measurement = current?.value else {
+            return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
         }
-        else {
-        return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
-    }
+        return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", measurement.value)
     }
 
     var maxValue: Measurement<UnitIncidence> {
         return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
-        }
+    }
 
     var minValue: Measurement<UnitIncidence> {
         return Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
     }
 
+    var current: Incidence? {
+        return measurements.last(where: { ($0.timestamp <= Date.now) && (($0.quality == .good) || ($0.quality == .uncertain)) })
+    }
+
     var trend: String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.roundToLastDayChange(from: Date.now) {
-            if let currentIncidence = measurements.first(where: { $0.timestamp == currentDate })?.value {
-                if let nextDate = Date.roundToLastDayChange(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
-                    if let nextIncidence = measurements.first(where: { $0.timestamp == nextDate })?.value {
-                        if currentIncidence > nextIncidence {
-                            symbol = "arrow.down.forward.circle"
-                        }
-                        else if currentIncidence < nextIncidence {
-                            symbol = "arrow.up.forward.circle"
-                        }
-                        else {
-                            symbol = "arrow.right.circle"
-                        }
-                    }
+        if let currentIncidence = self.current {
+            if let nextIncidence = measurements.last(where: { $0.timestamp < currentIncidence.timestamp }) {
+                let currentValue = currentIncidence.value
+                let previousValue = nextIncidence.value
+                if currentValue < previousValue {
+                    symbol = "arrow.down.forward.circle"
+                }
+                else if currentValue > previousValue {
+                    symbol = "arrow.up.forward.circle"
+                }
+                else {
+                    symbol = "arrow.right.circle"
                 }
             }
         }
@@ -51,14 +50,12 @@ import Foundation
         do {
             if let sensor = try await incidenceController.refreshIncidence(for: location) {
                 self.sensor = sensor
-                self.measurements = sensor.measurements
+                self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
                 if let current = Self.nowCast(data: self.measurements, alpha: 0.33) {
-                    self.current = current
                     self.measurements.append(current)
                     if let forecast = Self.forcast(data: self.measurements) {
                         self.measurements.append(contentsOf: forecast)
                     }
-
                 }
                 self.timestamp = sensor.timestamp
                 self.updateRegion(for: self.id, with: sensor.location)
@@ -95,7 +92,7 @@ import Foundation
         var forecast: [Incidence] = []
         if let max = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
             let valueCount = Int(Double(historicalData.count) * 0.33)
-            for i in 0..<valueCount {
+            for i in 0 ..< valueCount {
                 if let timestamp = Calendar.current.date(byAdding: .day, value: i + 1, to: max.timestamp) {
                     let value = Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
                     forecast.append(Incidence(value: value, quality: .unknown, timestamp: timestamp))

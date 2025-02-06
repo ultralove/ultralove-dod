@@ -18,18 +18,18 @@ import SwiftUI
     var trend: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToPreviousHour(from: Date.now) {
-            if let currentValue = self.measurements.first(where: { $0.timestamp == currentDate })?.temperature {
-                if let nextDate = Date.roundToNextHour(from: currentDate) {
-                    if let nextValue = self.measurements.first(where: { $0.timestamp == nextDate })?.temperature {
-                        if currentValue > nextValue {
-                            symbol = "arrow.down.forward.circle"
-                        }
-                        else if currentValue < nextValue {
-                            symbol = "arrow.up.forward.circle"
-                        }
-                        else {
-                            symbol = "arrow.right.circle"
-                        }
+            if let currentForecast = self.measurements.last(where: { $0.timestamp == currentDate }) {
+                if let previousForecast = self.measurements.last(where: { $0.timestamp < currentForecast.timestamp }) {
+                    let currentValue = currentForecast.temperature.value
+                    let previousValue = previousForecast.temperature.value
+                    if currentValue < previousValue {
+                        symbol = "arrow.down.forward.circle"
+                    }
+                    else if currentValue > previousValue {
+                        symbol = "arrow.up.forward.circle"
+                    }
+                    else {
+                        symbol = "arrow.right.circle"
                     }
                 }
             }
@@ -56,8 +56,9 @@ import SwiftUI
         for measurement in measurements {
             let quality = (measurement.timestamp < Date.now) ? QualityCode.good : QualityCode.uncertain
             sanitizedForecast.append(
-                    Forecast(temperature: measurement.temperature, apparentTemperature: measurement.apparentTemperature,
-                             symbol: measurement.symbol, quality: quality, timestamp: measurement.timestamp))
+                Forecast(
+                    temperature: measurement.temperature, apparentTemperature: measurement.apparentTemperature,
+                    symbol: measurement.symbol, quality: quality, timestamp: measurement.timestamp))
         }
         return sanitizedForecast
     }

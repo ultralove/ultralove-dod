@@ -174,9 +174,9 @@ class FascismController {
         //  3: Freie Demokratische Partei
         //  8: Freie Wähler
         // 18: Volt Deutschland
-        let officialClowns = [3]
-//        let realClowns = [3, 8, 18, 23]
-        let clowns = officialClowns
+//        let officialClowns = [3]
+        let realClowns = [3, 8, 18, 23]
+        let clowns = realClowns
         for clown in clowns {
             if let result = poll.results[clown] {
                 score += result

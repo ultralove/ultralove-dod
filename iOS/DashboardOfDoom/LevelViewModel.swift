@@ -5,17 +5,15 @@ import SwiftUI
 
     var sensor: LevelSensor?
     var measurements: [Level] = []
-    var current: Level?
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let measurement = current?.value {
-            return String(format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
-                          measurement.value, measurement.unit.symbol)
-        }
-        else {
+        guard let measurement = current?.value else {
             return "\(GreekLetters.levelLeft.rawValue)n/a\(GreekLetters.levelRight.rawValue)"
         }
+        return String(
+            format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
+            measurement.value, measurement.unit.symbol)
     }
 
     var maxValue: Measurement<UnitLength> {
@@ -26,22 +24,24 @@ import SwiftUI
         return Measurement<UnitLength>(value: 0, unit: .meters)
     }
 
+    var current: Level? {
+        return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) })
+    }
+
     var trend: String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.roundToLastDayChange(from: Date.now) {
-            if let currentIncidence = measurements.first(where: { $0.timestamp == currentDate })?.value.value {
-                if let nextDate = Date.roundToLastDayChange(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
-                    if let nextIncidence = measurements.first(where: { $0.timestamp == nextDate })?.value.value {
-                        if currentIncidence > nextIncidence {
-                            symbol = "arrow.down.forward.circle"
-                        }
-                        else if currentIncidence < nextIncidence {
-                            symbol = "arrow.up.forward.circle"
-                        }
-                        else {
-                            symbol = "arrow.right.circle"
-                        }
-                    }
+        if let currentLevel = self.current {
+            if let previousLevel = measurements.last(where: { $0.timestamp < currentLevel.timestamp }) {
+                let currentValue = currentLevel.value
+                let previousValue = previousLevel.value
+                if currentValue < previousValue {
+                    symbol = "arrow.down.forward.circle"
+                }
+                else if currentValue > previousValue {
+                    symbol = "arrow.up.forward.circle"
+                }
+                else {
+                    symbol = "arrow.right.circle"
                 }
             }
         }
@@ -50,15 +50,11 @@ import SwiftUI
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-//            self.timestamp = nil
             if let sensor = try await levelController.refreshLevel(for: location) {
                 self.sensor = sensor
                 self.measurements = sensor.measurements
-                if let current = self.measurements.max(by: { $0.timestamp < $1.timestamp }) {
-                    self.current = current
-                    if let forecast = await Self.forecast(data: self.measurements) {
-                        self.measurements.append(contentsOf: forecast)
-                    }
+                if let forecast = await Self.forecast(data: self.measurements) {
+                    self.measurements.append(contentsOf: forecast)
                 }
                 self.timestamp = sensor.timestamp
             }

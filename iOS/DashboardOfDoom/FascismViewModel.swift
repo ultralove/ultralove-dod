@@ -9,12 +9,10 @@ import Foundation
     var timestamp: Date? = nil
 
     var faceplate: String {
-        if let measurement = current?.value {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalNu.rawValue):%.0f%@", measurement.value, measurement.unit.symbol)
-        }
-        else {
+        guard let measurement = current?.value else {
             return "\(GreekLetters.mathematicalItalicCapitalNu.rawValue):n/a"
         }
+        return String(format: "\(GreekLetters.mathematicalBoldCapitalNu.rawValue):%.0f%@", measurement.value, measurement.unit.symbol)
     }
 
     var maxValue: Measurement<UnitPercentage> {
@@ -28,18 +26,18 @@ import Foundation
     var trend: String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToLastUTCDayChange(from: Date.now) {
-            if let currentRadiation = measurements.first(where: { $0.timestamp == currentDate })?.value.value {
-                if let nextDate = Date.roundToLastUTCDayChange(from: Date.now.addingTimeInterval(60 * 60 * 24)) {
-                    if let nextRadiation = measurements.first(where: { $0.timestamp == nextDate })?.value.value {
-                        if currentRadiation > nextRadiation {
-                            symbol = "arrow.down.forward.circle"
-                        }
-                        else if currentRadiation < nextRadiation {
-                            symbol = "arrow.up.forward.circle"
-                        }
-                        else {
-                            symbol = "arrow.right.circle"
-                        }
+            if let currentFascism = measurements.last(where: { $0.timestamp < currentDate }) {
+                if let previousFascism = measurements.last(where: { $0.timestamp < currentFascism.timestamp }) {
+                    let currentValue = currentFascism.value
+                    let previousValue = previousFascism.value
+                    if currentValue > previousValue {
+                        symbol = "arrow.up.forward.circle"
+                    }
+                    else if currentValue < previousValue {
+                        symbol = "arrow.down.forward.circle"
+                    }
+                    else {
+                        symbol = "arrow.right.circle"
                     }
                 }
             }
@@ -112,9 +110,9 @@ import Foundation
         }
         var forecast: [Fascism] = []
         for i in 1 ... count {
-//            if let timestamp = Calendar.current.date(byAdding: .day, value: i, to: from) {
+            //            if let timestamp = Calendar.current.date(byAdding: .day, value: i, to: from) {
             let timestamp = from.addingTimeInterval(TimeInterval(i * 60 * 60 * 24))
-                forecast.append(Fascism(value: Measurement<UnitPercentage>(value: 0, unit: .percent), quality: .unknown, timestamp: timestamp))
+            forecast.append(Fascism(value: Measurement<UnitPercentage>(value: 0, unit: .percent), quality: .unknown, timestamp: timestamp))
         }
         return forecast
     }
