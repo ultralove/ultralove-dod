@@ -1,13 +1,15 @@
 import Charts
 import SwiftUI
 
-struct FascismView: View {
-    @Environment(FascismViewModel.self) private var viewModel
+struct SurveyView: View {
+    @Environment(SurveyViewModel.self) private var viewModel
     @State private var selectedDate: Date?
+    let header: String
+    let selector: SurveySelector
 
     var body: some View {
         VStack {
-            HeaderView(label: "Fascists vote share in", sensor: viewModel.sensor)
+            HeaderView(label: header, sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
@@ -23,37 +25,37 @@ struct FascismView: View {
     func _view() -> some View {
         VStack {
             Chart {
-                ForEach(viewModel.measurements) { measurement in
+                ForEach(viewModel.measurements[selector] ?? []) { measurement in
                     LineMark(
                         x: .value("Date", measurement.timestamp),
-                        y: .value("Fascism", measurement.value.value)
+                        y: .value("Fascism", 5.0)
                     )
-                    .interpolationMethod(.catmullRom)
-                    .foregroundStyle(.gray.opacity(0.0))
+                    .interpolationMethod(.linear)
+                    .foregroundStyle(.gray.opacity(0.67))
                     .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
                         x: .value("Date", measurement.timestamp),
-                        y: .value("Fascism", measurement.value.value)
+                        y: .value("Survey", measurement.value.value)
                     )
-                    .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.fascists)
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(viewModel.gradient(selector: selector))
                 }
 
-                if let currentValue = viewModel.current {
+                if let currentValue = viewModel.current[selector] {
                     RuleMark(x: .value("Date", currentValue.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", currentValue.timestamp),
-                        y: .value("Fascism", currentValue.value.value)
+                        y: .value("Survey", currentValue.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
+                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
                             Text(String(format: "%@ %@", currentValue.timestamp.dateString(), currentValue.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.0f%@", currentValue.value.value, currentValue.value.unit.symbol))
-                                Image(systemName: viewModel.trend)
+                                Text(String(format: "%.1f%@", currentValue.value.value, currentValue.value.unit.symbol))
+                                Image(systemName: viewModel.trend(selector: selector))
                             }
                             .font(.headline)
                         }
@@ -63,26 +65,28 @@ struct FascismView: View {
                     }
                 }
 
-                if let selectedDate, let selectedValue = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
-                    RuleMark(x: .value("Date", selectedDate))
-                        .lineStyle(StrokeStyle(lineWidth: 1))
-                    PointMark(
-                        x: .value("Date", selectedDate),
-                        y: .value("Fascism", selectedValue.value.value)
-                    )
-                    .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
-                        VStack {
-                            Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
-                                .font(.footnote)
-                            HStack {
-                                Text(String(format: "%.0f%@", selectedValue.value.value, selectedValue.value.unit.symbol))
-                                    .font(.headline)
+                if let timestamp = selectedDate {
+                    if let measurement = viewModel.measurements[selector]?.first(where: { $0.timestamp == selectedDate }) {
+                        RuleMark(x: .value("Date", timestamp))
+                            .lineStyle(StrokeStyle(lineWidth: 1))
+                        PointMark(
+                            x: .value("Date", timestamp),
+                            y: .value("Survey", measurement.value.value)
+                        )
+                        .symbolSize(CGSize(width: 7, height: 7))
+                        .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
+                            VStack {
+                                Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
+                                    .font(.footnote)
+                                HStack {
+                                    Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
+                                        .font(.headline)
+                                }
                             }
+                            .padding(7)
+                            .padding(.horizontal, 7)
+                            .qualityCode(qualityCode: measurement.quality)
                         }
-                        .padding(7)
-                        .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: selectedValue.quality)
                     }
                 }
             }

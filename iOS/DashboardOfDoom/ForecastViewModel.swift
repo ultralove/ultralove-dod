@@ -4,24 +4,55 @@ import SwiftUI
     private let forecastController = ForecastController()
 
     var sensor: ForecastSensor?
-    var measurements: [Forecast] = []
+    var measurements: [ForecastSelector: [Forecast]] = [:]
+    var current: [ForecastSelector: Forecast] = [:]
     var timestamp: Date? = nil
 
-    var maxValue: Measurement<UnitTemperature> {
-        return Measurement<UnitTemperature>(value: 47.0, unit: .celsius)
+    func maxValue(selector: ForecastSelector) -> Measurement<Dimension> {
+        if let measurements = self.measurements[selector] {
+            if let measurement = measurements.first {
+                if measurement.value.unit is UnitTemperature {
+                    return Measurement(value: 47.0, unit: measurement.value.unit)
+                }
+                else if measurement.value.unit is UnitPercentage {
+                    return Measurement(value: 100.0, unit: measurement.value.unit)
+                }
+                else {
+                    if let value = measurements.max(by: { $0.value.value < $1.value.value })?.value.value {
+                        return Measurement(value: value, unit: measurement.value.unit)
+                    }
+                }
+            }
+        }
+        return Measurement(value: 100.0, unit: UnitPercentage.percent)
     }
 
-    var minValue: Measurement<UnitTemperature> {
-        return Measurement<UnitTemperature>(value: -20.0, unit: .celsius)
+    func minValue(selector: ForecastSelector) -> Measurement<Dimension> {
+        if let measurements = self.measurements[selector] {
+            if let measurement = self.measurements[selector]?.first {
+                if measurement.value.unit is UnitTemperature {
+                    return Measurement(value: -20.0, unit: measurement.value.unit)
+                }
+                else if measurement.value.unit is UnitPercentage {
+                    return Measurement(value: 0.0, unit: measurement.value.unit)
+                }
+                else {
+                    if let value = measurements.min(by: { $0.value.value < $1.value.value })?.value.value {
+                        return Measurement(value: value, unit: measurement.value.unit)
+                    }
+                }
+            }
+        }
+        return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
-    var trend: String {
+    func trend(selector: ForecastSelector) -> String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToPreviousHour(from: Date.now) {
-            if let currentForecast = self.measurements.last(where: { $0.timestamp == currentDate }) {
-                if let previousForecast = self.measurements.last(where: { $0.timestamp < currentForecast.timestamp }) {
-                    let currentValue = currentForecast.temperature.value
-                    let previousValue = previousForecast.temperature.value
+            if let currentForecast = self.measurements[selector]?.last(where: { $0.timestamp == currentDate }) {
+                if let previousForecast = self.measurements[selector]?.last(where: { $0.timestamp < currentForecast.timestamp }) {
+                    let currentValue = currentForecast.value.value
+                    let previousValue = previousForecast.value.value
                     if currentValue < previousValue {
                         symbol = "arrow.down.forward.circle"
                     }
@@ -41,7 +72,8 @@ import SwiftUI
         do {
             if let sensor = try await forecastController.refreshForecast(for: location) {
                 self.sensor = sensor
-                self.measurements = Self.sanitizeForecast(measurements: sensor.measurements)
+                self.measurements = await self.sanitizeForecast(measurements: sensor.measurements)
+                self.current = await self.updateCurrent(measurements: self.measurements)
                 self.timestamp = sensor.timestamp
                 self.updateRegion(for: self.id, with: sensor.location)
             }
@@ -51,15 +83,28 @@ import SwiftUI
         }
     }
 
-    private static func sanitizeForecast(measurements: [Forecast]) -> [Forecast] {
-        var sanitizedForecast: [Forecast] = []
-        for measurement in measurements {
-            let quality = (measurement.timestamp < Date.now) ? QualityCode.good : QualityCode.uncertain
-            sanitizedForecast.append(
-                Forecast(
-                    temperature: measurement.temperature, apparentTemperature: measurement.apparentTemperature,
-                    symbol: measurement.symbol, quality: quality, timestamp: measurement.timestamp))
+    private func sanitizeForecast(measurements: [ForecastSelector: [Forecast]]) async -> [ForecastSelector: [Forecast]] {
+        var sanitizedMeasurements: [ForecastSelector: [Forecast]] = [:]
+        for (selector, forecast) in measurements {
+            var sanitizedForecast: [Forecast] = []
+            for value in forecast {
+                let quality = (value.timestamp < Date.now) ? QualityCode.good : QualityCode.uncertain
+                sanitizedForecast.append(
+                    Forecast(
+                        value: Measurement(value: value.value.value, unit: value.value.unit), quality: quality, timestamp: value.timestamp))
+            }
+            sanitizedMeasurements[selector] = sanitizedForecast
         }
-        return sanitizedForecast
+        return sanitizedMeasurements
+    }
+
+    private func updateCurrent(measurements: [ForecastSelector: [Forecast]]) async -> [ForecastSelector: Forecast] {
+        var currentMeasurements: [ForecastSelector: Forecast] = [:]
+        for (selector, forecast) in measurements {
+            if let current = forecast.last(where: { $0.timestamp == Date.roundToNextHour(from: Date.now) }) {
+                currentMeasurements[selector] = current
+            }
+        }
+        return currentMeasurements
     }
 }

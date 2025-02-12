@@ -21,51 +21,108 @@ struct ContentView: View {
                 VStack(spacing: 10) {
                     switch selectedScreen {
                     case .home:
-                        WeatherView()
-                            .frame(height: 333)
-                            .onAppear {
-                                navigationVisible = .hidden
-                                navigationTitle = "Weather"
-                            }
-                        Divider()
-                        IncidenceView()
-                            .frame(height: 267)
-                        Divider()
-                        LevelView()
-                            .frame(height: 267)
-                        Divider()
-                        RadiationView()
-                            .frame(height: 267)
+                        VStack {
+                            MapView()
+                                .frame(height: 333)
+                            Divider()
+                            IncidenceView()
+                                .frame(height: 267)
+                            Divider()
+                            LevelView()
+                                .frame(height: 267)
+                            Divider()
+                            RadiationView()
+                                .frame(height: 267)
+                        }
+                        .onAppear {
+                            navigationVisible = .visible
+                            navigationTitle = "Home"
+                        }
                     case .weather:
-                        ForecastView(header: "Temperature forecast (actual)", type: .actual)
-                            .frame(height: 267)
-                            .onAppear {
-                                navigationVisible = .visible
-                                navigationTitle = "Weather Forecast"
-                            }
-                        Divider()
-                        ForecastView(header: "Temperature forecast (feels like)", type: .apparent)
-                            .frame(height: 267)
+                        VStack {
+                            ForecastView(header: "Temperature (actual)", selector: .actual)
+                                .frame(height: 267)
+                            Divider()
+                            ForecastView(header: "Temperature (feels like)", selector: .apparent)
+                                .frame(height: 267)
+                            Divider()
+                            ForecastView(header: "Dew point", selector: .dewPoint)
+                                .frame(height: 267)
+                            Divider()
+                            ForecastView(header: "Humidity", selector: .humidity)
+                                .frame(height: 233)
+                            Divider()
+                            ForecastView(header: "Precipitation chance", selector: .precipitationChance)
+                                .frame(height: 233)
+                            Divider()
+                            ForecastView(header: "Precipitation amount", selector: .precipitationAmount)
+                                .frame(height: 233)
+                            Divider()
+                            ForecastView(header: "Pressure", selector: .pressure)
+                                .frame(height: 233)
+                            Divider()
+                            ForecastView(header: "Visibility", selector: .visibility)
+                                .frame(height: 233)
+                        }
+                        .onAppear {
+                            navigationVisible = .visible
+                            navigationTitle = "Weather forecast"
+                        }
+
                     case .environment:
-                        IncidenceView()
-                            .frame(height: 267)
-                            .onAppear {
-                                navigationVisible = .visible
-                                navigationTitle = "Environmental Data"
-                            }
-                        Divider()
-                        LevelView()
-                            .frame(height: 267)
-                        Divider()
-                        RadiationView()
-                            .frame(height: 267)
+                        VStack {
+                            IncidenceView()
+                                .frame(height: 267)
+                            Divider()
+                            LevelView()
+                                .frame(height: 267)
+                            Divider()
+                            RadiationView()
+                                .frame(height: 267)
+                        }
+                        .onAppear {
+                            navigationVisible = .visible
+                            navigationTitle = "Environmental data"
+                        }
                     case .fascism:
-                        FascismView()
-                            .frame(height: 267)
-                            .onAppear {
-                                navigationVisible = .visible
-                                navigationTitle = "Election Polls"
-                            }
+                        VStack {
+                            SurveyView(header: "Fascists vote share in", selector: .fascists)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "Clowns vote share in", selector: .clowns)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "AfD vote share in", selector: .afd)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "FDP vote share in", selector: .fdp)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "BSW vote share in", selector: .bsw)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "Die Linke vote share in", selector: .linke)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "Die Grünen vote share in", selector: .gruene)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "CDU/CSU vote share in", selector: .cducsu)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "SPD vote share in", selector: .spd)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "Freie Wähler vote share in", selector: .freie_waehler)
+                                .frame(height: 267)
+                            Divider()
+                            SurveyView(header: "Sonstige vote share in", selector: .sonstige)
+                                .frame(height: 267)
+                        }
+                        .onAppear {
+                            navigationVisible = .visible
+                            navigationTitle = "Election polls"
+                        }
                     case .settings:
                         SettingsView()
                             .onAppear {

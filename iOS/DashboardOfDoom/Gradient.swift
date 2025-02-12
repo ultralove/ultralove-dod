@@ -2,7 +2,7 @@ import SwiftUI
 
 extension Gradient {
 
-    #if os(iOS)
+#if os(iOS)
     static let linear = LinearGradient(
         gradient: Gradient(colors: [
             Color.accentColor.opacity(0.67),
@@ -28,7 +28,7 @@ extension Gradient {
         startPoint: .top,
         endPoint: .bottom
     )
-    #else
+#else
     static let linear = LinearGradient(
         gradient: Gradient(colors: [
             Color.blue.opacity(0.66),
@@ -52,7 +52,7 @@ extension Gradient {
         ]),
         startPoint: .top,
         endPoint: .bottom)
-    #endif
+#endif
 
     static let rainbow = LinearGradient(
         stops: [
@@ -64,4 +64,40 @@ extension Gradient {
             Gradient.Stop(color: .purple, location: 1.0)
         ],
         startPoint: .bottom, endPoint: .top)
+
+    static let cducsu = LinearGradient(
+        gradient: Gradient(colors: [
+            .blue.opacity(1.0),
+            .blue.opacity(0.33)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    static let spd = LinearGradient(
+        gradient: Gradient(colors: [
+            .red.opacity(1.0),
+            .red.opacity(0.33)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    static let gruene = LinearGradient(
+        gradient: Gradient(colors: [
+            .green.opacity(1.0),
+            .green.opacity(0.33)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    static let linke = LinearGradient(
+        gradient: Gradient(colors: [
+            .purple.opacity(1.0),
+            .purple.opacity(0.33)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }

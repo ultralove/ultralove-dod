@@ -1,11 +1,12 @@
 import MapKit
 import SwiftUI
 
-struct WeatherView: View {
+struct MapView: View {
     @Environment(WeatherViewModel.self) private var weather
     @Environment(IncidenceViewModel.self) private var incidence
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
+    @Environment(SurveyViewModel.self) private var fascism
 
     //    private var cameraPosition: Binding<MapCameraPosition> {
     //        Binding(
@@ -18,11 +19,11 @@ struct WeatherView: View {
         VStack {
             HeaderView(label: "Environmental conditions", sensor: weather.sensor)
             if weather.timestamp == nil {
-            ActivityIndicator()
-        }
-        else {
-            _view()
-        }
+                ActivityIndicator()
+            }
+            else {
+                _view()
+            }
             FooterView(sensor: weather.sensor)
         }
         .padding()
@@ -63,19 +64,19 @@ struct WeatherView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
-                        Image(systemName: "facemask")
+                            Image(systemName: "facemask")
                                 .font(.title)
                             Text(incidence.faceplate)
                         }
                         .frame(width: 57, height: 57)
-                            .padding(5)
-                            .padding(.horizontal, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 13)
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
                                 .fill(Color.accentColor)
                                 .opacity(0.33)
-                            )
-                            .foregroundStyle(.black)
+                        )
+                        .foregroundStyle(.black)
                     }
                 }
                 if let coordinate = level.sensor?.location.coordinate {
@@ -84,21 +85,21 @@ struct WeatherView: View {
                             .fill(Color.accentColor)
                             .frame(width: 11, height: 11)
                     }
-                    Annotation("",coordinate: coordinate, anchor: .bottomLeading) {
+                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
-                        Image(systemName: "water.waves")
+                            Image(systemName: "water.waves")
                                 .font(.title)
                             Text(level.faceplate)
                         }
                         .frame(width: 57, height: 57)
-                            .padding(5)
-                            .padding(.horizontal, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 13)
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
                                 .fill(Color.accentColor)
                                 .opacity(0.33)
-                            )
-                            .foregroundStyle(.black)
+                        )
+                        .foregroundStyle(.black)
                     }
                 }
                 if let coordinate = radiation.sensor?.location.coordinate {
@@ -109,21 +110,21 @@ struct WeatherView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
-                        Image(systemName: "atom")
+                            Image(systemName: "atom")
                                 .font(.title)
                             Text(radiation.faceplate)
                         }
                         .frame(width: 57, height: 57)
-                            .padding(5)
-                            .padding(.horizontal, 5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 13)
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
                                 .fill(Color.accentColor)
                                 .opacity(0.33)
-                            )
-                            .foregroundStyle(.black)
+                        )
+                        .foregroundStyle(.black)
+                    }
                 }
-            }
             }
             .allowsHitTesting(false)
         }

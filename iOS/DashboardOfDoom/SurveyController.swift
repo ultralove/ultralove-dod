@@ -1,6 +1,6 @@
 import Foundation
 
-struct Poll {
+private struct Poll {
     let id: Int
     let parliament: Int
     let institute: Int
@@ -8,100 +8,161 @@ struct Poll {
     let timestamp: Date
 }
 
-struct Constituency {
+private struct Constituency {
     let name: String
     let location: Location
 }
 
-struct Parliament {
+private struct Parliament {
     let id: Int
     let name: String
 }
 
-class FascismController {
-    let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
+struct SurveyDescriptor {
+    let shortcut: String
+    let name: String
+}
 
-    func refreshFascism(for location: Location) async throws -> FascismSensor? {
-        var sensor: FascismSensor? = nil
+class SurveyController {
+    private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
+
+    let officialFascists = [7, 9, 11, 14, 16, 22, 25]
+    let realFascists = [1, 7, 8, 9, 11, 14, 16, 22, 25, 101, 102]
+    let officialClowns = [3]
+    let realClowns = [3, 18, 23]
+    let cducsu = [1, 101, 102]
+    let afd = [7]
+    let fdp = [3]
+    let bsw = [23]
+
+    func refreshGlobalSurveys(for location: Location) async throws -> SurveySensor? {
+        var sensor: SurveySensor? = nil
         let sensorName = germany.name
         let sensorLocation = germany.location
         let parliamentId = 0  // Bundestag
+
         if let data = try await DAWUMAPI.fetchPolls() {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(33).reversed())
-                    var measurements: [String:[Fascism]] = [:]
+                    var measurements: [SurveySelector: [Survey]] = [:]
 
-                    var values: [Fascism] = []
+                    var values: [Survey] = []
                     for poll in significantPolls {
-                        let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
-                        let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        let measurement = Measurement(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
-                        measurements["fascism"] = values
+                        measurements[.fascists] = values
                     }
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement<UnitPercentage>(value: computeClownShare(from: poll), unit: .percent)
-                        let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        let measurement = Measurement(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
-
                     if values.count > 0 {
-                        measurements["clowns"] = values
+                        measurements[.clowns] = values
+                    }
+
+                    let descriptors = try await parseParties(from: data)
+                    for (selector, _) in descriptors {
+                        values.removeAll(keepingCapacity: true)
+                        for poll in significantPolls {
+                            let measurement = Measurement(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
+                            let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                            values.append(fascism)
+                        }
+                        if values.count > 0 {
+                            measurements[selector] = values
+                        }
                     }
 
                     if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
-                        sensor = FascismSensor(
+                        sensor = SurveySensor(
                             id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
                     }
                 }
             }
         }
-
         return sensor
     }
 
-//    func refreshLocalFascism(for location: Location) async throws -> FascismSensor? {
-//        var sensor: FascismSensor? = nil
-//        var sensorName = germany.name
-//        var sensorLocation = germany.location
-//        var parliamentId = 0  // Bundestag
-//        if let constituency = try await Self.fetchConstituency(location: location) {
-//            if let data = try await DAWUMAPI.fetchPolls() {
-//                if let parliaments = try await parseParliaments(from: data) {
-//                    for parliament in parliaments where parliament.name.contains(constituency.name) {
-//                        sensorName = constituency.name
-//                        sensorLocation = constituency.location
-//                        parliamentId = parliament.id
-//                        break
-//                    }
-//                }
-//                if let polls = try await parsePolls(from: data, for: parliamentId) {
-//                    let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
-//                    if sortedPolls.count > 0 {
-//                        let significantPolls = Array(sortedPolls.reversed())
-//                        var measurements: [Fascism] = []
-//                        for poll in significantPolls {
-//                            let measurement = Measurement<UnitPercentage>(value: computeFascismShare(from: poll), unit: .percent)
-//                            let fascism = Fascism(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
-//                            measurements.append(fascism)
-//                        }
-//                        if measurements.count > 0 {
-//                            if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
-//                                sensor = FascismSensor(
-//                                    id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return sensor
-//    }
+    func initializeDescriptors() {
+
+    }
+
+    func refreshLocalSurveys(for location: Location) async throws -> SurveySensor? {
+        var sensor: SurveySensor? = nil
+        var sensorName = germany.name
+        var sensorLocation = germany.location
+        var parliamentId = 0  // Bundestag
+
+        if let constituency = try await Self.fetchConstituency(location: location) {
+            if let data = try await DAWUMAPI.fetchPolls() {
+                if let parliaments = try await parseParliaments(from: data) {
+                    for parliament in parliaments where parliament.name.contains(constituency.name) {
+                        sensorName = constituency.name
+                        sensorLocation = constituency.location
+                        parliamentId = parliament.id
+                        break
+                    }
+                }
+            }
+        }
+        
+        if let data = try await DAWUMAPI.fetchPolls() {
+            if let polls = try await parsePolls(from: data, for: parliamentId) {
+                let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
+                if sortedPolls.count > 0 {
+                    let significantPolls = Array(sortedPolls.prefix(33).reversed())
+                    var measurements: [SurveySelector: [Survey]] = [:]
+
+                    var values: [Survey] = []
+                    for poll in significantPolls {
+                        let measurement = Measurement(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        values.append(fascism)
+                    }
+                    if values.count > 0 {
+                        measurements[.fascists] = values
+                    }
+
+                    values.removeAll(keepingCapacity: true)
+                    for poll in significantPolls {
+                        let measurement = Measurement(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        values.append(fascism)
+                    }
+                    if values.count > 0 {
+                        measurements[.clowns] = values
+                    }
+
+                    let descriptors = try await parseParties(from: data)
+                    for (selector, _) in descriptors {
+                        values.removeAll(keepingCapacity: true)
+                        for poll in significantPolls {
+                            let measurement = Measurement(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
+                            let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                            values.append(fascism)
+                        }
+                        if values.count > 0 {
+                            measurements[selector] = values
+                        }
+                    }
+
+                    if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
+                        sensor = SurveySensor(
+                            id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
+                    }
+                }
+            }
+        }
+        return sensor
+    }
 
     private static func parseConstituencies(data: Data) async throws -> [Constituency]? {
         var constituencies: [Constituency]? = nil
@@ -144,23 +205,9 @@ class FascismController {
         return nearestConstituency
     }
 
-    func computeFascismShare(from poll: Poll) -> Double {
+    private func computeShare(_ selector: [Int], from poll: Poll) -> Double {
         var score = 0.0
-        //  1: Christlich Demokratische Union / Christlich-Soziale Union
-        //  7: Alternative für Deutschland
-        //  8: Freie Wähler
-        //  9: Nationaldemokratische Partei Deutschlands
-        // 11: Bayernpartei e.V.
-        // 14: Brandenburger Vereinigte Bürgerbewegungen/Freie Wähler
-        // 16: Bürger in Wut
-        // 22: Bürger für Thüringen
-        // 23: Bündnis Sahra Wagenknecht
-        // 25: WerteUnion
-        // 101: Christlich Demokratische Union
-        // 102: Christlich-Soziale Union
-//        let officialFascists = [7, 9, 11, 14, 16, 22, 25]
-        let realFascists = [1, 7, 8, 9, 11, 14, 16, 22, 23, 25, 101, 102]
-        let fascists = realFascists
+        let fascists = selector
         for fascist in fascists {
             if let result = poll.results[fascist] {
                 score += result
@@ -169,23 +216,7 @@ class FascismController {
         return score
     }
 
-    func computeClownShare(from poll: Poll) -> Double {
-        var score = 0.0
-        //  3: Freie Demokratische Partei
-        //  8: Freie Wähler
-        // 18: Volt Deutschland
-//        let officialClowns = [3]
-        let realClowns = [3, 8, 18, 23]
-        let clowns = realClowns
-        for clown in clowns {
-            if let result = poll.results[clown] {
-                score += result
-            }
-        }
-        return score
-    }
-
-    func parseParliaments(from data: Data) async throws -> [Parliament]? {
+    private func parseParliaments(from data: Data) async throws -> [Parliament]? {
         var parliaments: [Parliament]? = nil
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["Parliaments"] as? [String: Any] {
@@ -204,16 +235,20 @@ class FascismController {
         return parliaments
     }
 
-    func parseParties(from data: Data) async throws -> [Int: String]? {
-        var parties: [Int: String]? = nil
+    private func parseParties(from data: Data) async throws -> [SurveySelector: SurveyDescriptor] {
+        var parties: [SurveySelector: SurveyDescriptor] = [:]
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["Parties"] as? [String: Any] {
                 parties = [:]
                 for element in elements {
                     if let id = Int(element.key) {
-                        if let party = elements[element.key] as? [String: Any] {
-                            if let name = party["Shortcut"] as? String {
-                                parties?[id] = name
+                        if let selector = SurveySelector(rawValue: id) {
+                            if let party = elements[element.key] as? [String: Any] {
+                                if let shortcut = party["Shortcut"] as? String {
+                                    if let name = party["Name"] as? String {
+                                        parties[selector] = SurveyDescriptor(shortcut: shortcut, name: name)
+                                    }
+                                }
                             }
                         }
                     }
@@ -223,7 +258,7 @@ class FascismController {
         return parties
     }
 
-    func parseInstitues(from data: Data) async throws -> [Int: String]? {
+    private func parseInstitues(from data: Data) async throws -> [Int: String]? {
         var institutes: [Int: String]? = nil
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["Institutes"] as? [String: Any] {
@@ -242,7 +277,7 @@ class FascismController {
         return institutes
     }
 
-    func parsePolls(from data: Data, for parliament: Int) async throws -> [Poll]? {
+    private func parsePolls(from data: Data, for parliament: Int) async throws -> [Poll]? {
         var polls: [Poll]? = nil
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["Surveys"] as? [String: Any] {

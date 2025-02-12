@@ -12,9 +12,10 @@ class RadiationController {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let measurements = try await Self.fetchMeasurements(station: nearestStation) {
                 if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
-                    sensor = RadiationSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                    sensor = RadiationSensor(
+                        id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                }
             }
-        }
         }
         return sensor
     }
@@ -22,10 +23,10 @@ class RadiationController {
     private static func fetchNearestStation(location: Location) async throws -> RadiationStation? {
         var nearestStation: RadiationStation? = nil
         if let data = try await BfSAPI.fetchStations() {
-        let stations = try await Self.parseStations(from: data)
-        if stations.count > 0 {
-            nearestStation = Self.nearestStation(stations: stations, location: location)
-        }
+            let stations = try await Self.parseStations(from: data)
+            if stations.count > 0 {
+                nearestStation = Self.nearestStation(stations: stations, location: location)
+            }
         }
         return nearestStation
     }
@@ -39,14 +40,13 @@ class RadiationController {
                         let location = Location(latitude: coordinates[1], longitude: coordinates[0])
                         if let properties = feature["properties"] as? [String: Any] {
                             if let id = properties["kenn"] as? String {
-                            if let name = properties["name"] as? String {
-                                let siteStatus = properties["site_status"] as? Int
-                                if siteStatus == 1 {
+                                if let name = properties["name"] as? String {
+                                    let siteStatus = properties["site_status"] as? Int
+                                    if siteStatus == 1 {
                                         stations.append(RadiationStation(id: id, name: name, location: location))
+                                    }
                                 }
                             }
-                        }
-
                         }
                     }
                 }
@@ -89,8 +89,8 @@ class RadiationController {
                                     let measurement = Radiation(
                                         value: Measurement(value: value, unit: UnitRadiation.microsieverts), quality: .good, timestamp: timestamp)
                                     measurements.append(measurement)
-    }
-}
+                                }
+                            }
                         }
                     }
                 }

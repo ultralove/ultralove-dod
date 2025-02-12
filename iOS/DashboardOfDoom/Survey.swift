@@ -1,13 +1,13 @@
 import Foundation
 
-struct Fascism: Identifiable {
+struct Survey: Identifiable {
     let id = UUID()
-    let value: Measurement<UnitPercentage>
+    let value: Measurement<Dimension>
     let quality: QualityCode
     let timestamp: Date
 
     init(value: Measurement<UnitPercentage>, quality: QualityCode, timestamp: Date) {
-        self.value = value
+        self.value = Measurement(value: value.value, unit: UnitPercentage.percent)
         self.quality = quality
         self.timestamp = timestamp
     }
