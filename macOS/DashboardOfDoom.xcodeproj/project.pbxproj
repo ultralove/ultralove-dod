@@ -6,12 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		42325BC52D5D322B00CF6970 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 42325BC42D5D322B00CF6970 /* LaunchAtLogin */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		422A6E922D5A10C700B69213 /* DashboardOfDoom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DashboardOfDoom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DashboardOfDoom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		422A6E942D5A10C700B69213 /* DashboardOfDoom */ = {
+		42EADC252D5D0EF100CC3BF3 /* DashboardOfDoom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DashboardOfDoom;
 			sourceTree = "<group>";
@@ -19,28 +23,29 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		422A6E8F2D5A10C700B69213 /* Frameworks */ = {
+		42EADC202D5D0EF100CC3BF3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				42325BC52D5D322B00CF6970 /* LaunchAtLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		422A6E892D5A10C700B69213 = {
+		42EADC1A2D5D0EF100CC3BF3 = {
 			isa = PBXGroup;
 			children = (
-				422A6E942D5A10C700B69213 /* DashboardOfDoom */,
-				422A6E932D5A10C700B69213 /* Products */,
+				42EADC252D5D0EF100CC3BF3 /* DashboardOfDoom */,
+				42EADC242D5D0EF100CC3BF3 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		422A6E932D5A10C700B69213 /* Products */ = {
+		42EADC242D5D0EF100CC3BF3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				422A6E922D5A10C700B69213 /* DashboardOfDoom.app */,
+				42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,64 +53,68 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		422A6E912D5A10C700B69213 /* DashboardOfDoom */ = {
+		42EADC222D5D0EF100CC3BF3 /* DashboardOfDoom */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 422A6EA12D5A10C700B69213 /* Build configuration list for PBXNativeTarget "DashboardOfDoom" */;
+			buildConfigurationList = 42EADC322D5D0EF200CC3BF3 /* Build configuration list for PBXNativeTarget "DashboardOfDoom" */;
 			buildPhases = (
-				422A6E8E2D5A10C700B69213 /* Sources */,
-				422A6E8F2D5A10C700B69213 /* Frameworks */,
-				422A6E902D5A10C700B69213 /* Resources */,
+				42EADC1F2D5D0EF100CC3BF3 /* Sources */,
+				42EADC202D5D0EF100CC3BF3 /* Frameworks */,
+				42EADC212D5D0EF100CC3BF3 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				422A6E942D5A10C700B69213 /* DashboardOfDoom */,
+				42EADC252D5D0EF100CC3BF3 /* DashboardOfDoom */,
 			);
 			name = DashboardOfDoom;
 			packageProductDependencies = (
+				42325BC42D5D322B00CF6970 /* LaunchAtLogin */,
 			);
 			productName = DashboardOfDoom;
-			productReference = 422A6E922D5A10C700B69213 /* DashboardOfDoom.app */;
+			productReference = 42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		422A6E8A2D5A10C700B69213 /* Project object */ = {
+		42EADC1B2D5D0EF100CC3BF3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					422A6E912D5A10C700B69213 = {
+					42EADC222D5D0EF100CC3BF3 = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
-			buildConfigurationList = 422A6E8D2D5A10C700B69213 /* Build configuration list for PBXProject "DashboardOfDoom" */;
+			buildConfigurationList = 42EADC1E2D5D0EF100CC3BF3 /* Build configuration list for PBXProject "DashboardOfDoom" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 422A6E892D5A10C700B69213;
+			mainGroup = 42EADC1A2D5D0EF100CC3BF3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				42325BC32D5D322B00CF6970 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
+			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 422A6E932D5A10C700B69213 /* Products */;
+			productRefGroup = 42EADC242D5D0EF100CC3BF3 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				422A6E912D5A10C700B69213 /* DashboardOfDoom */,
+				42EADC222D5D0EF100CC3BF3 /* DashboardOfDoom */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		422A6E902D5A10C700B69213 /* Resources */ = {
+		42EADC212D5D0EF100CC3BF3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -115,7 +124,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		422A6E8E2D5A10C700B69213 /* Sources */ = {
+		42EADC1F2D5D0EF100CC3BF3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -125,7 +134,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		422A6E9F2D5A10C700B69213 /* Debug */ = {
+		42EADC302D5D0EF200CC3BF3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -188,7 +197,7 @@
 			};
 			name = Debug;
 		};
-		422A6EA02D5A10C700B69213 /* Release */ = {
+		42EADC312D5D0EF200CC3BF3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -243,7 +252,7 @@
 			};
 			name = Release;
 		};
-		422A6EA22D5A10C700B69213 /* Debug */ = {
+		42EADC332D5D0EF200CC3BF3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -259,6 +268,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -274,7 +285,7 @@
 			};
 			name = Debug;
 		};
-		422A6EA32D5A10C700B69213 /* Release */ = {
+		42EADC342D5D0EF200CC3BF3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -290,6 +301,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -308,25 +321,44 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		422A6E8D2D5A10C700B69213 /* Build configuration list for PBXProject "DashboardOfDoom" */ = {
+		42EADC1E2D5D0EF100CC3BF3 /* Build configuration list for PBXProject "DashboardOfDoom" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				422A6E9F2D5A10C700B69213 /* Debug */,
-				422A6EA02D5A10C700B69213 /* Release */,
+				42EADC302D5D0EF200CC3BF3 /* Debug */,
+				42EADC312D5D0EF200CC3BF3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		422A6EA12D5A10C700B69213 /* Build configuration list for PBXNativeTarget "DashboardOfDoom" */ = {
+		42EADC322D5D0EF200CC3BF3 /* Build configuration list for PBXNativeTarget "DashboardOfDoom" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				422A6EA22D5A10C700B69213 /* Debug */,
-				422A6EA32D5A10C700B69213 /* Release */,
+				42EADC332D5D0EF200CC3BF3 /* Debug */,
+				42EADC342D5D0EF200CC3BF3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		42325BC32D5D322B00CF6970 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		42325BC42D5D322B00CF6970 /* LaunchAtLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 42325BC32D5D322B00CF6970 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
+			productName = LaunchAtLogin;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 422A6E8A2D5A10C700B69213 /* Project object */;
+	rootObject = 42EADC1B2D5D0EF100CC3BF3 /* Project object */;
 }

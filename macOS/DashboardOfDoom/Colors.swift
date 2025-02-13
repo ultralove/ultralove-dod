@@ -1,7 +1,5 @@
 import SwiftUI
 
-#if os(iOS)
-#else
 extension Color {
     init(light: Color, dark: Color) {
         self.init(NSColor(name: nil, dynamicProvider: { appearance in
@@ -9,5 +7,4 @@ extension Color {
         }))
     }
 }
-#endif
 

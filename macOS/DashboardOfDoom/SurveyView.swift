@@ -27,13 +27,13 @@ struct SurveyView: View {
             Chart {
                 ForEach(viewModel.measurements[selector] ?? []) { measurement in
                     if selector != .fascists && selector != .clowns && selector != .sonstige {
-                    LineMark(
-                        x: .value("Date", measurement.timestamp),
-                        y: .value("Fascism", 5.0)
-                    )
-                    .interpolationMethod(.linear)
-                    .foregroundStyle(.gray.opacity(0.67))
-                    .lineStyle(StrokeStyle(lineWidth: 1))
+                        LineMark(
+                            x: .value("Date", measurement.timestamp),
+                            y: .value("Fascism", 5.0)
+                        )
+                        .interpolationMethod(.linear)
+                        .foregroundStyle(.gray.opacity(0.67))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
                     }
                     AreaMark(
                         x: .value("Date", measurement.timestamp),
