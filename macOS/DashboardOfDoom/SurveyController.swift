@@ -45,7 +45,7 @@ class SurveyController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(33).reversed())
+                    let significantPolls = Array(sortedPolls.prefix(100).reversed())
                     var measurements: [SurveySelector: [Survey]] = [:]
 
                     var values: [Survey] = []
@@ -83,16 +83,12 @@ class SurveyController {
 
                     if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = SurveySensor(
-                            id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
+                            id: sensorName, placemark: placemark, location: sensorLocation, measurements: measurements, timestamp: Date.now)
                     }
                 }
             }
         }
         return sensor
-    }
-
-    func initializeDescriptors() {
-
     }
 
     func refreshLocalSurveys(for location: Location) async throws -> SurveySensor? {
@@ -118,7 +114,7 @@ class SurveyController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(33).reversed())
+                    let significantPolls = Array(sortedPolls.reversed())
                     var measurements: [SurveySelector: [Survey]] = [:]
 
                     var values: [Survey] = []
@@ -156,7 +152,7 @@ class SurveyController {
 
                     if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = SurveySensor(
-                            id: sensorName, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
+                            id: sensorName, placemark: placemark, location: sensorLocation, measurements: measurements, timestamp: Date.now)
                     }
                 }
             }

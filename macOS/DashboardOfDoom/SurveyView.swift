@@ -95,10 +95,15 @@ struct SurveyView: View {
             .chartYScale(domain: viewModel.minValue.value ... viewModel.maxValue.value)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
-                    Rectangle().fill(.clear).contentShape(Rectangle())
-                        .gesture(
+                    Rectangle()
+                        .fill(.clear)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
+                                    let horizontalAmount = abs(value.translation.width)
+                                    let verticalAmount = abs(value.translation.height)
+                                    if horizontalAmount > verticalAmount * 2.0 {
                                     if let plotFrame = geometryProxy.plotFrame {
                                         let x = value.location.x - geometryReader[plotFrame].origin.x
                                         if let source: Date = geometryProxy.value(atX: x) {
@@ -107,6 +112,7 @@ struct SurveyView: View {
                                             }
                                         }
                                     }
+                                }
                                 }
                                 .onEnded { value in
                                     self.selectedDate = nil

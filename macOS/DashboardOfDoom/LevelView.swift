@@ -47,7 +47,7 @@ struct LevelView: View {
                         y: .value("Level", currentLevel.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
+                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
                             Text(String(format: "%@ %@", currentLevel.timestamp.dateString(), currentLevel.timestamp.timeString()))
                                 .font(.footnote)
@@ -71,14 +71,14 @@ struct LevelView: View {
                         y: .value("Level", selectedLevel.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .disabled)) {
+                    .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
                             Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                 .font(.footnote)
-                        HStack {
+                            HStack {
                                 Text(String(format: "%.2f%@", selectedLevel.value.value, selectedLevel.value.unit.symbol))
                                     .font(.headline)
-                        }
+                            }
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
@@ -89,23 +89,29 @@ struct LevelView: View {
             .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value * 1.67))
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
-                    Rectangle().fill(.clear).contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                if let plotFrame = geometryProxy.plotFrame {
-                                    let x = value.location.x - geometryReader[plotFrame].origin.x
-                                    if let source: Date = geometryProxy.value(atX: x) {
-                                        if let target = Date.roundToPreviousQuarterHour(from: source) {
-                                            self.selectedDate = target
+                    Rectangle()
+                        .fill(.clear)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    let horizontalAmount = abs(value.translation.width)
+                                    let verticalAmount = abs(value.translation.height)
+                                    if horizontalAmount > verticalAmount * 2.0 {
+                                        if let plotFrame = geometryProxy.plotFrame {
+                                            let x = value.location.x - geometryReader[plotFrame].origin.x
+                                            if let source: Date = geometryProxy.value(atX: x) {
+                                                if let target = Date.roundToPreviousQuarterHour(from: source) {
+                                                    self.selectedDate = target
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            .onEnded { value in
-                                self.selectedDate = nil
-                            }
-                    )
+                                .onEnded { value in
+                                    self.selectedDate = nil
+                                }
+                        )
                 }
             }
         }

@@ -89,14 +89,22 @@ struct ForecastView: View {
             .chartYScale(domain: viewModel.minValue(selector: selector).value ... viewModel.maxValue(selector: selector).value)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
-                    Rectangle().fill(.clear).contentShape(Rectangle())
-                        .gesture(
+                    Rectangle()
+                        .fill(.clear)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
-                                    if let plotFrame = geometryProxy.plotFrame {
-                                        let x = value.location.x - geometryReader[plotFrame].origin.x
-                                        if let date: Date = geometryProxy.value(atX: x), let roundedHour = Date.roundToPreviousHour(from: date) {
-                                            self.selectedDate = roundedHour
+                                    let horizontalAmount = abs(value.translation.width)
+                                    let verticalAmount = abs(value.translation.height)
+                                    if horizontalAmount > verticalAmount * 2.0 {
+                                        if let plotFrame = geometryProxy.plotFrame {
+                                            let x = value.location.x - geometryReader[plotFrame].origin.x
+                                            if let source: Date = geometryProxy.value(atX: x) {
+                                                if let target = Date.roundToPreviousHour(from: source) {
+                                                    self.selectedDate = target
+                                                }
+                                            }
                                         }
                                     }
                                 }

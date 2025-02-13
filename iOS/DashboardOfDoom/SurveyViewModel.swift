@@ -52,10 +52,8 @@ import SwiftUI
             return Gradient.fascists
         case .afd:
             return Gradient.fascists
-        case .freie_waehler:
-            return Gradient.fascists
         case .bsw:
-            return Gradient.clowns
+            return Gradient.fascists
         case .clowns:
             return Gradient.clowns
         case .fdp:
@@ -83,6 +81,8 @@ import SwiftUI
                 self.measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
                 self.current = await self.aggregateCurrent(measurements: measurements)
                 self.timestamp = sensor.timestamp
+//                This messes up the map display if it adds the location of the Bundestag election poll
+//                self.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

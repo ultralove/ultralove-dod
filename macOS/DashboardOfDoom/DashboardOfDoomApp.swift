@@ -12,7 +12,8 @@ struct DashboardOfDoomApp: App {
     var body: some Scene {
         MenuBarExtra {
             ContentView()
-                .accentColor(.init(light: .blue, dark: .orange))
+                .preferredColorScheme(.dark) 
+//                .accentColor(.init(light: .blue, dark: .orange))
                 .environment(weatherViewModel)
                 .environment(forecastViewModel)
                 .environment(incidenceViewModel)

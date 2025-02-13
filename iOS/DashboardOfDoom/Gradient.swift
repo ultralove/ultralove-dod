@@ -2,23 +2,13 @@ import SwiftUI
 
 extension Gradient {
 
-#if os(iOS)
     static let linear = LinearGradient(
         gradient: Gradient(colors: [
-            Color.accentColor.opacity(0.67),
-            Color.accentColor.opacity(0.0)
+            Color.chart.opacity(0.67),
+            Color.chart.opacity(0.0)
         ]),
         startPoint: .top,
         endPoint: .bottom)
-#else
-    static let linear = LinearGradient(
-        gradient: Gradient(colors: [
-            Color.blue.opacity(0.66),
-            Color.blue.opacity(0.0)
-        ]),
-        startPoint: .top,
-        endPoint: .bottom)
-#endif
 
     static let fascists = LinearGradient(
         gradient: Gradient(colors: [

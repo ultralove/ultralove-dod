@@ -6,7 +6,7 @@ struct MapView: View {
     @Environment(IncidenceViewModel.self) private var incidence
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
-    @Environment(SurveyViewModel.self) private var fascism
+    @Environment(SurveyViewModel.self) private var survey
 
     //    private var cameraPosition: Binding<MapCameraPosition> {
     //        Binding(
@@ -36,7 +36,7 @@ struct MapView: View {
                 if let coordinate = weather.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(Color.faceplate)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
@@ -50,7 +50,7 @@ struct MapView: View {
                         .padding(.horizontal, 5)
                         .background(
                             RoundedRectangle(cornerRadius: 13)
-                                .fill(Color.accentColor)
+                                .fill(Color.faceplate)
                                 .opacity(0.33)
                         )
                         .foregroundStyle(.black)
@@ -59,7 +59,7 @@ struct MapView: View {
                 if let coordinate = incidence.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(Color.faceplate)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
@@ -73,7 +73,7 @@ struct MapView: View {
                         .padding(.horizontal, 5)
                         .background(
                             RoundedRectangle(cornerRadius: 13)
-                                .fill(Color.accentColor)
+                                .fill(Color.faceplate)
                                 .opacity(0.33)
                         )
                         .foregroundStyle(.black)
@@ -82,7 +82,7 @@ struct MapView: View {
                 if let coordinate = level.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(Color.faceplate)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
@@ -96,7 +96,7 @@ struct MapView: View {
                         .padding(.horizontal, 5)
                         .background(
                             RoundedRectangle(cornerRadius: 13)
-                                .fill(Color.accentColor)
+                                .fill(Color.faceplate)
                                 .opacity(0.33)
                         )
                         .foregroundStyle(.black)
@@ -105,7 +105,7 @@ struct MapView: View {
                 if let coordinate = radiation.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(Color.faceplate)
                             .frame(width: 11, height: 11)
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
@@ -119,7 +119,30 @@ struct MapView: View {
                         .padding(.horizontal, 5)
                         .background(
                             RoundedRectangle(cornerRadius: 13)
-                                .fill(Color.accentColor)
+                                .fill(Color.faceplate)
+                                .opacity(0.33)
+                        )
+                        .foregroundStyle(.black)
+                    }
+                }
+                if let coordinate = survey.sensor?.location.coordinate {
+                    Annotation("", coordinate: coordinate, anchor: .center) {
+                        Circle()
+                            .fill(Color.faceplate)
+                            .frame(width: 11, height: 11)
+                    }
+                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
+                        VStack {
+                            Image(systemName: "popcorn")
+                                .font(.title)
+                            Text(survey.faceplate(selector: .fascists))
+                        }
+                        .frame(width: 57, height: 57)
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(Color.faceplate)
                                 .opacity(0.33)
                         )
                         .foregroundStyle(.black)
