@@ -1,11 +1,12 @@
 import SwiftUI
+import LaunchAtLogin
 
 struct GrowingButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(.black)
-            .scaleEffect(configuration.isPressed ? 1.75 : 1.0)
-            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+//            .foregroundStyle(.black)
+//            .scaleEffect(configuration.isPressed ? 1.75 : 1.0)
+//            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
     }
 }
 
@@ -21,8 +22,21 @@ struct ContentView: View {
                     .font(.headline)
                 Spacer()
                 HStack {
-                    Button {
-                        NSApplication.shared.terminate(nil)
+                    Menu() {
+                        Button("Settings...") {
+                            openSettings()
+                        }
+                        .keyboardShortcut(",", modifiers: .command)
+                        .disabled(true)
+                        Divider()
+                        LaunchAtLogin.Toggle()
+                        Button("About...") {
+                        }
+                        Divider()
+                        Button("Quit") {
+                            NSApplication.shared.terminate(nil)
+                        }
+                        .keyboardShortcut("q", modifiers: .command)
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .imageScale(.large)
@@ -128,7 +142,9 @@ struct ContentView: View {
 
         }
         .frame(width: 768, height: 1024)
+        .preferredColorScheme(.dark)
         .background(colorScheme == .dark ? Color.black : Color.white)
+        .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
     }
 }
 

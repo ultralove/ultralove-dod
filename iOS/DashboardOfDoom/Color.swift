@@ -12,13 +12,13 @@ extension Color {
 
 extension Color {
     #if os(macOS)
-    static let faceplate = Self.blue
+    static let faceplate = Color(light: Color.blue, dark: Color.cyan)
     #else
     static let faceplate = Self.accentColor
     #endif
 
     #if os(macOS)
-        static let chart = Self.blue
+    static let chart = Color(light: Color.blue, dark: Color.cyan)
     #else
         static let chart = Self.accentColor
     #endif

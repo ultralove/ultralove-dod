@@ -35,7 +35,7 @@ class SurveyController {
     let fdp = [3]
     let bsw = [23]
 
-    func refreshGlobalSurveys(for location: Location) async throws -> SurveySensor? {
+    func refreshFederalSurveys(for location: Location) async throws -> SurveySensor? {
         var sensor: SurveySensor? = nil
         let sensorName = germany.name
         let sensorLocation = germany.location
@@ -45,7 +45,7 @@ class SurveyController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(100).reversed())
+                    let significantPolls = Array(sortedPolls.prefix(47).reversed())
                     var measurements: [SurveySelector: [Survey]] = [:]
 
                     var values: [Survey] = []
@@ -114,7 +114,7 @@ class SurveyController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.reversed())
+                    let significantPolls = Array(sortedPolls.prefix(47).reversed())
                     var measurements: [SurveySelector: [Survey]] = [:]
 
                     var values: [Survey] = []

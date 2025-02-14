@@ -8,6 +8,8 @@ struct MapView: View {
     @Environment(RadiationViewModel.self) private var radiation
     @Environment(SurveyViewModel.self) private var survey
 
+    private var viewModel = MapViewModel.shared
+
     //    private var cameraPosition: Binding<MapCameraPosition> {
     //        Binding(
     //            get: { self.viewModel.region },
@@ -32,12 +34,17 @@ struct MapView: View {
 
     func _view() -> some View {
         VStack {
-            Map(position: weather.binding(for: \.region), interactionModes: []) {
+            Map(position: viewModel.binding(for: \.region), interactionModes: []) {
                 if let coordinate = weather.sensor?.location.coordinate {
                     Annotation("", coordinate: coordinate, anchor: .center) {
-                        Circle()
-                            .fill(Color.faceplate)
-                            .frame(width: 11, height: 11)
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 20, height: 20)
+                            Circle()
+                                .fill(Color.faceplate)
+                                .frame(width: 13, height: 13)
+                        }
                     }
                     Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
                         VStack {

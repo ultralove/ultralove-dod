@@ -75,7 +75,7 @@ import SwiftUI
 
     @MainActor override func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await surveyController.refreshGlobalSurveys(for: location) {
+            if let sensor = try await surveyController.refreshFederalSurveys(for: location) {
                 self.sensor = sensor
                 let measurements = sensor.measurements
                 self.measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
@@ -83,6 +83,7 @@ import SwiftUI
                 self.timestamp = sensor.timestamp
 //                This messes up the map display if it adds the location of the Bundestag election poll
 //                self.updateRegion(for: self.id, with: sensor.location)
+//                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

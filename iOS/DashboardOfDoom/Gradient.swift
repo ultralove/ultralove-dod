@@ -1,7 +1,6 @@
 import SwiftUI
 
 extension Gradient {
-
     static let linear = LinearGradient(
         gradient: Gradient(colors: [
             Color.chart.opacity(0.67),

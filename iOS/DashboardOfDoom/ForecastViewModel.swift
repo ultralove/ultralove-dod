@@ -75,7 +75,7 @@ import SwiftUI
                 self.measurements = await self.sanitizeForecast(measurements: sensor.measurements)
                 self.current = await self.updateCurrent(measurements: self.measurements)
                 self.timestamp = sensor.timestamp
-                self.updateRegion(for: self.id, with: sensor.location)
+                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

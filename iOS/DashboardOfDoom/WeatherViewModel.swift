@@ -1,4 +1,5 @@
 import CoreLocation
+import MapKit
 import SwiftUI
 
 @Observable class WeatherViewModel: LocationViewModel {
@@ -34,7 +35,7 @@ import SwiftUI
                 self.symbol = sensor.measurements.symbol
                 self.sensor = sensor
                 self.timestamp = sensor.timestamp
-                self.updateRegion(for: self.id, with: sensor.location)
+                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {

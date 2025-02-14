@@ -55,7 +55,7 @@ import SwiftUI
                     self.measurements.append(contentsOf: forecast)
                 }
                 self.timestamp = sensor.timestamp
-                self.updateRegion(for: self.id, with: sensor.location)
+                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {
