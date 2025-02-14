@@ -170,15 +170,16 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(navigationVisible, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(
-                Color(
-                    uiColor: UIColor { traitCollection in
-                        traitCollection.userInterfaceStyle == .dark ? .black : .white
-                    }), for: .navigationBar
-            )
+            .toolbar(.hidden, for: .navigationBar)
+//            .navigationBarTitleDisplayMode(.inline)
+//            .toolbar(navigationVisible, for: .navigationBar)
+//            .toolbarBackground(.visible, for: .navigationBar)
+//            .toolbarBackground(
+//                Color(
+//                    uiColor: UIColor { traitCollection in
+//                        traitCollection.userInterfaceStyle == .dark ? .black : .white
+//                    }), for: .navigationBar
+//            )
             .toolbarBackground(.visible, for: .bottomBar)
             .toolbarBackground(
                 Color(
