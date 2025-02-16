@@ -48,28 +48,28 @@ import SwiftUI
 
     func gradient(selector: SurveySelector) -> LinearGradient {
         switch selector {
-        case .fascists:
-            return Gradient.fascists
-        case .afd:
-            return Gradient.fascists
-        case .bsw:
-            return Gradient.fascists
-        case .clowns:
-            return Gradient.clowns
-        case .fdp:
-            return Gradient.clowns
-        case .cducsu:
-            return Gradient.fascists
-        case .spd:
-            return Gradient.spd
-        case .gruene:
-            return Gradient.gruene
-        case .linke:
-            return Gradient.linke
-        case .sonstige:
-            return Gradient.sonstige
-        default:
-            return Gradient.linear
+            case .fascists:
+                return Gradient.fascists
+            case .afd:
+                return Gradient.fascists
+            case .bsw:
+                return Gradient.fascists
+            case .clowns:
+                return Gradient.clowns
+            case .fdp:
+                return Gradient.clowns
+            case .cducsu:
+                return Gradient.fascists
+            case .spd:
+                return Gradient.spd
+            case .gruene:
+                return Gradient.gruene
+            case .linke:
+                return Gradient.linke
+            case .sonstige:
+                return Gradient.sonstige
+            default:
+                return Gradient.linear
         }
     }
 
@@ -81,9 +81,9 @@ import SwiftUI
                 self.measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
                 self.current = await self.aggregateCurrent(measurements: measurements)
                 self.timestamp = sensor.timestamp
-//                This messes up the map display if it adds the location of the Bundestag election poll
-//                self.updateRegion(for: self.id, with: sensor.location)
-//                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+                //                This messes up the map display if it adds the location of the Bundestag election poll
+                //                self.updateRegion(for: self.id, with: sensor.location)
+                //                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {
@@ -93,7 +93,7 @@ import SwiftUI
 
     private func interpolateMeasurements(measurements: [SurveySelector: [Survey]]) async -> [SurveySelector: [Survey]] {
         var interpolatedMeasurements: [SurveySelector: [Survey]] = [:]
-        for(selector, measurement) in measurements {
+        for (selector, measurement) in measurements {
             interpolatedMeasurements[selector] = self.interpolateMeasurement(measurements: measurement)
         }
         return interpolatedMeasurements
@@ -111,11 +111,17 @@ import SwiftUI
                     }
                     else {
                         interpolatedMeasurement
-                            .append(Survey(value: Measurement(value: last.value.value, unit: UnitPercentage.percent), quality: .uncertain, timestamp: current))
+                            .append(
+                                Survey(
+                                    value: Measurement(value: last.value.value, unit: UnitPercentage.percent), quality: .uncertain,
+                                    timestamp: current))
                     }
                     current = current.addingTimeInterval(60 * 60 * 24)
                 }
             }
+        }
+        if let forecast = Self.forecast(data: interpolatedMeasurement) {
+            interpolatedMeasurement.append(contentsOf: forecast)
         }
         return interpolatedMeasurement
     }
@@ -123,13 +129,10 @@ import SwiftUI
     private func aggregateMeasurements(measurements: [SurveySelector: [Survey]]) async -> [SurveySelector: [Survey]] {
         var aggregatedMeasurements: [SurveySelector: [Survey]] = [:]
         for (selector, measurement) in measurements {
-            var uniqueMeasurements = Dictionary(grouping: measurement) { $0.timestamp }
+            let uniqueMeasurements = Dictionary(grouping: measurement) { $0.timestamp }
                 .map { timestamp, values in
                     self.aggregateMeasurement(timestamp: timestamp, measurements: values, quality: .uncertain)
                 }.sorted(by: { $0.timestamp < $1.timestamp })
-            if let forecast = await Self.forecast(data: uniqueMeasurements) {
-                uniqueMeasurements.append(contentsOf: forecast)
-            }
             aggregatedMeasurements[selector] = uniqueMeasurements
         }
         return aggregatedMeasurements
@@ -148,22 +151,25 @@ import SwiftUI
         return aggregated
     }
 
-    private static func forecast(data: [Survey]?) async -> [Survey]? {
-        guard let data = data, data.count > 0 else { return nil }
-        if let latest = data.max(by: { $0.timestamp < $1.timestamp }) {
-            return await Self.initializeForecast(from: latest.timestamp, count: Int(Double(data.count) * 0.33))
-        }
-        return nil
-    }
-
-    private static func initializeForecast(from: Date, count: Int) async -> [Survey]? {
-        guard count > 0 else {
+    private static func forecast(data: [Survey]?) -> [Survey]? {
+        var forecast: [Survey]? = nil
+        guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
-        var forecast: [Survey] = []
-        for i in 1 ... count {
-            let timestamp = from.addingTimeInterval(TimeInterval(i * 60 * 60 * 24))
-            forecast.append(Survey(value: Measurement(value: 0, unit: UnitPercentage.percent), quality: .unknown, timestamp: timestamp))
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+        }
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 23 * 24 * 3600)  // 23 days
+            forecast = prediction.forecasts.map { forecast in
+                Survey(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+            }
+        }
+        catch {
+            print("Forecasting error: \(error)")
         }
         return forecast
     }

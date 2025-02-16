@@ -65,22 +65,24 @@ import SwiftUI
     }
 
     private static func forecast(data: [Radiation]?) async -> [Radiation]? {
-        guard let data = data, data.count > 0 else { return nil }
-        if let latest = data.max(by: { $0.timestamp < $1.timestamp }) {
-            return await Self.initializeForecast(from: latest.timestamp, count: Int(Double(data.count) * 0.33))
-        }
-        return nil
-    }
-
-    private static func initializeForecast(from: Date, count: Int) async -> [Radiation]? {
-        guard count > 0 else {
+        var forecast: [Radiation]? = nil
+        guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
-        var forecast: [Radiation] = []
-        for i in 1 ... count {
-            if let timestamp = Calendar.current.date(byAdding: .hour, value: i, to: from) {
-                forecast.append(Radiation(value: Measurement<UnitRadiation>(value: 0, unit: .microsieverts), quality: .unknown, timestamp: timestamp))
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+    }
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .hourly)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 72 * 3600) // 3 days
+            forecast = prediction.forecasts.map { forecast in
+                Radiation(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+        }
             }
+        catch {
+            print("Forecasting error: \(error)")
         }
         return forecast
     }

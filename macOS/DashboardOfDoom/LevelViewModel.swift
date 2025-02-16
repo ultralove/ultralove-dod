@@ -67,22 +67,24 @@ import SwiftUI
     }
 
     private static func forecast(data: [Level]?) async -> [Level]? {
-        guard let data = data, data.count > 0 else { return nil }
-        if let latest = data.max(by: { $0.timestamp < $1.timestamp }) {
-            return await Self.initializeForecast(from: latest.timestamp, count: Int(Double(data.count) * 0.33))
-        }
-        return nil
-    }
-
-    private static func initializeForecast(from: Date, count: Int) async -> [Level]? {
-        guard count > 0 else {
+        var forecast: [Level]? = nil
+        guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
-        var forecast: [Level] = []
-        for i in 1 ... count {
-            if let timestamp = Calendar.current.date(byAdding: .minute, value: i * 15, to: from) {
-                forecast.append(Level(value: Measurement<UnitLength>(value: 0, unit: .meters), quality: .unknown, timestamp: timestamp))
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+        }
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .quarterHourly)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 36 * 3600) // 1.5 days
+            forecast = prediction.forecasts.map { forecast in
+                Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
+        }
+        catch {
+            print("Forecasting error: \(error)")
         }
         return forecast
     }

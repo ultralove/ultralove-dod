@@ -2,7 +2,7 @@ import Foundation
 
 struct Survey: Identifiable {
     let id = UUID()
-    let value: Measurement<Dimension>
+    let value: Measurement<UnitPercentage>
     let quality: QualityCode
     let timestamp: Date
 

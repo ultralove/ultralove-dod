@@ -53,7 +53,7 @@ import Foundation
                 self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
                 if let current = Self.nowCast(data: self.measurements, alpha: 0.33) {
                     self.measurements.append(current)
-                    if let forecast = Self.forcast(data: self.measurements) {
+                    if let forecast = await Self.forecast(data: self.measurements) {
                         self.measurements.append(contentsOf: forecast)
                     }
                 }
@@ -80,24 +80,32 @@ import Foundation
         return nil
     }
 
-    private static func nowCast(data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double) -> Measurement<UnitIncidence> {
+    private static func nowCast(
+        data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double
+    ) -> Measurement<UnitIncidence> {
         let value = alpha * data.value + (1 - alpha) * previous.value
         return Measurement<UnitIncidence>(value: value, unit: .casesper100k)
     }
 
-    private static func forcast(data: [Incidence]?) -> [Incidence]? {
+    private static func forecast(data: [Incidence]?) async -> [Incidence]? {
+        var forecast: [Incidence]? = nil
         guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
-        var forecast: [Incidence] = []
-        if let max = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
-            let valueCount = Int(Double(historicalData.count) * 0.33)
-            for i in 0 ..< valueCount {
-                if let timestamp = Calendar.current.date(byAdding: .day, value: i + 1, to: max.timestamp) {
-                    let value = Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
-                    forecast.append(Incidence(value: value, quality: .unknown, timestamp: timestamp))
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+        }
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 42 * 24 * 3600) // 42 days
+            forecast = prediction.forecasts.map { forecast in
+                Incidence(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                 }
             }
+        catch {
+            print("Forecasting error: \(error)")
         }
         return forecast
     }

@@ -50,7 +50,7 @@ extension Date {
         adjustedComponents.hour = 0    // Reset hours to 0
         adjustedComponents.minute = 0  // Reset minutes to 0
         adjustedComponents.second = 0  // Reset seconds to 0
-        adjustedComponents.timeZone = TimeZone.current
+        adjustedComponents.timeZone = TimeZone(abbreviation: "UTC")
 
         // Create a new date using the adjusted components
         return calendar.date(from: adjustedComponents)
