@@ -121,34 +121,7 @@ import SwiftUI
                 }
             }
         }
-        if let forecast = Self.forecastMeasurement(data: interpolatedMeasurement) {
-            interpolatedMeasurement.append(contentsOf: forecast)
-        }
         return interpolatedMeasurement
     }
-
-    private static func forecastMeasurement(data: [Particle]?) -> [Particle]? {
-        var forecast: [Particle]? = nil
-        guard let historicalData = data, historicalData.count > 0 else {
-            return nil
-        }
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
-            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-        }
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 1, d: 1, q: 1), interval: .hourly)
-        do {
-            try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 7 * 24 * 3600)  // 7 days
-            forecast = prediction.forecasts.map { forecast in
-                Particle(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
-            }
-        }
-        catch {
-            print("Forecasting error: \(error)")
-        }
-        return forecast
-    }
-
 }
 

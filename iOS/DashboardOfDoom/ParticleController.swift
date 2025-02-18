@@ -28,12 +28,51 @@ struct ParticleComponent {
 class ParticleController {
     func refreshParticles(for location: Location) async throws -> ParticleSensor? {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
-            print("Nearest station: \(nearestStation)")
             if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
-                print("Placemark: \(placemark)")
-                if let measurements = try await Self.fetchMeasurements(station: nearestStation) {
-                    return ParticleSensor(id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                if let interval = Self.calculateTimeInterval(span: 7 * 24 * 60 * 60) {  // 7 days
+                    if var measurements = try await Self.fetchMeasurements(station: nearestStation, from: interval.from, to: interval.to) {
+                        if let forecastInterval = Self.calculateForecastTimeInterval(span: 14 * 24 * 60 * 60) {  // 7 days
+                            if let forecast = try await Self.fetchForecasts(
+                                station: nearestStation, from: forecastInterval.from, to: forecastInterval.to)
+                            {
+                                for (selector, values) in measurements {
+                                    var actual = values
+                                    actual.append(contentsOf: forecast[selector] ?? [])
+                                    measurements[selector] = actual
+                                }
+                            }
+                            return ParticleSensor(
+                                id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements,
+                                timestamp: Date.now)
+                        }
+                    }
                 }
+            }
+        }
+        return nil
+    }
+
+    private static func calculateTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour], from: Date.now)
+        var adjustedComponents = components
+        adjustedComponents.minute = 0  // Reset minutes to 0
+        adjustedComponents.second = 0  // Reset seconds to 0
+        if let to = Calendar.current.date(from: adjustedComponents) {
+            let from = to.addingTimeInterval(-1 * span)  // rewind
+            return (from, to)  // notice the reversed order
+        }
+        return nil
+    }
+
+    private static func calculateForecastTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
+        if let next = Date.roundToNextHour(from: Date.now) {
+            let components = Calendar.current.dateComponents([.year, .month, .day, .hour], from: next)
+            var adjustedComponents = components
+            adjustedComponents.minute = 0  // Reset minutes to 0
+            adjustedComponents.second = 0  // Reset seconds to 0
+            if let from = Calendar.current.date(from: adjustedComponents) {
+                let to = from.addingTimeInterval(span)  // forward
+                return (from, to)  // notice the reversed order
             }
         }
         return nil
@@ -84,9 +123,9 @@ class ParticleController {
         return nearestStation
     }
 
-    private static func fetchMeasurements(station: ParticleStation) async throws -> [ParticleSelector: [Particle]]? {
+    private static func fetchMeasurements(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [Particle]]? {
         var measurements: [ParticleSelector: [Particle]]? = nil
-        if let data = try await UBAAPI.fetchMeasurements(code: station.code) {
+        if let data = try await UBAAPI.fetchMeasurements(code: station.code, from: from, to: to) {
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                 if let features = json["data"] as? [String: Any] {
                     if let featureId = features.keys.first {
@@ -100,7 +139,59 @@ class ParticleController {
                                                     if let selector = ParticleSelector(rawValue: componentId) {
                                                         if let unit = Self.selectMeasurementUnit(component: selector) {
                                                             if let value = measurementItem[1] as? Double {
-                                                                let measurement = Particle(value: Measurement(value: value, unit: unit), quality: .good, timestamp: timestamp)
+                                                                let measurement = Particle(
+                                                                    value: Measurement(value: value, unit: unit), quality: .good,
+                                                                    timestamp: timestamp)
+                                                                if measurements == nil {
+                                                                    measurements = [selector: [measurement]]
+                                                                }
+                                                                else if measurements?[selector] == nil {
+                                                                    measurements?[selector] = [measurement]
+                                                                }
+                                                                else {
+                                                                    measurements?[selector]?.append(measurement)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if measurements != nil {
+            for (selector, values) in measurements! {
+                measurements?[selector] = values.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+        }
+        return measurements
+    }
+
+    private static func fetchForecasts(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [Particle]]? {
+        var measurements: [ParticleSelector: [Particle]]? = nil
+        if let data = try await UBAAPI.fetchForecasts(code: station.code, from: from, to: to) {
+            if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
+                if let features = json["data"] as? [String: Any] {
+                    if let featureId = features.keys.first {
+                        if let measurementSequence = features[featureId] as? [String: [Any]] {
+                            for (_, measurementValues) in measurementSequence {
+                                if let measurementEnd = measurementValues[0] as? String {
+                                    if let timestamp = Date.fromString(measurementEnd, format: "yyyy-MM-dd HH:mm:ss") {
+                                        for measurementItems in measurementValues[4...] {
+                                            if let measurementItem = measurementItems as? [Any] {
+                                                if let componentId = measurementItem[0] as? Int {
+                                                    if let selector = ParticleSelector(rawValue: componentId) {
+                                                        if let unit = Self.selectMeasurementUnit(component: selector) {
+                                                            if let value = measurementItem[1] as? Double {
+                                                                let measurement = Particle(
+                                                                    value: Measurement(value: value, unit: unit), quality: .uncertain,
+                                                                    timestamp: timestamp)
                                                                 if measurements == nil {
                                                                     measurements = [selector: [measurement]]
                                                                 }
