@@ -99,7 +99,7 @@ import Foundation
         let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
         do {
             try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 31 * 24 * 3600) // 31 days
+            let prediction = try predictor.forecast(duration: 42 * 24 * 3600) // 42 days
             forecast = prediction.forecasts.map { forecast in
                 Incidence(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }

@@ -170,4 +170,10 @@ extension Date {
     func dateString() -> String {
         return self.absoluteString(fmtStr: "yyyy-MM-dd")
     }
+
+    static func fromString(_ string: String, format: String) -> Date? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = format
+        return dateFormatter.date(from: string)
+    }
 }
