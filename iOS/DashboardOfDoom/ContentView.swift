@@ -71,6 +71,12 @@ struct ContentView: View {
 
                     case .environment:
                         VStack {
+                            ParticleView(header: "PM\u{2081}\u{2080} at ", selector: .pm10)
+                                .frame(height: 267)
+                            ParticleView(header: "PM\u{2082}\u{2085} at ", selector: .pm25)
+                                .frame(height: 267)
+                            ParticleView(header: "NO\u{2082} at ", selector: .no2)
+                                .frame(height: 267)
                             IncidenceView()
                                 .frame(height: 267)
                             Divider()

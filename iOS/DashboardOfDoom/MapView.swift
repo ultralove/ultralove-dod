@@ -6,6 +6,7 @@ struct MapView: View {
     @Environment(IncidenceViewModel.self) private var incidence
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
+    @Environment(ParticleViewModel.self) private var particle
     @Environment(SurveyViewModel.self) private var survey
 
     private var viewModel = MapViewModel.shared
@@ -74,6 +75,29 @@ struct MapView: View {
                             Image(systemName: "facemask")
                                 .font(.title)
                             Text(incidence.faceplate)
+                        }
+                        .frame(width: 57, height: 57)
+                        .padding(5)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(Color.faceplate)
+                                .opacity(0.33)
+                        )
+                        .foregroundStyle(.black)
+                    }
+                }
+                if let coordinate = particle.sensor?.location.coordinate {
+                    Annotation("", coordinate: coordinate, anchor: .center) {
+                        Circle()
+                            .fill(Color.faceplate)
+                            .frame(width: 11, height: 11)
+                    }
+                    Annotation("", coordinate: coordinate, anchor: .topLeading) {
+                        VStack {
+                            Image(systemName: "waveform.path.ecg")
+                                .font(.title)
+                            Text(particle.faceplate(selector: .pm10))
                         }
                         .frame(width: 57, height: 57)
                         .padding(5)
