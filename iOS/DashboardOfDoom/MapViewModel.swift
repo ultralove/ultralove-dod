@@ -13,12 +13,18 @@ import SwiftUI
     static let shared = MapViewModel()
     private init() {}
 
+#if os(macOS)
+    static let frameOffset = 0.0
+#else
+    static let frameOffset = 4_250.0
+#endif
+
     @MainActor func updateRegion(for id: UUID, with location: Location) -> Void {
         self.visibleRegion[id] = location
         let maxDistance = Self.greatestDistance(locations: Array(self.visibleRegion.values))
         for location in self.visibleRegion.values {
             let boundingRectangle = Self.makeBoundingRectangle(
-                centerCoordinate: location.coordinate, widthMeters: (maxDistance.value / 2) + 4_250, heightMeters: (maxDistance.value / 2) + 4_250)
+                centerCoordinate: location.coordinate, widthMeters: (maxDistance.value / 2) + Self.frameOffset, heightMeters: (maxDistance.value / 2) + Self.frameOffset)
             self.visibleRectangle = self.visibleRectangle.union(boundingRectangle)
         }
         self.region = MapCameraPosition.region(MKCoordinateRegion(self.visibleRectangle))

@@ -20,17 +20,6 @@ struct HeaderView: View {
                 HStack {
                     Image(systemName: "globe")
                     Text(String(format: "%@", sensor?.placemark ?? "<Unknown>"))
-                        //                        .foregroundColor(.blue)
-                        //                        .underline()
-                        .onTapGesture {
-                        }
-                    //                        .onHover { hovering in
-                    //                            if hovering {
-                    //                                NSCursor.pointingHand.push()
-                    //                            } else {
-                    //                                NSCursor.pop()
-                    //                            }
-                    //                        }
                 }
                 .font(.footnote)
             }
@@ -50,17 +39,6 @@ struct HeaderView: View {
                 HStack {
                     Image(systemName: "globe")
                     Text(String(format: "%@", sensor?.placemark ?? "<Unknown>"))
-                        //                        .foregroundColor(.blue)
-                        //                        .underline()
-                        .onTapGesture {
-                        }
-                    //                        .onHover { hovering in
-                    //                            if hovering {
-                    //                                NSCursor.pointingHand.push()
-                    //                            } else {
-                    //                                NSCursor.pop()
-                    //                            }
-                    //                        }
                     Spacer()
                 }
                 .font(.footnote)
