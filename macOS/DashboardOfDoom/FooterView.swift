@@ -9,8 +9,7 @@ struct FooterView: View {
         HStack {
             Text("Last update: \(Date.absoluteString(date: sensor?.timestamp))")
                 .font(.footnote)
-//                .foregroundColor(.gray)
-                .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.gray)
+                .foregroundColor(.gray)
             Spacer()
         }
     }
