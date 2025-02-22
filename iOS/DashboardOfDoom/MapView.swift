@@ -49,11 +49,18 @@ struct MapView: View {
                     }
                     Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
                         VStack {
+                            Spacer()
                             Image(systemName: weather.symbol)
                                 .font(.largeTitle)
-                            Text(String(format: "%.1f%@", weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
+                            Spacer()
+                            VStack(alignment: .leading) {
+                                Text(
+                                    String(
+                                        format: "\(GreekLetters.mathematicalBoldCapitalTau.rawValue): %.1f%@",
+                                        weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
+                            }
+                            Spacer()
                         }
-                        .frame(width: 57, height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -72,11 +79,15 @@ struct MapView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
+                            Spacer()
                             Image(systemName: "facemask")
                                 .font(.title)
+                            Spacer()
+                            VStack(alignment: .leading) {
                             Text(incidence.faceplate)
                         }
-                        .frame(width: 57, height: 57)
+                            Spacer()
+                        }
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -95,11 +106,17 @@ struct MapView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .topLeading) {
                         VStack {
+                            Spacer()
                             Image(systemName: "waveform.path.ecg")
                                 .font(.title)
+                            Spacer()
+                            VStack(alignment: .leading) {
                             Text(particle.faceplate(selector: .pm10))
+//                                Text(particle.faceplate(selector: .pm25))
+//                                Text(particle.faceplate(selector: .no2))
+                            }
+                            Spacer()
                         }
-                        .frame(width: 57, height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -118,11 +135,15 @@ struct MapView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
+                            Spacer()
                             Image(systemName: "water.waves")
                                 .font(.title)
+                            Spacer()
+                            VStack(alignment: .leading) {
                             Text(level.faceplate)
                         }
-                        .frame(width: 57, height: 57)
+                            Spacer()
+                        }
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -141,11 +162,15 @@ struct MapView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
+                            Spacer()
                             Image(systemName: "atom")
                                 .font(.title)
+                            Spacer()
+                            VStack(alignment: .leading) {
                             Text(radiation.faceplate)
                         }
-                        .frame(width: 57, height: 57)
+                            Spacer()
+                        }
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -164,11 +189,15 @@ struct MapView: View {
                     }
                     Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
                         VStack {
+                            Spacer()
                             Image(systemName: "popcorn")
                                 .font(.title)
+                            Spacer()
+                            VStack(alignment: .leading) {
                             Text(survey.faceplate(selector: .fascists))
                         }
-                        .frame(width: 57, height: 57)
+                            Spacer()
+                        }
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(

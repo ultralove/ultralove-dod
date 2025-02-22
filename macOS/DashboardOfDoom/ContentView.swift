@@ -10,6 +10,42 @@ struct GrowingButton: ButtonStyle {
     }
 }
 
+//struct MapSizeModifier: ViewModifier {
+//    @Environment(\.horizontalSizeClass) var sizeClass
+//
+//    func body(content: Content) -> some View {
+//        content.frame(height: sizeClassBasedHeight)
+//    }
+//
+//    private var sizeClassBasedHeight: CGFloat {
+//        switch sizeClass {
+//            case .compact:
+//                return 300
+//            case .regular:
+//                return 500
+//            default:
+//                return 400
+//        }
+//    }
+//}
+
+struct MapSizeModifier: ViewModifier {
+    func body(content: Content) -> some View {
+#if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            content
+                .frame(height: 666)
+        } else {
+            content
+                .frame(height: 333)
+        }
+#else
+        content
+            .frame(height: 500)
+#endif
+    }
+}
+
 struct ContentView: View {
     @Environment(\.openSettings) private var openSettings
     @Environment(\.colorScheme) var colorScheme
@@ -51,7 +87,8 @@ struct ContentView: View {
                 VStack {
                     MapView()
                         .padding(.vertical, 5)
-                        .frame(height: 500)
+//                        .frame(height: 500)
+                        .modifier(MapSizeModifier())
                     IncidenceView()
                         .padding(.vertical, 5)
                         .frame(height: 200)

@@ -9,9 +9,9 @@ import SwiftUI
 
     var faceplate: String {
         guard let measurement = current?.value else {
-            return "\(GreekLetters.mathematicalItalicCapitalGamma.rawValue):n/a"
+            return "\(GreekLetters.mathematicalItalicCapitalGamma.rawValue): n/a"
         }
-        return String(format: "\(GreekLetters.mathematicalBoldCapitalGamma.rawValue):%.3f", measurement.value)
+        return String(format: "\(GreekLetters.mathematicalBoldCapitalGamma.rawValue): %.3f%@", measurement.value, measurement.unit.symbol)
     }
 
     var maxValue: Measurement<UnitRadiation> {

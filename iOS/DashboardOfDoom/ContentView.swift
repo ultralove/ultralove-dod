@@ -2,6 +2,43 @@ import Charts
 import MapKit
 import SwiftUI
 
+//struct MapSizeModifier: ViewModifier {
+//    @Environment(\.horizontalSizeClass) var sizeClass
+//
+//    func body(content: Content) -> some View {
+//        content.frame(height: sizeClassBasedHeight)
+//    }
+//
+//    private var sizeClassBasedHeight: CGFloat {
+//        switch sizeClass {
+//            case .compact:
+//                return 300
+//            case .regular:
+//                return 500
+//            default:
+//                return 400
+//        }
+//    }
+//}
+
+struct MapSizeModifier: ViewModifier {
+    func body(content: Content) -> some View {
+#if os(iOS)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            content
+                .frame(height: 666)
+        } else {
+            content
+                .frame(height: 333)
+        }
+#else
+        content
+            .frame(height: 500)
+#endif
+    }
+}
+
+
 struct ContentView: View {
     @State private var selectedScreen = Screen.home
     @State private var navigationVisible = Visibility.hidden
@@ -23,7 +60,9 @@ struct ContentView: View {
                     case .home:
                         VStack {
                             MapView()
-                                .frame(height: 333)
+                                .modifier(MapSizeModifier())
+//                                .frame(height: 333)
+//                                .frame(height: 666)
                             Divider()
                             IncidenceView()
                                 .frame(height: 267)

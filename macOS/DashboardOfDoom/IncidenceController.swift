@@ -78,7 +78,7 @@ class IncidenceController {
                                         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                                         dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
                                         if let date = dateFormatter.date(from: dateString) {
-                                            incidence.append(Incidence(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k), quality: .good, timestamp: date))
+                                            incidence.append(Incidence(value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good, timestamp: date))
                                         }
                                     }
                                 }
