@@ -19,10 +19,13 @@ class ForecastController {
             Forecast(value: Measurement(value: $0.humidity * 100, unit: UnitPercentage.percent), quality: .uncertain, timestamp: $0.date)
         }
         let precipitationChance = forecast.map {
-            Forecast(value: Measurement(value: $0.precipitationChance * 100, unit: UnitPercentage.percent), quality: .uncertain, timestamp: $0.date)
+            Forecast(
+                value: Measurement(value: $0.precipitationChance * 100, unit: UnitPercentage.percent), quality: .uncertain, timestamp: $0.date)
         }
         let precipitationAmount = forecast.map {
-            Forecast(value: Measurement(value: $0.precipitationAmount.value, unit: $0.precipitationAmount.unit), quality: .uncertain, timestamp: $0.date)
+            Forecast(
+                value: Measurement(value: $0.precipitationAmount.value, unit: $0.precipitationAmount.unit), quality: .uncertain, timestamp: $0.date
+            )
         }
         let pressure = forecast.map {
             Forecast(value: Measurement(value: $0.pressure.value, unit: $0.pressure.unit), quality: .uncertain, timestamp: $0.date)

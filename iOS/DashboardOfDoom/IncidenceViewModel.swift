@@ -11,15 +11,15 @@ import Foundation
         guard let measurement = current?.value else {
             return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
         }
-        return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue):%.1f", measurement.value)
+        return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
     }
 
     var maxValue: Measurement<UnitIncidence> {
-        return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
+        return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesPer100k)
     }
 
     var minValue: Measurement<UnitIncidence> {
-        return Measurement<UnitIncidence>(value: 0.0, unit: .casesper100k)
+        return Measurement<UnitIncidence>(value: 0.0, unit: .casesPer100k)
     }
 
     var current: Incidence? {
@@ -84,7 +84,7 @@ import Foundation
         data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double
     ) -> Measurement<UnitIncidence> {
         let value = alpha * data.value + (1 - alpha) * previous.value
-        return Measurement<UnitIncidence>(value: value, unit: .casesper100k)
+        return Measurement<UnitIncidence>(value: value, unit: .casesPer100k)
     }
 
     private static func forecast(data: [Incidence]?) async -> [Incidence]? {

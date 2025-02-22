@@ -29,6 +29,10 @@ enum GreekLetters: String {
     case mathematicalBoldSmallRho = "\u{1D6D2}"
     case mathematicalItalicCapitalRho = "\u{1D477}"
     case mathematicalItalicSmallRho = "\u{1D746}"
+    case mathematicalBoldCapitalTau = "\u{1D6BB}"
+    case mathematicalBoldSmallTau = "\u{1D6D5}"
+    case mathematicalItalicCapitalTau = "\u{1D72F}"
+    case mathematicalItalicSmallTau = "\u{1D749}"
     case levelLeft = "\u{230A}"
     case levelRight = "\u{230B}"
 }

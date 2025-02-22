@@ -21,18 +21,18 @@ struct Incidence: Identifiable {
     }
 
     init() {
-        self.init(value: Measurement<UnitIncidence>(value: 0, unit: .casesper100k), quality: .unknown)
+        self.init(value: Measurement<UnitIncidence>(value: 0, unit: .casesPer100k), quality: .unknown)
     }
 
     init(value: Double, quality: QualityCode, timestamp: Date) {
-        self.init(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k), quality: quality, timestamp: timestamp)
+        self.init(value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: quality, timestamp: timestamp)
     }
 
     init(value: Double, quality: QualityCode) {
-        self.init(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k), quality: quality)
+        self.init(value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: quality)
     }
 
     init(value: Double) {
-        self.init(value: Measurement<UnitIncidence>(value: value, unit: .casesper100k))
+        self.init(value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k))
     }
 }

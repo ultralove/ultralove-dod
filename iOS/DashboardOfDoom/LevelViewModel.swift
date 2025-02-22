@@ -9,11 +9,12 @@ import SwiftUI
 
     var faceplate: String {
         guard let measurement = current?.value else {
-            return "\(GreekLetters.levelLeft.rawValue)n/a\(GreekLetters.levelRight.rawValue)"
+            //            return "\(GreekLetters.levelLeft.rawValue)n/a\(GreekLetters.levelRight.rawValue)"
+            return "\(GreekLetters.mathematicalItalicCapitalEta.rawValue):n/a"
         }
         return String(
-            format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
-            measurement.value, measurement.unit.symbol)
+            //            format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
+            format: "\(GreekLetters.mathematicalBoldCapitalEta.rawValue): %.2f%@", measurement.value, measurement.unit.symbol)
     }
 
     var maxValue: Measurement<UnitLength> {
@@ -74,15 +75,15 @@ import SwiftUI
         let unit = historicalData[0].value.unit
         let historicalDataPoints = historicalData.map { incidence in
             TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-    }
+        }
         let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .quarterHourly)
         do {
             try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 36 * 3600) // 1.5 days
+            let prediction = try predictor.forecast(duration: 36 * 3600)  // 1.5 days
             forecast = prediction.forecasts.map { forecast in
                 Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
-        }
             }
+        }
         catch {
             print("Forecasting error: \(error)")
         }

@@ -32,9 +32,21 @@ import SwiftUI
 
     func faceplate(selector: ParticleSelector) -> String {
         guard let measurement = current[selector]?.value else {
-            return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue)\(GreekLetters.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}:n/a"
+            return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue)\(GreekLetters.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}: n/a"
         }
-        return String(format: "\(GreekLetters.mathematicalBoldCapitalRho.rawValue)\(GreekLetters.mathematicalBoldCapitalMu.rawValue)\u{2081}\u{2080}:%.0f", measurement.value)
+        if selector == .pm10 {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalRho.rawValue)\(GreekLetters.mathematicalBoldCapitalMu.rawValue)\u{2081}\u{2080}: %.0f%@", measurement.value, measurement.unit.symbol)
+        }
+        else if selector == .pm25 {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalRho.rawValue)\(GreekLetters.mathematicalBoldCapitalMu.rawValue)\u{2082}\u{2085}: %.0f%@", measurement.value, measurement.unit.symbol)
+        }
+        else if selector == .o3 {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)\u{2083}:   %.0f%@", measurement.value, measurement.unit.symbol)
+        }
+        else if selector == .no2 {
+            return String(format: "\(GreekLetters.mathematicalBoldCapitalNu.rawValue)\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)\u{2082}:  %.0f%@", measurement.value, measurement.unit.symbol)
+        }
+        return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue)\(GreekLetters.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}: n/a"
     }
 
     func trend(selector: ParticleSelector) -> String {
