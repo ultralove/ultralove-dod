@@ -61,6 +61,7 @@ struct MapView: View {
                             }
                             Spacer()
                         }
+                        .frame(height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -88,6 +89,7 @@ struct MapView: View {
                             }
                             Spacer()
                         }
+                        .frame(height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -117,6 +119,7 @@ struct MapView: View {
                             }
                             Spacer()
                         }
+                        .frame(height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -144,6 +147,7 @@ struct MapView: View {
                             }
                             Spacer()
                         }
+                        .frame(height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -171,6 +175,7 @@ struct MapView: View {
                             }
                             Spacer()
                         }
+                        .frame(height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
@@ -198,6 +203,7 @@ struct MapView: View {
                             }
                             Spacer()
                         }
+                        .frame(height: 57)
                         .padding(5)
                         .padding(.horizontal, 5)
                         .background(
