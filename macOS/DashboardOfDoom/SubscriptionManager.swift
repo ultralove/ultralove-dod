@@ -1,0 +1,57 @@
+import Foundation
+
+protocol SubscriptionManagerDelegate: Identifiable where ID == UUID {
+    func refreshData(location: Location) async
+}
+
+class SubscriptionManager: LocationManagerDelegate {
+    static let shared = SubscriptionManager()
+
+    private let locationManager = LocationManager()
+    private var location: Location?
+
+    private let updateInterval: TimeInterval = 60
+    private var subscriptions: [Subscription] = []
+    private var delegates: [UUID: any SubscriptionManagerDelegate] = [:]
+
+    private init() {
+        self.locationManager.delegate = self
+        Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
+            self.updateSubscriptions()
+        }
+    }
+
+    private func updateSubscriptions() {
+        for subscription in self.subscriptions {
+            subscription.update(timeout: self.updateInterval)
+            if subscription.isPending() {
+                if let delegate = self.delegates[subscription.id], let location = self.location {
+                    Task {
+                        await delegate.refreshData(location: location)
+                    }
+                }
+                subscription.reset()
+            }
+        }
+    }
+
+    func locationManager(didUpdateLocation location: Location) async {
+        self.location = location
+        for delegate in self.delegates.values {
+            await delegate.refreshData(location: location)
+        }
+        for subscription in self.subscriptions {
+            subscription.reset()
+        }
+    }
+
+    func addSubscription(id: UUID, delegate: any SubscriptionManagerDelegate, timeout: TimeInterval) {
+        self.subscriptions.append(Subscription(id: id, timeout: timeout * 60))
+        self.delegates[delegate.id] = delegate
+    }
+
+    func removeSubscription(id: UUID) {
+        self.subscriptions.removeAll { $0.id == id }
+        self.delegates.removeValue(forKey: id)
+    }
+}

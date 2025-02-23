@@ -33,7 +33,7 @@ class ForecastController {
         let visibility = forecast.map {
             Forecast(value: Measurement(value: $0.visibility.value, unit: $0.visibility.unit), quality: .uncertain, timestamp: $0.date)
         }
-        if let placemark = await LocationController.reverseGeocodeLocation(location: location) {
+        if let placemark = await LocationManager.reverseGeocodeLocation(location: location) {
             var measurements: [ForecastSelector: [Forecast]] = [:]
             measurements[.actual] = actual
             measurements[.apparent] = apparent

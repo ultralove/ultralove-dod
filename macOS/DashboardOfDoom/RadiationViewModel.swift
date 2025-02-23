@@ -1,11 +1,17 @@
 import SwiftUI
 
-@Observable class RadiationViewModel: LocationViewModel {
+@Observable class RadiationViewModel: Identifiable, SubscriptionManagerDelegate {
     private let radiationController = RadiationController()
 
+    let id = UUID()
     var sensor: RadiationSensor?
     var measurements: [Radiation] = []
     var timestamp: Date? = nil
+
+    init() {
+        let subscriptionManager = SubscriptionManager.shared
+        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+    }
 
     var faceplate: String {
         guard let measurement = current?.value else {
@@ -46,16 +52,12 @@ import SwiftUI
         return symbol
     }
 
-    @MainActor override func refreshData(location: Location) async -> Void {
+    func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await radiationController.refreshRadiation(for: location) {
-                self.sensor = sensor
-                self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
-                if let forecast = await Self.forecast(data: self.measurements) {
-                    self.measurements.append(contentsOf: forecast)
-                }
-                self.timestamp = sensor.timestamp
-                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+                print("\(Date.now): Radiation: Refreshing data...")
+                await self.synchronizeData(sensor: sensor)
+                print("\(Date.now): Radiation: Done.")
             }
         }
         catch {
@@ -64,26 +66,10 @@ import SwiftUI
         }
     }
 
-    private static func forecast(data: [Radiation]?) async -> [Radiation]? {
-        var forecast: [Radiation]? = nil
-        guard let historicalData = data, historicalData.count > 0 else {
-            return nil
-        }
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
-            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-        }
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .hourly)
-        do {
-            try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 72 * 3600) // 3 days
-            forecast = prediction.forecasts.map { forecast in
-                Radiation(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
-            }
-        }
-        catch {
-            print("Forecasting error: \(error)")
-        }
-        return forecast
+    @MainActor func synchronizeData(sensor: RadiationSensor) async -> Void {
+        self.sensor = sensor
+        self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
+        self.timestamp = sensor.timestamp
+        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 }

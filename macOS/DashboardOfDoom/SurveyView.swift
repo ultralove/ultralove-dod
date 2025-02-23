@@ -29,10 +29,10 @@ struct SurveyView: View {
                     if selector != .fascists && selector != .clowns && selector != .sonstige {
                         LineMark(
                             x: .value("Date", measurement.timestamp),
-                            y: .value("Fascism", 5.0)
+                            y: .value("Survey", 5.0)
                         )
                         .interpolationMethod(.linear)
-                        .foregroundStyle(.gray.opacity(0.67))
+                        .foregroundStyle(.black.opacity(0.33))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }
                     AreaMark(
@@ -43,7 +43,7 @@ struct SurveyView: View {
                     .foregroundStyle(viewModel.gradient(selector: selector))
                 }
 
-                if let currentValue = viewModel.current[selector] {
+                if let currentValue = viewModel.current(selector: selector) {
                     RuleMark(x: .value("Date", currentValue.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(

@@ -26,16 +26,43 @@ struct ParticleView: View {
         VStack {
             Chart {
                 ForEach(viewModel.measurements[selector] ?? []) { measurement in
+                    if selector == .pm10 {
+                        LineMark(
+                            x: .value("Date", measurement.timestamp),
+                            y: .value("Particle", 40.0)
+                        )
+                        .interpolationMethod(.linear)
+                        .foregroundStyle(.black.opacity(0.33))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                    }
+                    else if selector == .pm25 {
+                        LineMark(
+                            x: .value("Date", measurement.timestamp),
+                            y: .value("Particle", 25.0)
+                        )
+                        .interpolationMethod(.linear)
+                        .foregroundStyle(.black.opacity(0.33))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                    }
+                    else if selector == .no2 {
+                        LineMark(
+                            x: .value("Date", measurement.timestamp),
+                            y: .value("Particle", 40.0)
+                        )
+                        .interpolationMethod(.linear)
+                        .foregroundStyle(.black.opacity(0.33))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                    }
                     AreaMark(
                         x: .value("Date", Date.roundToPreviousHour(from: measurement.timestamp) ?? Date.now),
-                        yStart: .value("Forecast", viewModel.minValue(selector: selector).value),
-                        yEnd: .value("Forecast", measurement.value.value)
+                        yStart: .value("Particle", viewModel.minValue(selector: selector).value),
+                        yEnd: .value("Particle", measurement.value.value)
                     )
                     .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let current = viewModel.current[selector] {
+                if let current = viewModel.current(selector: selector) {
                     RuleMark(x: .value("Date", current.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(

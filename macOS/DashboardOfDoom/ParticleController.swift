@@ -28,7 +28,7 @@ struct ParticleComponent {
 class ParticleController {
     func refreshParticles(for location: Location) async throws -> ParticleSensor? {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
-            if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
+            if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                 if let interval = Self.calculateTimeInterval(span: 7 * 24 * 60 * 60) {  // 7 days
                     if var measurements = try await Self.fetchMeasurements(station: nearestStation, from: interval.from, to: interval.to) {
                         if let forecastInterval = Self.calculateForecastTimeInterval(span: 14 * 24 * 60 * 60) {  // 7 days
@@ -80,7 +80,7 @@ class ParticleController {
 
     private static func fetchNearestStation(location: Location) async throws -> ParticleStation? {
         var nearestStation: ParticleStation? = nil
-        if let data = try await UBAAPI.fetchStations() {
+        if let data = try await ParticleService.fetchStations() {
             let stations = try await Self.parseStations(from: data)
             if stations.count > 0 {
                 nearestStation = Self.nearestStation(stations: stations, location: location)
@@ -125,7 +125,7 @@ class ParticleController {
 
     private static func fetchMeasurements(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [Particle]]? {
         var measurements: [ParticleSelector: [Particle]]? = nil
-        if let data = try await UBAAPI.fetchMeasurements(code: station.code, from: from, to: to) {
+        if let data = try await ParticleService.fetchMeasurements(code: station.code, from: from, to: to) {
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                 if let features = json["data"] as? [String: Any] {
                     if let featureId = features.keys.first {
@@ -175,7 +175,7 @@ class ParticleController {
 
     private static func fetchForecasts(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [Particle]]? {
         var measurements: [ParticleSelector: [Particle]]? = nil
-        if let data = try await UBAAPI.fetchForecasts(code: station.code, from: from, to: to) {
+        if let data = try await ParticleService.fetchForecasts(code: station.code, from: from, to: to) {
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                 if let features = json["data"] as? [String: Any] {
                     if let featureId = features.keys.first {

@@ -47,7 +47,7 @@ struct MapView: View {
                                 .frame(width: 13, height: 13)
                         }
                     }
-                    Annotation("", coordinate: weather.coordinate, anchor: .topTrailing) {
+                    Annotation("", coordinate: coordinate, anchor: .topTrailing) {
                         VStack {
                             Spacer()
                             Image(systemName: weather.symbol)

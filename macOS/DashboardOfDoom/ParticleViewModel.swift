@@ -1,12 +1,17 @@
 import SwiftUI
 
-@Observable class ParticleViewModel: LocationViewModel {
+@Observable class ParticleViewModel: Identifiable, SubscriptionManagerDelegate {
     private let particleController = ParticleController()
 
+    let id = UUID()
     var sensor: ParticleSensor?
     var measurements: [ParticleSelector: [Particle]] = [:]
-    var current: [ParticleSelector: Particle] = [:]
     var timestamp: Date? = nil
+
+    init() {
+        let subscriptionManager = SubscriptionManager.shared
+        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+    }
 
     func maxValue(selector: ParticleSelector) -> Measurement<Dimension> {
         if let measurements = self.measurements[selector] {
@@ -30,8 +35,20 @@ import SwiftUI
         return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
+    func current(selector: ParticleSelector) -> Particle? {
+        guard let measurement = measurements[selector] else {
+            return nil
+        }
+        if let lastKnownGood = findLastKnownGoodMeasurement(measurements: measurement) {
+            if let current = measurement.last(where: { $0.timestamp == Date.roundToPreviousHour(from: lastKnownGood.timestamp) }) {
+                return current
+            }
+        }
+        return nil
+    }
+
     func faceplate(selector: ParticleSelector) -> String {
-        guard let measurement = current[selector]?.value else {
+        guard let measurement = current(selector: selector)?.value else {
             return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue)\(GreekLetters.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}: n/a"
         }
         if selector == .pm10 {
@@ -71,20 +88,25 @@ import SwiftUI
         return symbol
     }
 
-    @MainActor override func refreshData(location: Location) async -> Void {
+    func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await particleController.refreshParticles(for: location) {
                 self.sensor = sensor
-                let measurements = sensor.measurements
-                self.measurements = await self.interpolateMeasurements(measurements: measurements)
-                self.current = await self.updateCurrent(measurements: self.measurements)
-                self.timestamp = sensor.timestamp
-                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
-            }
+                let measurements = await self.interpolateMeasurements(measurements: sensor.measurements)
+                print("\(Date.now): Particle: Refreshing data...")
+                await self.synchronizeData(sensor: sensor, measurements: measurements)}
+                print("\(Date.now): Particle: Done.")
         }
         catch {
             print("Error refreshing data: \(error)")
         }
+    }
+
+    @MainActor func synchronizeData(sensor: ParticleSensor, measurements: [ParticleSelector: [Particle]]) async -> Void {
+        self.sensor = sensor
+        self.measurements = measurements
+        self.timestamp = sensor.timestamp
+        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 
     private func updateCurrent(measurements: [ParticleSelector: [Particle]]) async -> [ParticleSelector: Particle] {

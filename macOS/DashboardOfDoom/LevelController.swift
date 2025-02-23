@@ -14,8 +14,13 @@ struct Waterway {
 class LevelController {
     func refreshLevel(for location: Location) async throws -> LevelSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
-            if let measurements = try await fetchMeasurements(station: nearestStation) {
-                if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
+            var measurements: [Level] = []
+            if let level = try await fetchMeasurements(station: nearestStation) {
+                measurements.append(contentsOf: level)
+                if let forecast = await Self.forecast(data: measurements) {
+                    measurements.append(contentsOf: forecast)
+                }
+                if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                     return LevelSensor(
                         id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
                 }
@@ -26,7 +31,7 @@ class LevelController {
 
     private func fetchNearestStation(location: Location) async throws -> LevelStation? {
         var nearestStation: LevelStation? = nil
-        if let data = try await WSVAPI.fetchStations() {
+        if let data = try await LevelService.fetchStations() {
         if let stations = try Self.parseStations(from: data) {
                 if let waterways = try await fetchNearestWaterways(for: location) {
                     if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
@@ -79,7 +84,7 @@ class LevelController {
 
     private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
         var waterways: [Waterway]? = nil
-        if let data = try await OSMAPI.fetchWaterways(for: location, radius: 50000) {
+        if let data = try await LevelService.fetchWaterways(for: location, radius: 50000) {
             waterways = try Self.parseWaterways(data: data)
         }
         return waterways
@@ -136,7 +141,7 @@ class LevelController {
 
     private func fetchMeasurements(station: LevelStation) async throws -> [Level]? {
         var measurements: [Level]? = nil
-        if let data = try await WSVAPI.fetchMeasurements(for: station.id) {
+        if let data = try await LevelService.fetchMeasurements(for: station.id) {
             measurements = try Self.parseLevels(data: data)
         }
         return measurements
@@ -165,26 +170,25 @@ class LevelController {
         return formatter.date(from: string)
     }
 
-    private static func forecast(data: [Level]?, count: Int) -> [Level]? {
-        guard let data = data, data.count > 0, count > 0 else {
+    private static func forecast(data: [Level]?) async -> [Level]? {
+        var forecast: [Level]? = nil
+        guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
-        let historicalData = [Level](data.prefix(count))
-        if let latest = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
-            return Self.initializeForecast(from: latest.timestamp, count: count)
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
         }
-        return nil
-    }
-
-    private static func initializeForecast(from: Date, count: Int) -> [Level]? {
-        guard count > 0 else {
-            return nil
-        }
-        var forecast: [Level] = []
-        for i in 1 ... count {
-            if let timestamp = Calendar.current.date(byAdding: .minute, value: i * 15, to: from) {
-                forecast.append(Level(value: Measurement<UnitLength>(value: 0, unit: .centimeters), quality: .unknown, timestamp: timestamp))
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .quarterHourly)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 36 * 3600)  // 1.5 days
+            forecast = prediction.forecasts.map { forecast in
+                Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
+        }
+        catch {
+            print("Forecasting error: \(error)")
         }
         return forecast
     }

@@ -1,12 +1,18 @@
 import SwiftUI
 
-@Observable class ForecastViewModel: LocationViewModel {
+@Observable class ForecastViewModel: Identifiable, SubscriptionManagerDelegate {
     private let forecastController = ForecastController()
 
+    let id = UUID()
     var sensor: ForecastSensor?
     var measurements: [ForecastSelector: [Forecast]] = [:]
     var current: [ForecastSelector: Forecast] = [:]
     var timestamp: Date? = nil
+
+    init() {
+        let subscriptionManager = SubscriptionManager.shared
+        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 5)  // 5 minutes
+    }
 
     func maxValue(selector: ForecastSelector) -> Measurement<Dimension> {
         if let measurements = self.measurements[selector] {
@@ -68,7 +74,8 @@ import SwiftUI
         return symbol
     }
 
-    @MainActor override func refreshData(location: Location) async -> Void {
+    @MainActor func refreshData(location: Location) async -> Void {
+        print("\(Date.now): Forecast: Refreshing data for \(location)")
         do {
             if let sensor = try await forecastController.refreshForecast(for: location) {
                 self.sensor = sensor

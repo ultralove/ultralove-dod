@@ -1,13 +1,14 @@
 import CoreLocation
+import Foundation
 
-protocol LocationControllerDelegate: NSObjectProtocol {
-    func locationController(didUpdateLocation location: Location) async -> Void
+protocol LocationManagerDelegate {
+    func locationManager(didUpdateLocation location: Location) async -> Void
 }
 
-class LocationController: NSObject, CLLocationManagerDelegate {
+class LocationManager: NSObject, CLLocationManagerDelegate {
     private var locationManager = CLLocationManager()
-    var delegate: LocationControllerDelegate?
-    var location: Location?
+    private var location: Location?
+    var delegate: LocationManagerDelegate?
 
     override init() {
         super.init()
@@ -20,15 +21,36 @@ class LocationController: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let lastLocation = locations.last {
+            let latitude = lastLocation.coordinate.latitude
+            let longitude = lastLocation.coordinate.longitude
+            let location = Location(latitude: latitude, longitude: longitude)
             Task {
-                let latitude = lastLocation.coordinate.latitude
-                let longitude = lastLocation.coordinate.longitude
-                self.location = Location(latitude: latitude, longitude: longitude)
-                if let delegate = self.delegate, let location = self.location {
-                    await delegate.locationController(didUpdateLocation: location)
-                }
+                await self.updateLocation(location: location)
             }
         }
+    }
+
+    func updateLocation(location: Location) async -> Void {
+        var needsUpdate = false
+        if self.location == nil {
+            needsUpdate = true
+        }
+        else if self.significantLocationChange(previous: self.location, current: location) {
+            needsUpdate = true
+        }
+        if needsUpdate == true {
+            self.location = location
+            if let delegate = self.delegate {
+                await delegate.locationManager(didUpdateLocation: location)
+            }
+        }
+    }
+
+    private func significantLocationChange(previous: Location?, current: Location) -> Bool {
+        guard let previous = previous else { return true }
+        let deadband = Measurement(value: 100.0, unit: UnitLength.meters)
+        let distance = haversineDistance(location_0: previous, location_1: current)
+        return distance > deadband
     }
 
     static func reverseGeocodeLocation(latitude: Double, longitude: Double) async -> String? {
