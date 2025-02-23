@@ -41,7 +41,7 @@ class SurveyController {
         let sensorLocation = germany.location
         let parliamentId = 0  // Bundestag
 
-        if let data = try await DAWUMAPI.fetchPolls() {
+        if let data = try await SurveyService.fetchPolls() {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
@@ -81,7 +81,7 @@ class SurveyController {
                         }
                     }
 
-                    if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
+                    if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = SurveySensor(
                             id: sensorName, placemark: placemark, location: sensorLocation, measurements: measurements, timestamp: Date.now)
                     }
@@ -98,7 +98,7 @@ class SurveyController {
         var parliamentId = 0  // Bundestag
 
         if let constituency = try await Self.fetchConstituency(location: location) {
-            if let data = try await DAWUMAPI.fetchPolls() {
+            if let data = try await SurveyService.fetchPolls() {
                 if let parliaments = try await parseParliaments(from: data) {
                     for parliament in parliaments where parliament.name.contains(constituency.name) {
                         sensorName = constituency.name
@@ -110,7 +110,7 @@ class SurveyController {
             }
         }
         
-        if let data = try await DAWUMAPI.fetchPolls() {
+        if let data = try await SurveyService.fetchPolls() {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
@@ -150,7 +150,7 @@ class SurveyController {
                         }
                     }
 
-                    if let placemark = await LocationController.reverseGeocodeLocation(location: sensorLocation) {
+                    if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = SurveySensor(
                             id: sensorName, placemark: placemark, location: sensorLocation, measurements: measurements, timestamp: Date.now)
                     }
@@ -185,7 +185,7 @@ class SurveyController {
 
     private static func fetchConstituency(location: Location) async throws -> Constituency? {
         var nearestConstituency: Constituency? = nil
-        if let data = try await OSMAPI.fetchStates(for: location) {
+        if let data = try await SurveyService.fetchStates(for: location) {
             if let candidateConstituencies = try await Self.parseConstituencies(data: data) {
                 var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
                 for candidateConstituency in candidateConstituencies {

@@ -1,13 +1,18 @@
 import Foundation
 import SwiftUI
 
-@Observable class SurveyViewModel: LocationViewModel {
+@Observable class SurveyViewModel: Identifiable, SubscriptionManagerDelegate {
     private let surveyController = SurveyController()
 
+    let id = UUID()
     var sensor: SurveySensor?
     var measurements: [SurveySelector: [Survey]] = [:]
-    var current: [SurveySelector: Survey] = [:]
     var timestamp: Date? = nil
+
+    init() {
+        let subscriptionManager = SubscriptionManager.shared
+        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+    }
 
     var maxValue: Measurement<Dimension> {
         return Measurement(value: 66.67, unit: UnitPercentage.percent)
@@ -17,8 +22,16 @@ import SwiftUI
         return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
+    func current(selector: SurveySelector) -> Survey? {
+        var current: Survey? = nil
+        if let measurements = self.measurements[selector] {
+            current = measurements.last(where: { $0.timestamp <= Date.now })
+        }
+        return current
+    }
+
     func faceplate(selector: SurveySelector) -> String {
-        guard let measurement = current[selector]?.value else {
+        guard let measurement = current(selector: selector)?.value else {
             return "\(GreekLetters.mathematicalItalicCapitalNu.rawValue):n/a"
         }
         return String(format: "\(GreekLetters.mathematicalBoldCapitalNu.rawValue):%.0f%@", measurement.value, measurement.unit.symbol)
@@ -73,17 +86,13 @@ import SwiftUI
         }
     }
 
-    @MainActor override func refreshData(location: Location) async -> Void {
+    func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await surveyController.refreshFederalSurveys(for: location) {
-                self.sensor = sensor
-                let measurements = sensor.measurements
-                self.measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
-                self.current = await self.aggregateCurrent(measurements: measurements)
-                self.timestamp = sensor.timestamp
-//                This messes up the map display if it adds the location of the Bundestag election poll
-//                self.updateRegion(for: self.id, with: sensor.location)
-//                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+                let measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: sensor.measurements))
+                print("\(Date.now): Survey: Refreshing data...")
+                await self.synchronizeData(sensor: sensor, measurements: measurements)
+                print("\(Date.now): Survey: Done.")
             }
         }
         catch {
@@ -91,15 +100,24 @@ import SwiftUI
         }
     }
 
+    @MainActor func synchronizeData(sensor: SurveySensor, measurements: [SurveySelector: [Survey]]) async -> Void {
+        self.sensor = sensor
+        self.measurements = measurements
+        self.timestamp = sensor.timestamp
+//        This messes up the map display if it adds the location of the Bundestag election polls
+//        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+    }
+
+
     private func interpolateMeasurements(measurements: [SurveySelector: [Survey]]) async -> [SurveySelector: [Survey]] {
         var interpolatedMeasurements: [SurveySelector: [Survey]] = [:]
         for(selector, measurement) in measurements {
-            interpolatedMeasurements[selector] = self.interpolateMeasurement(measurements: measurement)
+            interpolatedMeasurements[selector] = await self.interpolateMeasurement(measurements: measurement)
         }
         return interpolatedMeasurements
     }
 
-    private func interpolateMeasurement(measurements: [Survey]) -> [Survey] {
+    private func interpolateMeasurement(measurements: [Survey]) async -> [Survey] {
         var interpolatedMeasurement: [Survey] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
@@ -141,14 +159,6 @@ import SwiftUI
     private func aggregateMeasurement(timestamp: Date, measurements: [Survey], quality: QualityCode) -> Survey {
         let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
         return Survey(value: Measurement<UnitPercentage>(value: value, unit: .percent), quality: quality, timestamp: timestamp)
-    }
-
-    private func aggregateCurrent(measurements: [SurveySelector: [Survey]]) async -> [SurveySelector: Survey] {
-        var aggregated: [SurveySelector: Survey] = [:]
-        for (selector, measurement) in measurements {
-            aggregated[selector] = measurement.max(by: { $0.timestamp < $1.timestamp })
-        }
-        return aggregated
     }
 
     private static func forecast(data: [Survey]?) -> [Survey]? {

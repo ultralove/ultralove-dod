@@ -1,6 +1,6 @@
 import Foundation
 
-class UBAAPI {
+class ParticleService {
     static func fetchStations() async throws -> Data? {
         guard
             let url = URL(

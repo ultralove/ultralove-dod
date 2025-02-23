@@ -1,11 +1,17 @@
 import SwiftUI
 
-@Observable class LevelViewModel: LocationViewModel {
+@Observable class LevelViewModel: Identifiable, SubscriptionManagerDelegate {
     private let levelController = LevelController()
 
+    let id = UUID()
     var sensor: LevelSensor?
     var measurements: [Level] = []
     var timestamp: Date? = nil
+
+    init() {
+        let subscriptionManager = SubscriptionManager.shared
+        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 15)  // 15 minutes
+    }
 
     var faceplate: String {
         guard let measurement = current?.value else {
@@ -49,16 +55,12 @@ import SwiftUI
         return symbol
     }
 
-    @MainActor override func refreshData(location: Location) async -> Void {
+    func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await levelController.refreshLevel(for: location) {
-                self.sensor = sensor
-                self.measurements = sensor.measurements
-                if let forecast = await Self.forecast(data: self.measurements) {
-                    self.measurements.append(contentsOf: forecast)
-                }
-                self.timestamp = sensor.timestamp
-                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+                print("\(Date.now): Level: Refreshing data...")
+                await self.synchronizeData(sensor: sensor)
+                print("\(Date.now): Level: Done.")
             }
         }
         catch {
@@ -67,26 +69,10 @@ import SwiftUI
         }
     }
 
-    private static func forecast(data: [Level]?) async -> [Level]? {
-        var forecast: [Level]? = nil
-        guard let historicalData = data, historicalData.count > 0 else {
-            return nil
-        }
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
-            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-        }
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .quarterHourly)
-        do {
-            try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 36 * 3600)  // 1.5 days
-            forecast = prediction.forecasts.map { forecast in
-                Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
-            }
-        }
-        catch {
-            print("Forecasting error: \(error)")
-        }
-        return forecast
+    @MainActor func synchronizeData(sensor: LevelSensor) async -> Void {
+        self.sensor = sensor
+        self.measurements = sensor.measurements
+        self.timestamp = sensor.timestamp
+        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 }

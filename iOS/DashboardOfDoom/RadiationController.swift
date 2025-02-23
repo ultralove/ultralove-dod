@@ -10,8 +10,13 @@ class RadiationController {
     func refreshRadiation(for location: Location) async throws -> RadiationSensor? {
         var sensor: RadiationSensor? = nil
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
-            if let measurements = try await Self.fetchMeasurements(station: nearestStation) {
-                if let placemark = await LocationController.reverseGeocodeLocation(location: nearestStation.location) {
+            var measurements: [Radiation] = []
+            if let radiation = try await Self.fetchMeasurements(station: nearestStation) {
+                measurements.append(contentsOf: radiation)
+                if let forecast = await Self.forecast(data: measurements) {
+                    measurements.append(contentsOf: forecast)
+                }
+                if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                     sensor = RadiationSensor(
                         id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
                 }
@@ -22,7 +27,7 @@ class RadiationController {
 
     private static func fetchNearestStation(location: Location) async throws -> RadiationStation? {
         var nearestStation: RadiationStation? = nil
-        if let data = try await BfSAPI.fetchStations() {
+        if let data = try await RadiationService.fetchStations() {
             let stations = try await Self.parseStations(from: data)
             if stations.count > 0 {
                 nearestStation = Self.nearestStation(stations: stations, location: location)
@@ -70,7 +75,7 @@ class RadiationController {
 
     private static func fetchMeasurements(station: RadiationStation) async throws -> [Radiation]? {
         var radiation: [Radiation]? = nil
-        if let data = try await BfSAPI.fetchMeasurements(for: station.id) {
+        if let data = try await RadiationService.fetchMeasurements(for: station.id) {
             radiation = try Self.parseRadiation(data: data)
         }
         return radiation
@@ -97,5 +102,28 @@ class RadiationController {
             }
         }
         return measurements
+    }
+
+    private static func forecast(data: [Radiation]?) async -> [Radiation]? {
+        var forecast: [Radiation]? = nil
+        guard let historicalData = data, historicalData.count > 0 else {
+            return nil
+        }
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+        }
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .hourly)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 72 * 3600) // 3 days
+            forecast = prediction.forecasts.map { forecast in
+                Radiation(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+            }
+        }
+        catch {
+            print("Forecasting error: \(error)")
+        }
+        return forecast
     }
 }
