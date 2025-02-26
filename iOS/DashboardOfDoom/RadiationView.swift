@@ -7,14 +7,14 @@ struct RadiationView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Radiation in", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
-            ActivityIndicator()
-        }
-        else {
-            _view()
-        }
-            FooterView(sensor: viewModel.sensor)
+                ActivityIndicator()
+            }
+            else {
+                HeaderView(label: "Radiation in", sensor: viewModel.sensor)
+                _view()
+                FooterView(sensor: viewModel.sensor)
+            }
         }
         .padding()
         .cornerRadius(13)
@@ -56,10 +56,10 @@ struct RadiationView: View {
                                 Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
-                    }
+                        }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: currentRadiation.quality)
+                        .quality(currentRadiation.quality)
                     }
                 }
 
@@ -77,12 +77,12 @@ struct RadiationView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.3f%@", selectedRadiation.value.value, selectedRadiation.value.unit.symbol))
-                            .font(.headline)
-                    }
-                    }
+                                    .font(.headline)
+                            }
+                        }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: selectedRadiation.quality)
+                        .quality(selectedRadiation.quality)
                     }
                 }
             }

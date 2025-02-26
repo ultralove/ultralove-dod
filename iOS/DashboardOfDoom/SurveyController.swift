@@ -1,5 +1,7 @@
 import Foundation
 
+typealias Survey = ProcessValue<UnitPercentage>
+
 private struct Poll {
     let id: Int
     let parliament: Int

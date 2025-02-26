@@ -7,7 +7,6 @@ struct MapView: View {
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
     @Environment(ParticleViewModel.self) private var particle
-    @Environment(SurveyViewModel.self) private var survey
 
     private var viewModel = MapViewModel.shared
 
@@ -42,8 +41,8 @@ struct MapView: View {
                             Circle()
                                 .fill(Color.white)
                                 .frame(width: 20, height: 20)
-                        Circle()
-                            .fill(Color.faceplate)
+                            Circle()
+                                .fill(Color.faceplate)
                                 .frame(width: 13, height: 13)
                         }
                     }
@@ -85,8 +84,8 @@ struct MapView: View {
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
-                            Text(incidence.faceplate)
-                        }
+                                Text(incidence.faceplate)
+                            }
                             Spacer()
                         }
                         .frame(height: 57)
@@ -109,13 +108,11 @@ struct MapView: View {
                     Annotation("", coordinate: coordinate, anchor: .topLeading) {
                         VStack {
                             Spacer()
-                            Image(systemName: "waveform.path.ecg")
+                            Image(systemName: "aqi.medium")
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
-                            Text(particle.faceplate(selector: .pm10))
-//                                Text(particle.faceplate(selector: .pm25))
-//                                Text(particle.faceplate(selector: .no2))
+                                Text(particle.faceplate(selector: .pm10))
                             }
                             Spacer()
                         }
@@ -143,8 +140,8 @@ struct MapView: View {
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
-                            Text(level.faceplate)
-                        }
+                                Text(level.faceplate)
+                            }
                             Spacer()
                         }
                         .frame(height: 57)
@@ -171,36 +168,8 @@ struct MapView: View {
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
-                            Text(radiation.faceplate)
-                        }
-                            Spacer()
-                        }
-                        .frame(height: 57)
-                        .padding(5)
-                        .padding(.horizontal, 5)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .fill(Color.faceplate)
-                                .opacity(0.33)
-                        )
-                        .foregroundStyle(.black)
-                    }
-                }
-                if let coordinate = survey.sensor?.location.coordinate {
-                    Annotation("", coordinate: coordinate, anchor: .center) {
-                        Circle()
-                            .fill(Color.faceplate)
-                            .frame(width: 11, height: 11)
-                    }
-                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
-                        VStack {
-                            Spacer()
-                            Image(systemName: "popcorn")
-                                .font(.title)
-                            Spacer()
-                            VStack(alignment: .leading) {
-                            Text(survey.faceplate(selector: .fascists))
-                        }
+                                Text(radiation.faceplate)
+                            }
                             Spacer()
                         }
                         .frame(height: 57)

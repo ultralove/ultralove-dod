@@ -6,7 +6,9 @@ class LevelService {
         guard let url = URL(string: endpoint) else {
             return nil
         }
+        trace.debug("Fetching level measurements stations...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched level measurements stations.")
         return data
     }
 
@@ -22,7 +24,9 @@ class LevelService {
         guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
             return nil
         }
+        trace.debug("Fetching nearby waterways...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched nearby waterways.")
         return data
     }
 
@@ -31,7 +35,9 @@ class LevelService {
         guard let url = URL(string: endpoint) else {
             return nil
         }
+        trace.debug("Fetching level measurements stations...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched level measurements stations.")
         return data
     }
 }

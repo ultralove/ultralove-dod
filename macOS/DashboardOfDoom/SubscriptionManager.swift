@@ -35,18 +35,31 @@ class SubscriptionManager: LocationManagerDelegate {
         }
     }
 
-    func locationManager(didUpdateLocation location: Location) async {
-        self.location = location
-        for delegate in self.delegates.values {
-            await delegate.refreshData(location: location)
-        }
+    private func resetSubscriptions() {
         for subscription in self.subscriptions {
             subscription.reset()
         }
     }
 
+    func locationManager(didUpdateLocation location: Location) {
+        self.location = location
+        self.refresh()
+    }
+
+    func refresh() {
+        if let location = self.location {
+        for delegate in self.delegates.values {
+                Task {
+            await delegate.refreshData(location: location)
+        }
+            }
+            self.resetSubscriptions()
+        }
+    }
+
+
     func addSubscription(id: UUID, delegate: any SubscriptionManagerDelegate, timeout: TimeInterval) {
-        self.subscriptions.append(Subscription(id: id, timeout: timeout * 60))
+        self.subscriptions.append(Subscription(id: delegate.id, timeout: timeout * 60))
         self.delegates[delegate.id] = delegate
     }
 

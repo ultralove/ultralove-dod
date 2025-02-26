@@ -1,6 +1,6 @@
 import Foundation
 
-enum QualityCode {
+enum ProcessValueQuality {
     case good
     case uncertain
     case bad

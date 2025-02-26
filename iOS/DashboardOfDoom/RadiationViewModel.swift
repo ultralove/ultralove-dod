@@ -55,9 +55,7 @@ import SwiftUI
     func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await radiationController.refreshRadiation(for: location) {
-                print("\(Date.now): Radiation: Refreshing data...")
                 await self.synchronizeData(sensor: sensor)
-                print("\(Date.now): Radiation: Done.")
             }
         }
         catch {

@@ -6,7 +6,6 @@ import SwiftUI
     let id = UUID()
     var sensor: ForecastSensor?
     var measurements: [ForecastSelector: [Forecast]] = [:]
-    var current: [ForecastSelector: Forecast] = [:]
     var timestamp: Date? = nil
 
     init() {
@@ -52,6 +51,14 @@ import SwiftUI
         return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
+    func current(selector: ForecastSelector) -> Forecast? {
+        var current: Forecast? = nil
+        if let measurement = measurements[selector] {
+            current = measurement.last(where: { $0.timestamp == Date.roundToNextHour(from: Date.now) })
+        }
+        return current
+    }
+
     func trend(selector: ForecastSelector) -> String {
         var symbol = "questionmark.circle"
         if let currentDate = Date.roundToPreviousHour(from: Date.now) {
@@ -74,15 +81,13 @@ import SwiftUI
         return symbol
     }
 
-    @MainActor func refreshData(location: Location) async -> Void {
-        print("\(Date.now): Forecast: Refreshing data for \(location)")
+    func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await forecastController.refreshForecast(for: location) {
-                self.sensor = sensor
-                self.measurements = await self.sanitizeForecast(measurements: sensor.measurements)
-                self.current = await self.updateCurrent(measurements: self.measurements)
-                self.timestamp = sensor.timestamp
-                MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+                await self.synchronizeData(
+                    sensor: ForecastSensor(
+                        id: sensor.id, placemark: sensor.placemark, location: sensor.location,
+                        measurements: await self.sanitizeForecast(measurements: sensor.measurements), timestamp: sensor.timestamp))
             }
         }
         catch {
@@ -90,12 +95,19 @@ import SwiftUI
         }
     }
 
+    @MainActor func synchronizeData(sensor: ForecastSensor) async -> Void {
+        self.sensor = sensor
+        self.measurements = await self.sanitizeForecast(measurements: sensor.measurements)
+        self.timestamp = sensor.timestamp
+        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+    }
+
     private func sanitizeForecast(measurements: [ForecastSelector: [Forecast]]) async -> [ForecastSelector: [Forecast]] {
         var sanitizedMeasurements: [ForecastSelector: [Forecast]] = [:]
         for (selector, forecast) in measurements {
             var sanitizedForecast: [Forecast] = []
             for value in forecast {
-                let quality = (value.timestamp < Date.now) ? QualityCode.good : QualityCode.uncertain
+                let quality = (value.timestamp < Date.now) ? ProcessValueQuality.good : ProcessValueQuality.uncertain
                 sanitizedForecast.append(
                     Forecast(
                         value: Measurement(value: value.value.value, unit: value.value.unit), quality: quality, timestamp: value.timestamp))
@@ -103,15 +115,5 @@ import SwiftUI
             sanitizedMeasurements[selector] = sanitizedForecast
         }
         return sanitizedMeasurements
-    }
-
-    private func updateCurrent(measurements: [ForecastSelector: [Forecast]]) async -> [ForecastSelector: Forecast] {
-        var currentMeasurements: [ForecastSelector: Forecast] = [:]
-        for (selector, forecast) in measurements {
-            if let current = forecast.last(where: { $0.timestamp == Date.roundToNextHour(from: Date.now) }) {
-                currentMeasurements[selector] = current
-            }
-        }
-        return currentMeasurements
     }
 }

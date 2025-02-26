@@ -9,14 +9,14 @@ struct ParticleView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: header, sensor: viewModel.sensor)
             if viewModel.timestamp == nil {
                 ActivityIndicator()
             }
             else {
+                HeaderView(label: header, sensor: viewModel.sensor)
                 _view()
+                FooterView(sensor: viewModel.sensor)
             }
-            FooterView(sensor: viewModel.sensor)
         }
         .padding()
         .cornerRadius(13)
@@ -82,7 +82,7 @@ struct ParticleView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: current.quality)
+                        .quality(current.quality)
                     }
                 }
 
@@ -106,7 +106,7 @@ struct ParticleView: View {
                             }
                             .padding(7)
                             .padding(.horizontal, 7)
-                            .qualityCode(qualityCode: selectedValue.quality)
+                            .quality(selectedValue.quality)
                         }
                     }
                 }

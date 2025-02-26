@@ -1,5 +1,7 @@
 import Foundation
 
+typealias Particle = ProcessValue<UnitConcentrationMass>
+
 struct ParticleStation {
     let id: String
     let code: String
@@ -29,7 +31,7 @@ class ParticleController {
     func refreshParticles(for location: Location) async throws -> ParticleSensor? {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                if let interval = Self.calculateTimeInterval(span: 7 * 24 * 60 * 60) {  // 7 days
+                if let interval = Self.calculateTimeInterval(span: 21 * 24 * 60 * 60) {  // 21 days
                     if var measurements = try await Self.fetchMeasurements(station: nearestStation, from: interval.from, to: interval.to) {
                         if let forecastInterval = Self.calculateForecastTimeInterval(span: 14 * 24 * 60 * 60) {  // 7 days
                             if let forecast = try await Self.fetchForecasts(

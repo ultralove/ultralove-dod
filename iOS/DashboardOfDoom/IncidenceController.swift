@@ -1,5 +1,7 @@
 import Foundation
 
+typealias Incidence = ProcessValue<UnitIncidence>
+
 struct District: Identifiable, Equatable {
     let id: String
     let name: String
@@ -10,15 +12,7 @@ class IncidenceController {
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         var sensor: IncidenceSensor? = nil
         if let district = try await self.fetchDistrict(for: location) {
-            var measurements: [Incidence] = []
-            if let incidence = try await self.fetchIncidence(for: district) {
-                measurements.append(contentsOf: incidence)
-                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
-                    measurements.append(current)
-                    if let forecast = await Self.forecast(data: incidence) {
-                        measurements.append(contentsOf: forecast)
-                    }
-                }
+            if let measurements = try await self.fetchIncidence(for: district) {
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
                     sensor = IncidenceSensor(
                         id: district.name, placemark: placemark, location: district.location, measurements: measurements, timestamp: Date.now)
@@ -58,56 +52,70 @@ class IncidenceController {
     private func fetchDistrict(for location: Location) async throws -> District? {
         var nearestDistrict: District? = nil
         if let data = try await IncidenceService.fetchDistricts(for: location) {
-        if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
-            var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
-            for candidateDistrict in candidateDistricts {
-                let candidateLocation = candidateDistrict.location
-                let distance = haversineDistance(location_0: candidateLocation, location_1: location)
-                if distance < minDistance {
-                    minDistance = distance
-                    nearestDistrict = candidateDistrict
+            if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
+                var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
+                for candidateDistrict in candidateDistricts {
+                    let candidateLocation = candidateDistrict.location
+                    let distance = haversineDistance(location_0: candidateLocation, location_1: location)
+                    if distance < minDistance {
+                        minDistance = distance
+                        nearestDistrict = candidateDistrict
+                    }
                 }
             }
-            }
         }
-            return nearestDistrict
-        }
+        return nearestDistrict
+    }
 
     static private func parseIncidence(data: Data, district: District) throws -> [Incidence]? {
-        var result: [Incidence]? = nil
+        var incidence: [Incidence]?
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let data = json["data"] as? [String: Any] {
                 if let district = data[district.id] as? [String: Any] {
-                        if let history = district["history"] as? [[String: Any]] {
-                            var incidence: [Incidence] = []
-                            for entry in history {
-                                if let value = entry["weekIncidence"] as? Double {
-                                    if let dateString = entry["date"] as? String {
-                                        let dateFormatter = DateFormatter()
-                                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                                        dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-                                        if let date = dateFormatter.date(from: dateString) {
-                                        incidence.append(
-                                            Incidence(
-                                                value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
-                                                timestamp: date))
+                    if let history = district["history"] as? [[String: Any]] {
+                        for entry in history {
+                            if let value = entry["weekIncidence"] as? Double {
+                                if let dateString = entry["date"] as? String {
+                                    let dateFormatter = DateFormatter()
+                                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+                                    dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+                                    if let date = dateFormatter.date(from: dateString) {
+                                        let newIncidence = Incidence(
+                                            value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
+                                            timestamp: date)
+                                        if incidence == nil {
+                                            incidence = [newIncidence]
                                         }
+                                        else {
+                                            incidence?.append(
+                                                Incidence(
+                                                    value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
+                                                    timestamp: date))
+                                       }
                                     }
                                 }
-                            }
-                            result = incidence
                             }
                         }
                     }
                 }
-        return result
+            }
         }
+        return incidence
+    }
 
     private func fetchIncidence(for district: District) async throws -> [Incidence]? {
         var incidence: [Incidence]? = nil
         if let data = try await IncidenceService.fetchIncidence(id: district.id) {
-            incidence = try Self.parseIncidence(data: data, district: district)
-    }
+            if let measurements = try Self.parseIncidence(data: data, district: district) {
+                incidence = measurements
+                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
+                    incidence?.append(current)
+                    if let forecast = await Self.forecast(data: incidence) {
+                        incidence?.append(contentsOf: forecast)
+                    }
+                }
+            }
+        }
         return incidence
     }
 
@@ -129,7 +137,7 @@ class IncidenceController {
         data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double
     ) -> Measurement<UnitIncidence> {
         let value = alpha * data.value + (1 - alpha) * previous.value
-        return Measurement<UnitIncidence>(value: value, unit: .casesPer100k)
+        return Measurement<UnitIncidence>(value: value, unit: data.unit)
     }
 
     private static func forecast(data: [Incidence]?) async -> [Incidence]? {
