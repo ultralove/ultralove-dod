@@ -58,9 +58,7 @@ import SwiftUI
     func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await levelController.refreshLevel(for: location) {
-                print("\(Date.now): Level: Refreshing data...")
                 await self.synchronizeData(sensor: sensor)
-                print("\(Date.now): Level: Done.")
             }
         }
         catch {

@@ -93,9 +93,7 @@ import SwiftUI
             if let sensor = try await particleController.refreshParticles(for: location) {
                 self.sensor = sensor
                 let measurements = await self.interpolateMeasurements(measurements: sensor.measurements)
-                print("\(Date.now): Particle: Refreshing data...")
                 await self.synchronizeData(sensor: sensor, measurements: measurements)}
-                print("\(Date.now): Particle: Done.")
         }
         catch {
             print("Error refreshing data: \(error)")
@@ -107,18 +105,6 @@ import SwiftUI
         self.measurements = measurements
         self.timestamp = sensor.timestamp
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
-    }
-
-    private func updateCurrent(measurements: [ParticleSelector: [Particle]]) async -> [ParticleSelector: Particle] {
-        var currentMeasurements: [ParticleSelector: Particle] = [:]
-        for (selector, forecast) in measurements {
-            if let lastKnownGood = findLastKnownGoodMeasurement(measurements: forecast) {
-                if let current = forecast.last(where: { $0.timestamp == Date.roundToPreviousHour(from: lastKnownGood.timestamp) }) {
-                    currentMeasurements[selector] = current
-                }
-            }
-        }
-        return currentMeasurements
     }
 
     private func findLastKnownGoodMeasurement(measurements: [Particle]) -> Particle? {

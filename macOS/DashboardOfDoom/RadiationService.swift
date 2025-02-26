@@ -7,7 +7,9 @@ class RadiationService {
         guard let url = URL(string: endpoint) else {
             return nil
         }
+        trace.debug("Fetching radiation measurement stations...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched radiation measurement stations.")
         return data
     }
 
@@ -18,7 +20,9 @@ class RadiationService {
         guard let url = URL(string: endpoint) else {
             return nil
         }
+        trace.debug("Fetching radiation measurement...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched radiation measurement.")
         return data
     }
 }

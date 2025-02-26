@@ -1,5 +1,7 @@
 import Foundation
 
+typealias Level = ProcessValue<UnitLength>
+
 struct LevelStation {
     let id: String
     let name: String
@@ -16,7 +18,7 @@ class LevelController {
         if let nearestStation = try await fetchNearestStation(location: location) {
             var measurements: [Level] = []
             if let level = try await fetchMeasurements(station: nearestStation) {
-                measurements.append(contentsOf: level)
+                measurements.append(contentsOf: self.interpolateMeasurements(measurements: level))
                 if let forecast = await Self.forecast(data: measurements) {
                     measurements.append(contentsOf: forecast)
                 }
@@ -147,6 +149,11 @@ class LevelController {
         return measurements
     }
 
+    private static func parseTimestamp(string: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        return formatter.date(from: string)
+    }
+
     private static func parseLevels(data: Data) throws -> [Level]? {
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [[String: Any]] {
             var levels: [Level] = []
@@ -165,9 +172,28 @@ class LevelController {
         return nil
     }
 
-    private static func parseTimestamp(string: String) -> Date? {
-        let formatter = ISO8601DateFormatter()
-        return formatter.date(from: string)
+    private func interpolateMeasurements(measurements: [Level]) -> [Level] {
+        var interpolatedMeasurement: [Level] = []
+        if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
+            var current = start
+            if var last = measurements.first {
+                while current <= end {
+                    if let match = measurements.first(where: { $0.timestamp == current }) {
+                        last = match
+                        interpolatedMeasurement.append(match)
+                    }
+                    else {
+                        interpolatedMeasurement
+                            .append(
+                                Level(
+                                    value: Measurement(value: last.value.value, unit: last.value.unit), quality: .uncertain,
+                                    timestamp: current))
+                    }
+                    current = current.addingTimeInterval(60 * 15) // 15 minutes
+                }
+            }
+        }
+        return interpolatedMeasurement
     }
 
     private static func forecast(data: [Level]?) async -> [Level]? {

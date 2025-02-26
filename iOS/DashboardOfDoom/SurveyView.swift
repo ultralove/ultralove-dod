@@ -9,14 +9,14 @@ struct SurveyView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: header, sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
+                HeaderView(label: header, sensor: viewModel.sensor)
                 _view()
+                FooterView(sensor: viewModel.sensor)
             }
-            FooterView(sensor: viewModel.sensor)
         }
         .padding()
         .cornerRadius(13)
@@ -27,13 +27,13 @@ struct SurveyView: View {
             Chart {
                 ForEach(viewModel.measurements[selector] ?? []) { measurement in
                     if selector != .fascists && selector != .clowns && selector != .sonstige {
-                    LineMark(
-                        x: .value("Date", measurement.timestamp),
+                        LineMark(
+                            x: .value("Date", measurement.timestamp),
                             y: .value("Survey", 5.0)
-                    )
-                    .interpolationMethod(.linear)
+                        )
+                        .interpolationMethod(.linear)
                         .foregroundStyle(.black.opacity(0.33))
-                    .lineStyle(StrokeStyle(lineWidth: 1))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
                     }
                     AreaMark(
                         x: .value("Date", measurement.timestamp),
@@ -63,7 +63,7 @@ struct SurveyView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: currentValue.quality)
+                        .quality(currentValue.quality)
                     }
                 }
 
@@ -87,7 +87,7 @@ struct SurveyView: View {
                             }
                             .padding(7)
                             .padding(.horizontal, 7)
-                            .qualityCode(qualityCode: measurement.quality)
+                            .quality(measurement.quality)
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 import Foundation
 
+typealias Radiation = ProcessValue<UnitRadiation>
+
 struct RadiationStation {
     let id: String
     let name: String

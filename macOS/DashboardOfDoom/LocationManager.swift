@@ -2,7 +2,7 @@ import CoreLocation
 import Foundation
 
 protocol LocationManagerDelegate {
-    func locationManager(didUpdateLocation location: Location) async -> Void
+    func locationManager(didUpdateLocation location: Location) -> Void
 }
 
 class LocationManager: NSObject, CLLocationManagerDelegate {
@@ -23,14 +23,11 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         if let lastLocation = locations.last {
             let latitude = lastLocation.coordinate.latitude
             let longitude = lastLocation.coordinate.longitude
-            let location = Location(latitude: latitude, longitude: longitude)
-            Task {
-                await self.updateLocation(location: location)
-            }
+            self.updateLocation(location: Location(latitude: latitude, longitude: longitude))
         }
     }
 
-    func updateLocation(location: Location) async -> Void {
+    func updateLocation(location: Location) -> Void {
         var needsUpdate = false
         if self.location == nil {
             needsUpdate = true
@@ -41,7 +38,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         if needsUpdate == true {
             self.location = location
             if let delegate = self.delegate {
-                await delegate.locationManager(didUpdateLocation: location)
+                delegate.locationManager(didUpdateLocation: location)
             }
         }
     }

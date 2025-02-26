@@ -7,7 +7,6 @@ struct MapView: View {
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
     @Environment(ParticleViewModel.self) private var particle
-    @Environment(SurveyViewModel.self) private var survey
 
     private var viewModel = MapViewModel.shared
 
@@ -109,13 +108,11 @@ struct MapView: View {
                     Annotation("", coordinate: coordinate, anchor: .topLeading) {
                         VStack {
                             Spacer()
-                            Image(systemName: "waveform.path.ecg")
+                            Image(systemName: "aqi.medium")
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
                                 Text(particle.faceplate(selector: .pm10))
-//                                Text(particle.faceplate(selector: .pm25))
-//                                Text(particle.faceplate(selector: .no2))
                             }
                             Spacer()
                         }
@@ -172,34 +169,6 @@ struct MapView: View {
                             Spacer()
                             VStack(alignment: .leading) {
                                 Text(radiation.faceplate)
-                            }
-                            Spacer()
-                        }
-                        .frame(height: 57)
-                        .padding(5)
-                        .padding(.horizontal, 5)
-                        .background(
-                            RoundedRectangle(cornerRadius: 13)
-                                .fill(Color.faceplate)
-                                .opacity(0.33)
-                        )
-                        .foregroundStyle(.black)
-                    }
-                }
-                if let coordinate = survey.sensor?.location.coordinate {
-                    Annotation("", coordinate: coordinate, anchor: .center) {
-                        Circle()
-                            .fill(Color.faceplate)
-                            .frame(width: 11, height: 11)
-                    }
-                    Annotation("", coordinate: coordinate, anchor: .bottomLeading) {
-                        VStack {
-                            Spacer()
-                            Image(systemName: "popcorn")
-                                .font(.title)
-                            Spacer()
-                            VStack(alignment: .leading) {
-                                Text(survey.faceplate(selector: .fascists))
                             }
                             Spacer()
                         }

@@ -9,14 +9,14 @@ struct SurveyView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: header, sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
+                HeaderView(label: header, sensor: viewModel.sensor)
                 _view()
+                FooterView(sensor: viewModel.sensor)
             }
-            FooterView(sensor: viewModel.sensor)
         }
         .padding()
         .cornerRadius(13)
@@ -63,7 +63,7 @@ struct SurveyView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: currentValue.quality)
+                        .quality(currentValue.quality)
                     }
                 }
 
@@ -87,7 +87,7 @@ struct SurveyView: View {
                             }
                             .padding(7)
                             .padding(.horizontal, 7)
-                            .qualityCode(qualityCode: measurement.quality)
+                            .quality(measurement.quality)
                         }
                     }
                 }

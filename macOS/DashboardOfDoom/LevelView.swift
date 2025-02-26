@@ -7,14 +7,14 @@ struct LevelView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Water level at the", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
+                HeaderView(label: "Water level at the", sensor: viewModel.sensor)
                 _view()
+                FooterView(sensor: viewModel.sensor)
             }
-            FooterView(sensor: viewModel.sensor)
         }
         .padding()
         .cornerRadius(13)
@@ -59,7 +59,7 @@ struct LevelView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: currentLevel.quality)
+                        .quality(currentLevel.quality)
                     }
                 }
 
@@ -82,7 +82,7 @@ struct LevelView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: selectedLevel.quality)
+                        .quality(selectedLevel.quality)
                     }
                 }
             }

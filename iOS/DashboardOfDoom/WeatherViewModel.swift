@@ -34,7 +34,6 @@ import SwiftUI
     }
 
     @MainActor func refreshData(location: Location) async -> Void {
-        print("\(Date.now): Weather: Refreshing data for \(location)")
         do {
             if let sensor = try await weatherController.refreshWeather(for: location) {
                 self.actualTemperature = sensor.measurements.temperature

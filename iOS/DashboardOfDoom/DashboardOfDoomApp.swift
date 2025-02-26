@@ -8,7 +8,6 @@ struct DashboardOfDoomApp: App {
     @State var levelViewModel = LevelViewModel()
     @State var radiationViewModel = RadiationViewModel()
     @State var particleViewModel = ParticleViewModel()
-    @State var surveyViewModel = SurveyViewModel()
 
     var body: some Scene {
         WindowGroup {
@@ -21,7 +20,6 @@ struct DashboardOfDoomApp: App {
                 .environment(levelViewModel)
                 .environment(radiationViewModel)
                 .environment(particleViewModel)
-                .environment(surveyViewModel)
         }
     }
 }

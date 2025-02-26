@@ -86,7 +86,7 @@ import SwiftUI
         }
     }
 
-    func refreshData(location: Location) async -> Void {
+    @MainActor func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await surveyController.refreshFederalSurveys(for: location) {
                 let measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: sensor.measurements))
@@ -156,7 +156,7 @@ import SwiftUI
         return aggregatedMeasurements
     }
 
-    private func aggregateMeasurement(timestamp: Date, measurements: [Survey], quality: QualityCode) -> Survey {
+    private func aggregateMeasurement(timestamp: Date, measurements: [Survey], quality: ProcessValueQuality) -> Survey {
         let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
         return Survey(value: Measurement<UnitPercentage>(value: value, unit: .percent), quality: quality, timestamp: timestamp)
     }

@@ -55,9 +55,7 @@ import Foundation
     func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await incidenceController.refreshIncidence(for: location) {
-                print("\(Date.now): Incidence: Refreshing data...")
                 await synchronizeData(sensor: sensor)
-                print("\(Date.now): Incidence: Done.")
             }
         }
         catch {

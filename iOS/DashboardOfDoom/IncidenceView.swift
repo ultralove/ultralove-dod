@@ -5,21 +5,16 @@ struct IncidenceView: View {
     @Environment(IncidenceViewModel.self) private var viewModel
     @State private var selectedDate: Date?
 
-    private let linearGradient = LinearGradient(
-        gradient: Gradient(colors: [Color.blue.opacity(0.66), Color.blue.opacity(0.0)]),
-        startPoint: .top,
-        endPoint: .bottom)
-
     var body: some View {
         VStack {
-            HeaderView(label: "COVID-19 Incidence in", sensor: viewModel.sensor)
             if viewModel.sensor?.timestamp == nil {
                 ActivityIndicator()
             }
             else {
+                HeaderView(label: "COVID-19 Incidence in", sensor: viewModel.sensor)
                 _view()
+                FooterView(sensor: viewModel.sensor)
             }
-            FooterView(sensor: viewModel.sensor)
         }
         .padding()
         .cornerRadius(13)
@@ -64,7 +59,7 @@ struct IncidenceView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: currentIncidence.quality)
+                        .quality(currentIncidence.quality)
                     }
                 }
                 if let selectedDate, let selectedIncidence = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
@@ -86,7 +81,7 @@ struct IncidenceView: View {
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .qualityCode(qualityCode: selectedIncidence.quality)
+                        .quality(selectedIncidence.quality)
                     }
                 }
             }
