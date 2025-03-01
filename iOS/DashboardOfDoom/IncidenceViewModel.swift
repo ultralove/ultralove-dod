@@ -1,6 +1,6 @@
 import Foundation
 
-@Observable class IncidenceViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class IncidenceViewModel: Identifiable, SubscriberProtocol {
     private let incidenceController = IncidenceController()
 
     let id = UUID()
@@ -15,9 +15,9 @@ import Foundation
 
     var faceplate: String {
         guard let measurement = current?.value else {
-            return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue):n/a"
+            return "\(MathematicalSymbols.mathematicalItalicCapitalOmicron.rawValue):n/a"
         }
-        return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
+        return String(format: "\(MathematicalSymbols.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
     }
 
     var maxValue: Measurement<UnitIncidence> {
@@ -59,7 +59,7 @@ import Foundation
             }
         }
         catch {
-            print("Error refreshing data: \(error.localizedDescription)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 

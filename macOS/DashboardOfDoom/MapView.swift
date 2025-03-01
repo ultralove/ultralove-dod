@@ -84,7 +84,7 @@ struct MapView: View {
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
-                                Text(incidence.faceplate)
+                                Text(incidence.faceplate(selector: .incidence))
                             }
                             Spacer()
                         }

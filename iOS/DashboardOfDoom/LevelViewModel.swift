@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class LevelViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class LevelViewModel: Identifiable, SubscriberProtocol {
     private let levelController = LevelController()
 
     let id = UUID()
@@ -16,11 +16,11 @@ import SwiftUI
     var faceplate: String {
         guard let measurement = current?.value else {
             //            return "\(GreekLetters.levelLeft.rawValue)n/a\(GreekLetters.levelRight.rawValue)"
-            return "\(GreekLetters.mathematicalItalicCapitalEta.rawValue):n/a"
+            return "\(MathematicalSymbols.mathematicalItalicCapitalEta.rawValue):n/a"
         }
         return String(
             //            format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
-            format: "\(GreekLetters.mathematicalBoldCapitalEta.rawValue): %.2f%@", measurement.value, measurement.unit.symbol)
+            format: "\(MathematicalSymbols.mathematicalBoldCapitalEta.rawValue): %.2f%@", measurement.value, measurement.unit.symbol)
     }
 
     var maxValue: Measurement<UnitLength> {
@@ -62,8 +62,7 @@ import SwiftUI
             }
         }
         catch {
-            print("Error refreshing data: \(error.localizedDescription)")
-
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 

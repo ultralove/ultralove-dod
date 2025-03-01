@@ -17,7 +17,7 @@ class LevelService {
             """
             [out:json][timeout:25];
             (
-            way(around:\(radius),\(location.latitude),\(location.longitude))["waterway"~"^(river|canal)$"];
+            way(around:\(radius),\(location.latitude),\(location.longitude))["waterway"="river"];
             );
             out center tags;
             """
@@ -35,9 +35,21 @@ class LevelService {
         guard let url = URL(string: endpoint) else {
             return nil
         }
-        trace.debug("Fetching level measurements stations...")
+        trace.debug("Fetching level measurements...")
+        trace.debug("Station: %@", id)
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        trace.debug("Fetched level measurements stations.")
+        trace.debug("Fetched level measurements.")
+        return data
+    }
+
+    static func fetchforecast(for id: String) async throws -> Data? {
+        let endpoint = String(format: "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%@/WV/measurements.json", id)
+        guard let url = URL(string: endpoint) else {
+            return nil
+        }
+        trace.debug("Fetching level measurements forecast...")
+        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched level measurements forecast.")
         return data
     }
 }

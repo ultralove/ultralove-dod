@@ -41,7 +41,7 @@ struct MapSizeModifier: ViewModifier {
         }
 #else
         content
-            .frame(height: 500)
+            .frame(height: 750)
 #endif
     }
 }
@@ -87,9 +87,8 @@ struct ContentView: View {
                 VStack {
                     MapView()
                         .padding(.vertical, 5)
-//                        .frame(height: 500)
                         .modifier(MapSizeModifier())
-                    IncidenceView()
+                    IncidenceView(selector: .incidence)
                         .padding(.vertical, 5)
                         .frame(height: 200)
                     LevelView()
@@ -135,9 +134,9 @@ struct ContentView: View {
             }
 
         }
-        .frame(width: 768, height: 1024)
+        .frame(width: 1024, height: 1024)
         .preferredColorScheme(.dark)
-        .background(colorScheme == .dark ? Color.black : Color.white)
+//        .background(colorScheme == .dark ? Color.black : Color.white)
         .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
     }
 }

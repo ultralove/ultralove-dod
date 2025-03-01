@@ -4,22 +4,38 @@ import SwiftUI
 struct ParticleView: View {
     @Environment(ParticleViewModel.self) private var viewModel
     @State private var selectedDate: Date?
-    let header: String
     let selector: ParticleSelector
 
+    private let chemicalSymbols: [ParticleSelector: ParticleSymbol] = [
+        .pm10: .pm10,
+        .pm25: .pm25,
+        .o3: .o3,
+        .no2: .no2,
+        .co: .co,
+        .so2: .so2,
+        .lead: .lead,
+        .benzoapyrene: .benzoapyrene,
+        .benzene: .benzene,
+        .arsenic: .arsenic,
+        .cadmium: .cadmium,
+        .nickel: .nickel
+    ]
+
     var body: some View {
-        VStack {
-            if viewModel.timestamp == nil {
-                ActivityIndicator()
+        if viewModel.hasMeasurements(selector: selector) {
+            VStack {
+                if viewModel.timestamp == nil {
+                    ActivityIndicator()
+                }
+                else {
+                    HeaderView(label: "\((chemicalSymbols[selector] ?? .pm10).rawValue) at", sensor: viewModel.sensor)
+                    _view()
+                    FooterView(sensor: viewModel.sensor)
+                }
             }
-            else {
-                HeaderView(label: header, sensor: viewModel.sensor)
-                _view()
-                FooterView(sensor: viewModel.sensor)
-            }
+            .padding()
+            .cornerRadius(13)
         }
-        .padding()
-        .cornerRadius(13)
     }
 
     func _view() -> some View {

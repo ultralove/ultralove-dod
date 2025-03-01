@@ -1,7 +1,5 @@
 import Foundation
 
-typealias Incidence = ProcessValue<UnitIncidence>
-
 struct District: Identifiable, Equatable {
     let id: String
     let name: String
@@ -12,11 +10,16 @@ class IncidenceController {
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         var sensor: IncidenceSensor? = nil
         if let district = try await self.fetchDistrict(for: location) {
-            if let measurements = try await self.fetchIncidence(for: district) {
-                if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
-                    sensor = IncidenceSensor(
-                        id: district.name, placemark: placemark, location: district.location, measurements: measurements, timestamp: Date.now)
-                }
+            var measurements: [IncidenceSelector: [ProcessValue<Dimension>]] = [:]
+            if let incidence = try await self.fetchIncidence(for: district) {
+                measurements[.incidence] = incidence
+            }
+            if let cases = try await self.fetchCases(for: district) {
+                measurements[.cases] = cases
+            }
+            if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
+                sensor = IncidenceSensor(
+                    id: district.name, placemark: placemark, location: district.location, measurements: measurements, timestamp: Date.now)
             }
         }
         return sensor
@@ -67,8 +70,8 @@ class IncidenceController {
         return nearestDistrict
     }
 
-    static private func parseIncidence(data: Data, district: District) throws -> [Incidence]? {
-        var incidence: [Incidence]?
+    static private func parseIncidence(data: Data, district: District) throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]?
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let data = json["data"] as? [String: Any] {
                 if let district = data[district.id] as? [String: Any] {
@@ -80,16 +83,16 @@ class IncidenceController {
                                     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                                     dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
                                     if let date = dateFormatter.date(from: dateString) {
-                                        let newIncidence = Incidence(
-                                            value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
+                                        let newIncidence = ProcessValue<Dimension>(
+                                            value: Measurement<Dimension>(value: value, unit: UnitIncidence.casesPer100k), quality: .good,
                                             timestamp: date)
                                         if incidence == nil {
                                             incidence = [newIncidence]
                                         }
                                         else {
                                             incidence?.append(
-                                                Incidence(
-                                                    value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
+                                                ProcessValue<Dimension>(
+                                                    value: Measurement<Dimension>(value: value, unit: UnitIncidence.casesPer100k), quality: .good,
                                                     timestamp: date))
                                         }
                                     }
@@ -103,8 +106,8 @@ class IncidenceController {
         return incidence
     }
 
-    private func fetchIncidence(for district: District) async throws -> [Incidence]? {
-        var incidence: [Incidence]? = nil
+    private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]? = nil
         if let data = try await IncidenceService.fetchIncidence(id: district.id) {
             if let measurements = try Self.parseIncidence(data: data, district: district) {
                 incidence = measurements
@@ -119,29 +122,57 @@ class IncidenceController {
         return incidence
     }
 
-    private static func nowCast(data: [Incidence]?, alpha: Double) -> Incidence? {
+    static private func parseCases(data: Data, district: District) throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]?
+        if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
+            if let _ = json["data"] as? [String: Any] {
+                incidence = []
+                //TODO: Implement parsing of case data
+            }
+        }
+        return incidence
+    }
+
+    private func fetchCases(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var cases: [ProcessValue<Dimension>]? = nil
+        if let data = try await IncidenceService.fetchCases(id: district.id) {
+            if let measurements = try Self.parseCases(data: data, district: district) {
+                cases = measurements
+                if let current = Self.nowCast(data: cases, alpha: 0.33) {
+                    cases?.append(current)
+                    if let forecast = await Self.forecast(data: cases) {
+                        cases?.append(contentsOf: forecast)
+                    }
+                }
+            }
+        }
+        return cases
+    }
+
+
+    private static func nowCast(data: [ProcessValue<Dimension>]?, alpha: Double) -> ProcessValue<Dimension>? {
         guard let data = data, data.count > 0, alpha >= 0.0, alpha <= 1.0 else {
             return nil
         }
-        let historicalData = [Incidence](data.reversed())
+        let historicalData = [ProcessValue<Dimension>](data.reversed())
         if let current = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
             if let timestamp = Calendar.current.date(byAdding: .day, value: 1, to: current.timestamp) {
                 let value = Self.nowCast(data: historicalData[1].value, previous: historicalData[0].value, alpha: alpha)
-                return Incidence(value: value, quality: .uncertain, timestamp: timestamp)
+                return ProcessValue<Dimension>(value: value, quality: .uncertain, timestamp: timestamp)
             }
         }
         return nil
     }
 
     private static func nowCast(
-        data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double
-    ) -> Measurement<UnitIncidence> {
+        data: Measurement<Dimension>, previous: Measurement<Dimension>, alpha: Double
+    ) -> Measurement<Dimension> {
         let value = alpha * data.value + (1 - alpha) * previous.value
-        return Measurement<UnitIncidence>(value: value, unit: data.unit)
+        return Measurement<Dimension>(value: value, unit: data.unit)
     }
 
-    private static func forecast(data: [Incidence]?) async -> [Incidence]? {
-        var forecast: [Incidence]? = nil
+    private static func forecast(data: [ProcessValue<Dimension>]?) async -> [ProcessValue<Dimension>]? {
+        var forecast: [ProcessValue<Dimension>]? = nil
         guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
@@ -154,7 +185,7 @@ class IncidenceController {
             try predictor.addData(historicalDataPoints)
             let prediction = try predictor.forecast(duration: 42 * 24 * 3600)  // 42 days
             forecast = prediction.forecasts.map { forecast in
-                Incidence(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
         }
         catch {

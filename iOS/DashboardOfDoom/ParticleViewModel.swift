@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class ParticleViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class ParticleViewModel: Identifiable, SubscriberProtocol {
     private let particleController = ParticleController()
 
     let id = UUID()
@@ -11,6 +11,10 @@ import SwiftUI
     init() {
         let subscriptionManager = SubscriptionManager.shared
         subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+    }
+
+    func hasMeasurements(selector: ParticleSelector) -> Bool {
+        return self.measurements[selector] != nil
     }
 
     func maxValue(selector: ParticleSelector) -> Measurement<Dimension> {
@@ -49,21 +53,45 @@ import SwiftUI
 
     func faceplate(selector: ParticleSelector) -> String {
         guard let measurement = current(selector: selector)?.value else {
-            return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue)\(GreekLetters.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}:n/a"
+            return
+                "\(MathematicalSymbols.mathematicalItalicCapitalRho.rawValue)\(MathematicalSymbols.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}:n/a"
         }
         if selector == .pm10 {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalRho.rawValue)\(GreekLetters.mathematicalBoldCapitalMu.rawValue)\u{2081}\u{2080}: %.0f%@", measurement.value, measurement.unit.symbol)
+            return String(
+                format:
+                    "\(MathematicalSymbols.mathematicalBoldCapitalRho.rawValue)\(MathematicalSymbols.mathematicalBoldCapitalMu.rawValue)\u{2081}\u{2080}: %.0f%@",
+                measurement.value, measurement.unit.symbol)
         }
         else if selector == .pm25 {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalRho.rawValue)\(GreekLetters.mathematicalBoldCapitalMu.rawValue)\u{2082}\u{2085}: %.0f%@", measurement.value, measurement.unit.symbol)
+            return String(
+                format:
+                    "\(MathematicalSymbols.mathematicalBoldCapitalRho.rawValue)\(MathematicalSymbols.mathematicalBoldCapitalMu.rawValue)\u{2082}\u{2085}: %.0f%@",
+                measurement.value, measurement.unit.symbol)
         }
         else if selector == .o3 {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)\u{2083}:   %.0f%@", measurement.value, measurement.unit.symbol)
+            return String(
+                format: "\(MathematicalSymbols.mathematicalBoldCapitalOmicron.rawValue)\u{2083}: %.0f%@", measurement.value,
+                measurement.unit.symbol)
         }
         else if selector == .no2 {
-            return String(format: "\(GreekLetters.mathematicalBoldCapitalNu.rawValue)\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)\u{2082}:  %.0f%@", measurement.value, measurement.unit.symbol)
+            return String(
+                format:
+                    "\(MathematicalSymbols.mathematicalBoldCapitalNu.rawValue)\(MathematicalSymbols.mathematicalBoldCapitalOmicron.rawValue)\u{2082}: %.0f%@",
+                measurement.value, measurement.unit.symbol)
         }
-        return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue)\(GreekLetters.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}: n/a"
+        return
+            "\(MathematicalSymbols.mathematicalItalicCapitalRho.rawValue)\(MathematicalSymbols.mathematicalItalicCapitalMu.rawValue)\u{2081}\u{2080}: n/a"
+    }
+
+    func faceplate() -> String {
+        var found: ParticleSelector = .pm10
+        for selector in ParticleSelector.allCases {
+            if self.hasMeasurements(selector: selector) {
+                found = selector
+                break
+            }
+        }
+        return self.faceplate(selector: found)
     }
 
     func trend(selector: ParticleSelector) -> String {
@@ -92,11 +120,12 @@ import SwiftUI
         do {
             if let sensor = try await particleController.refreshParticles(for: location) {
                 self.sensor = sensor
-                let measurements = await self.interpolateMeasurements(measurements: sensor.measurements)
-                await self.synchronizeData(sensor: sensor, measurements: measurements)}
+                let measurements = self.interpolateMeasurements(measurements: sensor.measurements)
+                await self.synchronizeData(sensor: sensor, measurements: measurements)
+            }
         }
         catch {
-            print("Error refreshing data: \(error)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 
@@ -111,7 +140,7 @@ import SwiftUI
         return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) })
     }
 
-    private func interpolateMeasurements(measurements: [ParticleSelector: [Particle]]) async -> [ParticleSelector: [Particle]] {
+    private func interpolateMeasurements(measurements: [ParticleSelector: [Particle]]) -> [ParticleSelector: [Particle]] {
         var interpolatedMeasurements: [ParticleSelector: [Particle]] = [:]
         for (selector, measurement) in measurements {
             interpolatedMeasurements[selector] = self.interpolateMeasurement(measurements: measurement)
@@ -144,4 +173,3 @@ import SwiftUI
         return interpolatedMeasurement
     }
 }
-
