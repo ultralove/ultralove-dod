@@ -48,7 +48,9 @@ struct ForecastView: View {
                             Text(String(format: "%@ %@", current.timestamp.dateString(), current.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                //                                    Image(systemName: currentTemperature.symbol)
+                                if let icon = current.customData?["icon"] as? String {
+                                    Image(systemName: icon)
+                                }
                                 Text(String(format: "%.1f%@", current.value.value, current.value.unit.symbol))
                                 Image(systemName: viewModel.trend(selector: selector))
                             }
@@ -74,7 +76,9 @@ struct ForecastView: View {
                                 Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
                                     .font(.footnote)
                                 HStack {
-                                    //                                    Image(systemName: selectedTemperature.symbol)
+                                    if let icon = selectedValue.customData?["icon"] as? String {
+                                        Image(systemName: icon)
+                                    }
                                     Text(String(format: "%.1f%@", selectedValue.value.value, selectedValue.value.unit.symbol))
                                         .font(.headline)
                                 }

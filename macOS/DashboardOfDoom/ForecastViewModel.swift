@@ -5,12 +5,20 @@ import SwiftUI
 
     let id = UUID()
     var sensor: ForecastSensor?
-    var measurements: [ForecastSelector: [Forecast]] = [:]
+    var measurements: [ForecastSelector: [ProcessValue<Dimension>]] = [:]
     var timestamp: Date? = nil
 
     init() {
         let subscriptionManager = SubscriptionManager.shared
         subscriptionManager.addSubscription(id: id, delegate: self, timeout: 5)  // 5 minutes
+    }
+
+    func icon(selector: ForecastSelector) -> String? {
+        var icon: String? = nil
+        if let customData = current(selector: selector)?.customData {
+            icon = customData["icon"] as? String
+        }
+        return icon
     }
 
     func maxValue(selector: ForecastSelector) -> Measurement<Dimension> {
@@ -51,8 +59,8 @@ import SwiftUI
         return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
-    func current(selector: ForecastSelector) -> Forecast? {
-        var current: Forecast? = nil
+    func current(selector: ForecastSelector) -> ProcessValue<Dimension>? {
+        var current: ProcessValue<Dimension>? = nil
         if let measurement = measurements[selector] {
             current = measurement.last(where: { $0.timestamp == Date.roundToNextHour(from: Date.now) })
         }
@@ -102,15 +110,20 @@ import SwiftUI
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 
-    private func sanitizeForecast(measurements: [ForecastSelector: [Forecast]]) -> [ForecastSelector: [Forecast]] {
-        var sanitizedMeasurements: [ForecastSelector: [Forecast]] = [:]
+    private func sanitizeForecast(measurements: [ForecastSelector: [ProcessValue<Dimension>]]) -> [ForecastSelector: [ProcessValue<Dimension>]] {
+        var sanitizedMeasurements: [ForecastSelector: [ProcessValue<Dimension>]] = [:]
         for (selector, forecast) in measurements {
-            var sanitizedForecast: [Forecast] = []
+            var sanitizedForecast: [ProcessValue<Dimension>] = []
             for value in forecast {
                 let quality = (value.timestamp < Date.now) ? ProcessValueQuality.good : ProcessValueQuality.uncertain
                 sanitizedForecast.append(
-                    Forecast(
-                        value: Measurement(value: value.value.value, unit: value.value.unit), quality: quality, timestamp: value.timestamp))
+                    ProcessValue<Dimension>(
+                        value: Measurement(value: value.value.value, unit: value.value.unit),
+                        customData: value.customData,
+                        quality: quality,
+                        timestamp: value.timestamp
+                    )
+                )
             }
             sanitizedMeasurements[selector] = sanitizedForecast
         }
