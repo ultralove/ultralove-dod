@@ -5,7 +5,7 @@ import SwiftUI
 
     let id = UUID()
     var sensor: ParticleSensor?
-    var measurements: [ParticleSelector: [Particle]] = [:]
+    var measurements: [ParticleSelector: [ProcessValue<Dimension>]] = [:]
     var timestamp: Date? = nil
 
     init() {
@@ -39,7 +39,7 @@ import SwiftUI
         return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
-    func current(selector: ParticleSelector) -> Particle? {
+    func current(selector: ParticleSelector) -> ProcessValue<Dimension>? {
         guard let measurement = measurements[selector] else {
             return nil
         }
@@ -131,27 +131,27 @@ import SwiftUI
         }
     }
 
-    @MainActor func synchronizeData(sensor: ParticleSensor, measurements: [ParticleSelector: [Particle]]) async -> Void {
+    @MainActor func synchronizeData(sensor: ParticleSensor, measurements: [ParticleSelector: [ProcessValue<Dimension>]]) async -> Void {
         self.sensor = sensor
         self.measurements = measurements
         self.timestamp = sensor.timestamp
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 
-    private func findLastKnownGoodMeasurement(measurements: [Particle]) -> Particle? {
+    private func findLastKnownGoodMeasurement(measurements: [ProcessValue<Dimension>]) -> ProcessValue<Dimension>? {
         return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) })
     }
 
-    private func interpolateMeasurements(measurements: [ParticleSelector: [Particle]]) -> [ParticleSelector: [Particle]] {
-        var interpolatedMeasurements: [ParticleSelector: [Particle]] = [:]
+    private func interpolateMeasurements(measurements: [ParticleSelector: [ProcessValue<Dimension>]]) -> [ParticleSelector: [ProcessValue<Dimension>]] {
+        var interpolatedMeasurements: [ParticleSelector: [ProcessValue<Dimension>]] = [:]
         for (selector, measurement) in measurements {
             interpolatedMeasurements[selector] = self.interpolateMeasurement(measurements: measurement)
         }
         return interpolatedMeasurements
     }
 
-    private func interpolateMeasurement(measurements: [Particle]) -> [Particle] {
-        var interpolatedMeasurement: [Particle] = []
+    private func interpolateMeasurement(measurements: [ProcessValue<Dimension>]) -> [ProcessValue<Dimension>] {
+        var interpolatedMeasurement: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             let unit = measurements[0].value.unit
             var current = start
@@ -164,7 +164,7 @@ import SwiftUI
                     else {
                         interpolatedMeasurement
                             .append(
-                                Particle(
+                                ProcessValue<Dimension>(
                                     value: Measurement(value: last.value.value, unit: unit), quality: .uncertain,
                                     timestamp: current))
                     }

@@ -1,7 +1,5 @@
 import Foundation
 
-typealias Particle = ProcessValue<UnitConcentrationMass>
-
 struct ParticleStation {
     let id: String
     let code: String
@@ -144,8 +142,8 @@ class ParticleController {
         return nearestStation
     }
 
-    private static func fetchMeasurements(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [Particle]]? {
-        var measurements: [ParticleSelector: [Particle]]? = nil
+    private static func fetchMeasurements(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
+        var measurements: [ParticleSelector: [ProcessValue<Dimension>]]? = nil
         do {
             if let data = try await ParticleService.fetchMeasurements(code: station.code, from: from, to: to) {
                 if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
@@ -161,7 +159,7 @@ class ParticleController {
                                                         if let selector = ParticleSelector(rawValue: componentId) {
                                                             if let unit = Self.selectMeasurementUnit(component: selector) {
                                                                 if let value = measurementItem[1] as? Double {
-                                                                    let measurement = Particle(
+                                                                    let measurement = ProcessValue<Dimension>(
                                                                         value: Measurement(value: value, unit: unit), quality: .good,
                                                                         timestamp: timestamp)
                                                                     if measurements == nil {
@@ -199,8 +197,8 @@ class ParticleController {
         return measurements
     }
 
-    private static func fetchForecasts(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [Particle]]? {
-        var measurements: [ParticleSelector: [Particle]]? = nil
+    private static func fetchForecasts(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
+        var measurements: [ParticleSelector: [ProcessValue<Dimension>]]? = nil
         if let data = try await ParticleService.fetchForecasts(code: station.code, from: from, to: to) {
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                 if let features = json["data"] as? [String: Any] {
@@ -215,7 +213,7 @@ class ParticleController {
                                                     if let selector = ParticleSelector(rawValue: componentId) {
                                                         if let unit = Self.selectMeasurementUnit(component: selector) {
                                                             if let value = measurementItem[1] as? Double {
-                                                                let measurement = Particle(
+                                                                let measurement = ProcessValue<Dimension>(
                                                                     value: Measurement(value: value, unit: unit), quality: .uncertain,
                                                                     timestamp: timestamp)
                                                                 if measurements == nil {

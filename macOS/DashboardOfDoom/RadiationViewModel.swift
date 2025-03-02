@@ -5,7 +5,7 @@ import SwiftUI
 
     let id = UUID()
     var sensor: RadiationSensor?
-    var measurements: [Radiation] = []
+    var measurements: [ProcessValue<Dimension>] = []
     var timestamp: Date? = nil
 
     init() {
@@ -29,15 +29,15 @@ import SwiftUI
         return "questionmark.circle"
     }
 
-    var maxValue: Measurement<UnitRadiation> {
-        return measurements.map({ $0.value }).max() ?? Measurement<UnitRadiation>(value: 0.0, unit: .microsieverts)
+    var maxValue: Measurement<Dimension> {
+        return measurements.map({ $0.value }).max() ?? Measurement<Dimension>(value: 0.0, unit: UnitRadiation.microsieverts)
     }
 
-    var minValue: Measurement<UnitRadiation> {
-        return Measurement<UnitRadiation>(value: 0.0, unit: .microsieverts)
+    var minValue: Measurement<Dimension> {
+        return Measurement<Dimension>(value: 0.0, unit: UnitRadiation.microsieverts)
     }
 
-    var current: Radiation? {
+    var current: ProcessValue<Dimension>? {
         return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) } )
     }
 

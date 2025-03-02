@@ -1,7 +1,5 @@
 import Foundation
 
-typealias Level = ProcessValue<UnitLength>
-
 struct LevelStation {
     let id: String
     let name: String
@@ -26,7 +24,7 @@ class LevelController {
         if let nearestStation = try await fetchNearestStation(location: location) {
             trace.debug("Nearest station: \(nearestStation)")
             if let level = try await fetchMeasurements(station: nearestStation) {
-                var measurements: [Level] = []
+                var measurements: [ProcessValue<Dimension>] = []
                 measurements.append(contentsOf: Self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
                 measurements.append(contentsOf: Self.forecastMeasurements(data: measurements, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
@@ -168,8 +166,8 @@ class LevelController {
         return nearestWaterway
     }
 
-    private func fetchMeasurements(station: LevelStation) async throws -> [Level]? {
-        var measurements: [Level]? = nil
+    private func fetchMeasurements(station: LevelStation) async throws -> [ProcessValue<Dimension>]? {
+        var measurements: [ProcessValue<Dimension>]? = nil
         if let data = try await LevelService.fetchMeasurements(for: station.id) {
             measurements = try Self.parseLevels(data: data)
         }
@@ -181,15 +179,15 @@ class LevelController {
         return formatter.date(from: string)
     }
 
-    private static func parseLevels(data: Data) throws -> [Level]? {
+    private static func parseLevels(data: Data) throws -> [ProcessValue<Dimension>]? {
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [[String: Any]] {
-            var levels: [Level] = []
+            var levels: [ProcessValue<Dimension>] = []
             for item in json {
                 if let value = item["value"] as? Double {
                     if let timestamp = item["timestamp"] as? String {
                         if let date = Self.parseTimestamp(string: timestamp) {
-                            let level = Measurement<UnitLength>(value: value, unit: .centimeters)
-                            levels.append(Level(value: level.converted(to: .meters), quality: .good, timestamp: date))
+                            let level = Measurement<Dimension>(value: value, unit: UnitLength.centimeters)
+                            levels.append(ProcessValue<Dimension>(value: level.converted(to: UnitLength.meters), quality: .good, timestamp: date))
                         }
                     }
                 }
@@ -199,8 +197,8 @@ class LevelController {
         return nil
     }
 
-    private static func interpolateMeasurements(measurements: [Level], distance: TimeInterval) -> [Level] {
-        var interpolatedMeasurement: [Level] = []
+    private static func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
+        var interpolatedMeasurement: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
             if var last = measurements.first {
@@ -212,7 +210,7 @@ class LevelController {
                     else {
                         interpolatedMeasurement
                             .append(
-                                Level(
+                                ProcessValue<Dimension>(
                                     value: Measurement(value: last.value.value, unit: last.value.unit), quality: .uncertain,
                                     timestamp: current))
                     }
@@ -223,8 +221,8 @@ class LevelController {
         return interpolatedMeasurement
     }
 
-    private static func forecastMeasurements(data: [Level], duration: TimeInterval) -> [Level] {
-        var forecastMeasurements: [Level] = []
+    private static func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
+        var forecastMeasurements: [ProcessValue<Dimension>] = []
         if data.count > 0 {
             let unit = data[0].value.unit
             let dataPoints = data.map { incidence in
@@ -235,7 +233,7 @@ class LevelController {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
-                    Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                 }
             }
             catch {

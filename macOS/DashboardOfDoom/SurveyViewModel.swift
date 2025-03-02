@@ -6,7 +6,7 @@ import SwiftUI
 
     let id = UUID()
     var sensor: SurveySensor?
-    var measurements: [SurveySelector: [Survey]] = [:]
+    var measurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
     var timestamp: Date? = nil
 
     init() {
@@ -22,8 +22,8 @@ import SwiftUI
         return Measurement(value: 0.0, unit: UnitPercentage.percent)
     }
 
-    func current(selector: SurveySelector) -> Survey? {
-        var current: Survey? = nil
+    func current(selector: SurveySelector) -> ProcessValue<Dimension>? {
+        var current: ProcessValue<Dimension>? = nil
         if let measurements = self.measurements[selector] {
             current = measurements.last(where: { $0.timestamp <= Date.now })
         }
@@ -109,7 +109,7 @@ import SwiftUI
         }
     }
 
-    @MainActor func synchronizeData(sensor: SurveySensor, measurements: [SurveySelector: [Survey]]) async -> Void {
+    @MainActor func synchronizeData(sensor: SurveySensor, measurements: [SurveySelector: [ProcessValue<Dimension>]]) async -> Void {
         self.sensor = sensor
         self.measurements = measurements
         self.timestamp = sensor.timestamp
@@ -118,16 +118,16 @@ import SwiftUI
     }
 
 
-    private func interpolateMeasurements(measurements: [SurveySelector: [Survey]]) async -> [SurveySelector: [Survey]] {
-        var interpolatedMeasurements: [SurveySelector: [Survey]] = [:]
+    private func interpolateMeasurements(measurements: [SurveySelector: [ProcessValue<Dimension>]]) async -> [SurveySelector: [ProcessValue<Dimension>]] {
+        var interpolatedMeasurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
         for (selector, measurement) in measurements {
             interpolatedMeasurements[selector] = await self.interpolateMeasurement(measurements: measurement)
         }
         return interpolatedMeasurements
     }
 
-    private func interpolateMeasurement(measurements: [Survey]) async -> [Survey] {
-        var interpolatedMeasurement: [Survey] = []
+    private func interpolateMeasurement(measurements: [ProcessValue<Dimension>]) async -> [ProcessValue<Dimension>] {
+        var interpolatedMeasurement: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
             if var last = measurements.first {
@@ -139,7 +139,7 @@ import SwiftUI
                     else {
                         interpolatedMeasurement
                             .append(
-                                Survey(
+                                ProcessValue<Dimension>(
                                     value: Measurement(value: last.value.value, unit: UnitPercentage.percent), quality: .uncertain,
                                     timestamp: current))
                     }
@@ -153,8 +153,8 @@ import SwiftUI
         return interpolatedMeasurement
     }
 
-    private func aggregateMeasurements(measurements: [SurveySelector: [Survey]]) async -> [SurveySelector: [Survey]] {
-        var aggregatedMeasurements: [SurveySelector: [Survey]] = [:]
+    private func aggregateMeasurements(measurements: [SurveySelector: [ProcessValue<Dimension>]]) async -> [SurveySelector: [ProcessValue<Dimension>]] {
+        var aggregatedMeasurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
         for (selector, measurement) in measurements {
             let uniqueMeasurements = Dictionary(grouping: measurement) { $0.timestamp }
                 .map { timestamp, values in
@@ -165,13 +165,14 @@ import SwiftUI
         return aggregatedMeasurements
     }
 
-    private func aggregateMeasurement(timestamp: Date, measurements: [Survey], quality: ProcessValueQuality) -> Survey {
+    private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessValueQuality) -> ProcessValue<Dimension> {
         let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
-        return Survey(value: Measurement<UnitPercentage>(value: value, unit: .percent), quality: quality, timestamp: timestamp)
+        let unit = measurements.count > 0 ? measurements[0].value.unit : UnitPercentage.percent // Use hardcoded unit if no measurements are available
+        return ProcessValue<Dimension>(value: Measurement<Dimension>(value: value, unit: unit), quality: quality, timestamp: timestamp)
     }
 
-    private static func forecast(data: [Survey]?) -> [Survey]? {
-        var forecast: [Survey]? = nil
+    private static func forecast(data: [ProcessValue<Dimension>]?) -> [ProcessValue<Dimension>]? {
+        var forecast: [ProcessValue<Dimension>]? = nil
         guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
@@ -184,7 +185,7 @@ import SwiftUI
             try predictor.addData(historicalDataPoints)
             let prediction = try predictor.forecast(duration: 23 * 24 * 3600)  // 23 days
             forecast = prediction.forecasts.map { forecast in
-                Survey(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
         }
         catch {
