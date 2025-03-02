@@ -4,7 +4,6 @@ import SwiftUI
 struct IncidenceView: View {
     @Environment(IncidenceViewModel.self) private var viewModel
     @State private var selectedDate: Date?
-    let selector: IncidenceSelector
 
     var body: some View {
         VStack {
@@ -24,7 +23,7 @@ struct IncidenceView: View {
     func _view() -> some View {
         VStack {
             Chart {
-                ForEach(viewModel.measurements[selector] ?? []) { incidence in
+                ForEach(viewModel.measurements) { incidence in
                     LineMark(
                         x: .value("Date", incidence.timestamp),
                         y: .value("Incidence", incidence.value.value)
@@ -40,7 +39,7 @@ struct IncidenceView: View {
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let currentIncidence = viewModel.current(selector: selector) {
+                if let currentIncidence = viewModel.current {
                     RuleMark(x: .value("Date", currentIncidence.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
@@ -54,7 +53,7 @@ struct IncidenceView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.1f", currentIncidence.value.value))
-                                Image(systemName: viewModel.trend(selector: selector))
+                                Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
                         }
@@ -63,7 +62,7 @@ struct IncidenceView: View {
                         .quality(currentIncidence.quality)
                     }
                 }
-                if let selectedDate, let selectedIncidence = viewModel.measurements[selector]?.first(where: { $0.timestamp == selectedDate }) {
+                if let selectedDate, let selectedIncidence = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
                     RuleMark(x: .value("Date", selectedDate))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
@@ -86,7 +85,7 @@ struct IncidenceView: View {
                     }
                 }
             }
-            .chartYScale(domain: viewModel.minValue(selector: selector).value ... viewModel.maxValue(selector: selector).value * 1.33)
+            .chartYScale(domain: viewModel.minValue.value ... viewModel.maxValue.value * 1.33)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle()

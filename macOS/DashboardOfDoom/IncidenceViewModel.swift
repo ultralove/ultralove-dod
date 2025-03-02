@@ -1,11 +1,11 @@
 import Foundation
 
-@Observable class IncidenceViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class IncidenceViewModel: Identifiable, SubscriberProtocol {
     private let incidenceController = IncidenceController()
 
     let id = UUID()
     var sensor: IncidenceSensor?
-    var measurements: [IncidenceSelector: [ProcessValue<Dimension>]] = [:]
+    var measurements: [Incidence] = []
     var timestamp: Date? = nil
 
     init() {
@@ -13,57 +13,44 @@ import Foundation
         subscriptionManager.addSubscription(id: id, delegate: self, timeout: 360)  // 6  hours
     }
 
-    func faceplate(selector: IncidenceSelector) -> String {
-        switch selector {
-            case .incidence:
-                if let measurement = self.current(selector: selector)?.value {
-                    return String(
-                        format: "\(GreekLetters.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
-                }
-                else {
-                    return "\(GreekLetters.mathematicalItalicCapitalOmicron.rawValue): n/a"
-                }
-            default:
-                if let measurement = self.current(selector: selector)?.value {
-                    return String(
-                        format: "\(GreekLetters.mathematicalBoldCapitalRho.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
-                }
-                else {
-                    return "\(GreekLetters.mathematicalItalicCapitalRho.rawValue): n/a"
-                }
+    var faceplate: String {
+        guard let measurement = current?.value else {
+            return "\(MathematicalSymbols.mathematicalItalicCapitalOmicron.rawValue):n/a"
         }
+        return String(format: "\(MathematicalSymbols.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
     }
 
-    func maxValue(selector: IncidenceSelector) -> Measurement<Dimension> {
-        switch selector {
-            case .incidence:
-                return measurements[selector]?.map({ $0.value }).max() ?? Measurement<Dimension>(value: 0.0, unit: UnitIncidence.casesPer100k)
-            default:
-                return measurements[selector]?.map({ $0.value }).max() ?? Measurement<Dimension>(value: 0.0, unit: UnitPopulation.people)
+    var icon: String {
+        if let customData = sensor?.customData {
+            if let icon = customData["icon"] as? String {
+                return icon
+            }
         }
+        return "questionmark.circle"
     }
 
-    func minValue(selector: IncidenceSelector) -> Measurement<Dimension> {
-        switch selector {
-            case .incidence:
-                return Measurement<Dimension>(value: 0.0, unit: UnitIncidence.casesPer100k)
-            default:
-                return Measurement<Dimension>(value: 0.0, unit: UnitPopulation.people)
-        }
+    var maxValue: Measurement<UnitIncidence> {
+        return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesPer100k)
     }
 
-    func current(selector: IncidenceSelector) -> ProcessValue<Dimension>? {
-        return measurements[selector]?.last(where: { ($0.timestamp <= Date.now) && (($0.quality == .good) || ($0.quality == .uncertain)) })
+    var minValue: Measurement<UnitIncidence> {
+        return Measurement<UnitIncidence>(value: 0.0, unit: .casesPer100k)
     }
 
-    func trend(selector: IncidenceSelector) -> String {
+    var current: Incidence? {
+        return measurements.last(where: { ($0.timestamp <= Date.now) && (($0.quality == .good) || ($0.quality == .uncertain)) })
+    }
+
+    var trend: String {
         var symbol = "questionmark.circle"
-        if let current = self.current(selector: selector) {
-            if let previous = measurements[selector]?.last(where: { $0.timestamp < current.timestamp }) {
-                if current.value < previous.value {
+        if let currentIncidence = self.current {
+            if let nextIncidence = measurements.last(where: { $0.timestamp < currentIncidence.timestamp }) {
+                let currentValue = currentIncidence.value
+                let previousValue = nextIncidence.value
+                if currentValue < previousValue {
                     symbol = "arrow.down.forward.circle"
                 }
-                else if current.value > previous.value {
+                else if currentValue > previousValue {
                     symbol = "arrow.up.forward.circle"
                 }
                 else {
@@ -81,14 +68,13 @@ import Foundation
             }
         }
         catch {
-            print("Error refreshing data: \(error.localizedDescription)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 
     @MainActor func synchronizeData(sensor: IncidenceSensor) async {
         self.sensor = sensor
-        //        self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
-        self.measurements = sensor.measurements
+        self.measurements = sensor.measurements.sorted(by: { $0.timestamp < $1.timestamp })
         self.timestamp = sensor.timestamp
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }

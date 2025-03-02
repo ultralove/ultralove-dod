@@ -14,17 +14,26 @@ struct Waterway {
 }
 
 class LevelController {
+    private let measurementDistance: TimeInterval
+    private let forecastDuration: TimeInterval
+
+    init() {
+        self.measurementDistance = 900  // 15 minutes
+        self.forecastDuration = 36 * 4 * self.measurementDistance  // 3 days
+    }
+
     func refreshLevel(for location: Location) async throws -> LevelSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
-            var measurements: [Level] = []
+            trace.debug("Nearest station: \(nearestStation)")
             if let level = try await fetchMeasurements(station: nearestStation) {
-                measurements.append(contentsOf: self.interpolateMeasurements(measurements: level))
-                if let forecast = await Self.forecast(data: measurements) {
-                    measurements.append(contentsOf: forecast)
-                }
+                var measurements: [Level] = []
+                measurements.append(contentsOf: Self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
+                measurements.append(contentsOf: Self.forecastMeasurements(data: measurements, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                     return LevelSensor(
-                        id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                        id: nearestStation.name, placemark: placemark, customData: ["icon": "water.waves"], location: nearestStation.location,
+                        measurements: measurements,
+                        timestamp: Date.now)
                 }
             }
         }
@@ -34,13 +43,28 @@ class LevelController {
     private func fetchNearestStation(location: Location) async throws -> LevelStation? {
         var nearestStation: LevelStation? = nil
         if let data = try await LevelService.fetchStations() {
-        if let stations = try Self.parseStations(from: data) {
+            if let stations = try Self.parseStations(from: data) {
                 if let waterways = try await fetchNearestWaterways(for: location) {
                     if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
+                        trace.debug("Nearest waterway: \(nearestWaterway)")
                         if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
                             if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
-                                nearestStation = LevelStation(id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
+                                nearestStation = LevelStation(
+                                    id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
                             }
+                        }
+                        else {
+                            trace.warning("No synchronized stations found, falling back to nearest station")
+                            if let station = Self.nearestStation(stations: stations, location: location) {
+                                nearestStation = LevelStation(
+                                    id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                            }
+                        }
+                        if let nearestStation = nearestStation {
+                            trace.debug("Nearest station: \(nearestStation)")
+                        }
+                        else {
+                            trace.error("No station found")
                         }
                     }
                 }
@@ -54,11 +78,11 @@ class LevelController {
             var stations: [LevelStation] = []
             for item in json {
                 if let id = item["uuid"] as? String {
-                            if let latitude = item["latitude"] as? Double {
-                                if let longitude = item["longitude"] as? Double {
-                                    if let water = item["water"] as? [String: Any] {
+                    if let latitude = item["latitude"] as? Double {
+                        if let longitude = item["longitude"] as? Double {
+                            if let water = item["water"] as? [String: Any] {
                                 if let name = water["longname"] as? String {
-                                            let location = Location(latitude: latitude, longitude: longitude)
+                                    let location = Location(latitude: latitude, longitude: longitude)
                                     stations.append(LevelStation(id: id, name: name, location: location))
                                 }
                             }
@@ -86,7 +110,7 @@ class LevelController {
 
     private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
         var waterways: [Waterway]? = nil
-        if let data = try await LevelService.fetchWaterways(for: location, radius: 50000) {
+        if let data = try await LevelService.fetchWaterways(for: location, radius: 10000) {
             waterways = try Self.parseWaterways(data: data)
         }
         return waterways
@@ -96,7 +120,10 @@ class LevelController {
         var synchronizedStations: [LevelStation]? = nil
         var foundStations: [LevelStation] = []
         for station in stations where station.name.lowercased().contains(waterway.name.lowercased()) {
-            foundStations.append(station)
+            let maxDistance = Measurement(value: 16.67, unit: UnitLength.kilometers)
+            if haversineDistance(location_0: station.location, location_1: waterway.location) < maxDistance {
+                foundStations.append(station)
+            }
         }
         if foundStations.count > 0 {
             synchronizedStations = foundStations
@@ -172,7 +199,7 @@ class LevelController {
         return nil
     }
 
-    private func interpolateMeasurements(measurements: [Level]) -> [Level] {
+    private static func interpolateMeasurements(measurements: [Level], distance: TimeInterval) -> [Level] {
         var interpolatedMeasurement: [Level] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
@@ -189,33 +216,45 @@ class LevelController {
                                     value: Measurement(value: last.value.value, unit: last.value.unit), quality: .uncertain,
                                     timestamp: current))
                     }
-                    current = current.addingTimeInterval(60 * 15) // 15 minutes
+                    current = current.addingTimeInterval(distance)
                 }
             }
         }
         return interpolatedMeasurement
     }
 
-    private static func forecast(data: [Level]?) async -> [Level]? {
-        var forecast: [Level]? = nil
-        guard let historicalData = data, historicalData.count > 0 else {
-            return nil
-        }
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
-            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-        }
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .quarterHourly)
-        do {
-            try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 36 * 3600)  // 1.5 days
-            forecast = prediction.forecasts.map { forecast in
-                Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+    private static func forecastMeasurements(data: [Level], duration: TimeInterval) -> [Level] {
+        var forecastMeasurements: [Level] = []
+        if data.count > 0 {
+            let unit = data[0].value.unit
+            let dataPoints = data.map { incidence in
+                TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+            }
+            let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .quarterHourly)
+            do {
+                try predictor.addData(dataPoints)
+                let prediction = try predictor.forecast(duration: duration)
+                forecastMeasurements = prediction.forecasts.map { forecast in
+                    Level(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                }
+            }
+            catch {
+                print("Forecasting error: \(error)")
             }
         }
-        catch {
-            print("Forecasting error: \(error)")
+        return forecastMeasurements
+    }
+
+    private func capitalizeGerman(text: String) -> String {
+        let words = text.components(separatedBy: .whitespacesAndNewlines)
+        let properCasedWords = words.map { word -> String in
+            guard !word.isEmpty else { return word }
+
+            let firstChar = String(word.prefix(1)).uppercased()
+            let restOfWord = String(word.dropFirst()).lowercased()
+
+            return firstChar + restOfWord
         }
-        return forecast
+        return properCasedWords.joined(separator: " ")
     }
 }

@@ -1,11 +1,11 @@
 import Foundation
 
 class IncidenceService {
-    static func fetchDistricts(for location: Location) async throws -> Data? {
+    static func fetchDistricts(for location: Location, radius: Double) async throws -> Data? {
         let query =
             """
             [out:json][timeout:25];
-            relation(around:30000,\(location.latitude),\(location.longitude))["boundary"="administrative"]["admin_level"~"4|6|9"];
+            relation(around:\(radius),\(location.latitude),\(location.longitude))["boundary"="administrative"]["admin_level"~"4|6|7|8|9"];
             out center tags;
             """
         guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {

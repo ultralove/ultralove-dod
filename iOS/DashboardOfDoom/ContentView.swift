@@ -174,6 +174,7 @@ struct ContentView: View {
                             Button(action: { selectedScreen = .airQuality }) {
                                 Image(systemName: selectedScreen == .airQuality ? "aqi.medium" : "aqi.low")
                                     .foregroundColor(selectedScreen == .airQuality ? .accentColor : .accentColor.opacity(0.5))
+                                    .fontWeight(.black) // Workaround for "aqi.medium" icon being rather thin
                             }
                             Spacer()
                             Button(action: { selectedScreen = .settings }) {

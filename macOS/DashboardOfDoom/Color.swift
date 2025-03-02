@@ -7,14 +7,18 @@ extension Color {
             return (appearance.name) == .darkAqua ? NSColor(dark) : NSColor(light)
         }))
     }
+
+    static let blendedBlue = Color(red: 0.33, green: 0.67, blue: 1.0)
 }
 #endif
 
 extension Color {
     #if os(macOS)
-    static let faceplate = Color(light: Color.blue, dark: Color.cyan)
-    static let chart = Color(light: Color.blue, dark: Color.cyan)
+    static let location: Color = Color(light: Color.blue, dark: Color.cyan)
+    static let faceplate = Color(light: Color.blendedBlue, dark: Color.cyan)
+    static let chart = Color(light: Color.blendedBlue, dark: Color.cyan)
     #else
+    static let location: Color = .accentColor
     static let faceplate = Self.accentColor
     static let chart = Self.accentColor
     #endif

@@ -5,7 +5,8 @@ import WeatherKit
 class ForecastController {
     func refreshForecast(for location: Location) async throws -> ForecastSensor? {
         let weather = try await WeatherService.shared.weather(for: CLLocation(latitude: location.latitude, longitude: location.longitude))
-        let forecast = weather.hourlyForecast.forecast.prefix(100)
+        let forecast = weather.hourlyForecast.forecast.prefix(111)
+
         let actual = forecast.map {
             Forecast(value: Measurement(value: $0.temperature.value, unit: $0.temperature.unit), quality: .uncertain, timestamp: $0.date)
         }
@@ -35,8 +36,8 @@ class ForecastController {
         }
         if let placemark = await LocationManager.reverseGeocodeLocation(location: location) {
             var measurements: [ForecastSelector: [Forecast]] = [:]
-            measurements[.actual] = actual
-            measurements[.apparent] = apparent
+            measurements[.temperature] = actual
+            measurements[.apparentTemperature] = apparent
             measurements[.dewPoint] = dewPoint
             measurements[.humidity] = humidity
             measurements[.precipitationChance] = precipitationChance

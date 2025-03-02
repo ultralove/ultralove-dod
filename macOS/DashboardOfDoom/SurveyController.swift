@@ -85,7 +85,7 @@ class SurveyController {
 
                     if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = SurveySensor(
-                            id: sensorName, placemark: placemark, location: sensorLocation, measurements: measurements, timestamp: Date.now)
+                            id: sensorName, placemark: placemark, customData: ["icon": "popcorn"], location: sensorLocation, measurements: measurements, timestamp: Date.now)
                     }
                 }
             }

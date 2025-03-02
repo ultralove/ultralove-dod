@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class ForecastViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class ForecastViewModel: Identifiable, SubscriberProtocol {
     private let forecastController = ForecastController()
 
     let id = UUID()
@@ -87,22 +87,22 @@ import SwiftUI
                 await self.synchronizeData(
                     sensor: ForecastSensor(
                         id: sensor.id, placemark: sensor.placemark, location: sensor.location,
-                        measurements: await self.sanitizeForecast(measurements: sensor.measurements), timestamp: sensor.timestamp))
+                        measurements: self.sanitizeForecast(measurements: sensor.measurements), timestamp: sensor.timestamp))
             }
         }
         catch {
-            print("Error refreshing data: \(error)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 
     @MainActor func synchronizeData(sensor: ForecastSensor) async -> Void {
         self.sensor = sensor
-        self.measurements = await self.sanitizeForecast(measurements: sensor.measurements)
+        self.measurements = sensor.measurements
         self.timestamp = sensor.timestamp
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 
-    private func sanitizeForecast(measurements: [ForecastSelector: [Forecast]]) async -> [ForecastSelector: [Forecast]] {
+    private func sanitizeForecast(measurements: [ForecastSelector: [Forecast]]) -> [ForecastSelector: [Forecast]] {
         var sanitizedMeasurements: [ForecastSelector: [Forecast]] = [:]
         for (selector, forecast) in measurements {
             var sanitizedForecast: [Forecast] = []
