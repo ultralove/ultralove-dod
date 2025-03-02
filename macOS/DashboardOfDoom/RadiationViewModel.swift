@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class RadiationViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class RadiationViewModel: Identifiable, SubscriberProtocol {
     private let radiationController = RadiationController()
 
     let id = UUID()
@@ -15,9 +15,18 @@ import SwiftUI
 
     var faceplate: String {
         guard let measurement = current?.value else {
-            return "\(GreekLetters.mathematicalItalicCapitalGamma.rawValue): n/a"
+            return "\(MathematicalSymbols.mathematicalItalicCapitalGamma.rawValue):n/a"
         }
-        return String(format: "\(GreekLetters.mathematicalBoldCapitalGamma.rawValue): %.3f%@", measurement.value, measurement.unit.symbol)
+        return String(format: "\(MathematicalSymbols.mathematicalBoldCapitalGamma.rawValue): %.3f%@", measurement.value, measurement.unit.symbol)
+    }
+
+    var icon: String {
+        if let customData = sensor?.customData {
+            if let icon = customData["icon"] as? String {
+                return icon
+            }
+        }
+        return "questionmark.circle"
     }
 
     var maxValue: Measurement<UnitRadiation> {
@@ -59,8 +68,7 @@ import SwiftUI
             }
         }
         catch {
-            print("Error refreshing data: \(error.localizedDescription)")
-
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 

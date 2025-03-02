@@ -28,12 +28,20 @@ struct ParticleComponent {
 }
 
 class ParticleController {
+    private let measurementDuration: TimeInterval
+    private let forecastDuration: TimeInterval
+
+    init() {
+        self.measurementDuration = 21 * 24 * 60 * 60  // 21 minutes
+        self.forecastDuration = 14 * 24 * 60 * 60  // 7 days
+    }
+
     func refreshParticles(for location: Location) async throws -> ParticleSensor? {
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                if let interval = Self.calculateTimeInterval(span: 21 * 24 * 60 * 60) {  // 21 days
+                if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
                     if var measurements = try await Self.fetchMeasurements(station: nearestStation, from: interval.from, to: interval.to) {
-                        if let forecastInterval = Self.calculateForecastTimeInterval(span: 14 * 24 * 60 * 60) {  // 7 days
+                        if let forecastInterval = Self.calculateForecastTimeInterval(span: self.forecastDuration) {  // 7 days
                             if let forecast = try await Self.fetchForecasts(
                                 station: nearestStation, from: forecastInterval.from, to: forecastInterval.to)
                             {
@@ -54,7 +62,7 @@ class ParticleController {
         return nil
     }
 
-    private static func calculateTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
+    private static func calculateMeasurementTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
         let components = Calendar.current.dateComponents([.year, .month, .day, .hour], from: Date.now)
         var adjustedComponents = components
         adjustedComponents.minute = 0  // Reset minutes to 0
@@ -74,7 +82,7 @@ class ParticleController {
             adjustedComponents.second = 0  // Reset seconds to 0
             if let from = Calendar.current.date(from: adjustedComponents) {
                 let to = from.addingTimeInterval(span)  // forward
-                return (from, to)  
+                return (from, to)
             }
         }
         return nil
@@ -253,5 +261,4 @@ class ParticleController {
                 return UnitConcentrationMass.nanogramsPerCubicMeter
         }
     }
-
 }

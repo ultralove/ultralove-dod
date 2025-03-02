@@ -2,7 +2,7 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-@Observable class WeatherViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class WeatherViewModel: Identifiable, SubscriberProtocol {
     private let weatherController = WeatherController()
 
     var actualTemperature: Measurement<UnitTemperature>?
@@ -45,7 +45,7 @@ import SwiftUI
             }
         }
         catch {
-            print("Error refreshing data: \(error)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 }

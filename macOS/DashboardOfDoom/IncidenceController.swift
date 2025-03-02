@@ -9,13 +9,25 @@ struct District: Identifiable, Equatable {
 }
 
 class IncidenceController {
+    private let measurementDistance: TimeInterval
+    private let forecastDuration: TimeInterval
+
+    init() {
+        self.measurementDistance = 24 * 60 * 60  // 1 day
+        self.forecastDuration = 37 * self.measurementDistance  // 37 days
+    }
+
     func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
         var sensor: IncidenceSensor? = nil
         if let district = try await self.fetchDistrict(for: location) {
-            if let measurements = try await self.fetchIncidence(for: district) {
+            if let incidence = try await self.fetchIncidence(for: district) {
+                var measurements: [Incidence] = []
+                measurements.append(contentsOf: Self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
+                measurements.append(contentsOf: Self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
                     sensor = IncidenceSensor(
-                        id: district.name, placemark: placemark, location: district.location, measurements: measurements, timestamp: Date.now)
+                        id: district.name, placemark: placemark, customData: ["icon": "facemask"], location: district.location,
+                        measurements: measurements, timestamp: Date.now)
                 }
             }
         }
@@ -51,12 +63,12 @@ class IncidenceController {
 
     private func fetchDistrict(for location: Location) async throws -> District? {
         var nearestDistrict: District? = nil
-        if let data = try await IncidenceService.fetchDistricts(for: location) {
+        if let data = try await IncidenceService.fetchDistricts(for: location, radius: 30000) {
             if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
                 var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
                 for candidateDistrict in candidateDistricts {
                     let candidateLocation = candidateDistrict.location
-                    let distance = haversineDistance(location_0: candidateLocation, location_1: location)
+                    let distance = haversineDistance(location_0: candidateLocation, location_1: location).converted(to: .kilometers)
                     if distance < minDistance {
                         minDistance = distance
                         nearestDistrict = candidateDistrict
@@ -110,9 +122,6 @@ class IncidenceController {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
                     incidence?.append(current)
-                    if let forecast = await Self.forecast(data: incidence) {
-                        incidence?.append(contentsOf: forecast)
-                    }
                 }
             }
         }
@@ -140,26 +149,49 @@ class IncidenceController {
         return Measurement<UnitIncidence>(value: value, unit: data.unit)
     }
 
-    private static func forecast(data: [Incidence]?) async -> [Incidence]? {
-        var forecast: [Incidence]? = nil
-        guard let historicalData = data, historicalData.count > 0 else {
-            return nil
-        }
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
-            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-        }
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
-        do {
-            try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 42 * 24 * 3600)  // 42 days
-            forecast = prediction.forecasts.map { forecast in
-                Incidence(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+    private static func interpolateMeasurements(measurements: [Incidence], distance: TimeInterval) -> [Incidence] {
+        var interpolatedMeasurement: [Incidence] = []
+        if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
+            var current = start
+            if var last = measurements.first {
+                while current <= end {
+                    if let match = measurements.first(where: { $0.timestamp == current }) {
+                        last = match
+                        interpolatedMeasurement.append(match)
+                    }
+                    else {
+                        interpolatedMeasurement
+                            .append(
+                                Incidence(
+                                    value: Measurement(value: last.value.value, unit: last.value.unit), quality: .uncertain,
+                                    timestamp: current))
+                    }
+                    current = current.addingTimeInterval(distance)
+                }
             }
         }
-        catch {
-            print("Forecasting error: \(error)")
+        return interpolatedMeasurement
+    }
+
+    private static func forecastMeasurements(data: [Incidence], duration: TimeInterval) -> [Incidence] {
+        var forecastMeasurements: [Incidence] = []
+        if data.count > 0 {
+            let unit = data[0].value.unit
+            let dataPoints = data.map { incidence in
+                TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+            }
+            let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
+            do {
+                try predictor.addData(dataPoints)
+                let prediction = try predictor.forecast(duration: duration)
+                forecastMeasurements = prediction.forecasts.map { forecast in
+                    Incidence(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                }
+            }
+            catch {
+                trace.error("Forecasting error: %@", error.localizedDescription)
+            }
         }
-        return forecast
+        return forecastMeasurements
     }
 }

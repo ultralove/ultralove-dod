@@ -8,6 +8,7 @@ struct DashboardOfDoomApp: App {
     @State var levelViewModel = LevelViewModel()
     @State var radiationViewModel = RadiationViewModel()
     @State var particleViewModel = ParticleViewModel()
+    @State var hotspotViewModel = HotspotViewModel()
 
     var body: some Scene {
         MenuBarExtra {
@@ -20,9 +21,10 @@ struct DashboardOfDoomApp: App {
                 .environment(levelViewModel)
                 .environment(radiationViewModel)
                 .environment(particleViewModel)
+                .environment(hotspotViewModel)
 
         } label: {
-            Text(weatherViewModel.faceplate)
+            Text(weatherViewModel.faceplate(selector: .actualTemperature))
                 .font(.system(.body, design: .monospaced))
         }
         .menuBarExtraStyle(.window)

@@ -9,18 +9,25 @@ struct RadiationStation {
 }
 
 class RadiationController {
+    private let measurementDistance: TimeInterval
+    private let forecastDuration: TimeInterval
+
+    init() {
+        self.measurementDistance = 3600  // 1 hour
+        self.forecastDuration = 3 * 24 * self.measurementDistance  // 3 days
+    }
+
     func refreshRadiation(for location: Location) async throws -> RadiationSensor? {
         var sensor: RadiationSensor? = nil
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
-            var measurements: [Radiation] = []
             if let radiation = try await Self.fetchMeasurements(station: nearestStation) {
-                measurements.append(contentsOf: radiation)
-                if let forecast = await Self.forecast(data: measurements) {
-                    measurements.append(contentsOf: forecast)
-                }
+            var measurements: [Radiation] = []
+                measurements.append(contentsOf: Self.interpolateMeasurements(measurements: radiation, distance: self.measurementDistance))
+                measurements.append(contentsOf: Self.forecastMeasurements(data: measurements, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                     sensor = RadiationSensor(
-                        id: nearestStation.name, placemark: placemark, location: nearestStation.location, measurements: measurements, timestamp: Date.now)
+                        id: nearestStation.name, placemark: placemark, customData: ["icon": "atom"], location: nearestStation.location, measurements: measurements,
+                        timestamp: Date.now)
                 }
             }
         }
@@ -106,25 +113,49 @@ class RadiationController {
         return measurements
     }
 
-    private static func forecast(data: [Radiation]?) async -> [Radiation]? {
-        var forecast: [Radiation]? = nil
-        guard let historicalData = data, historicalData.count > 0 else {
-            return nil
+    private static func interpolateMeasurements(measurements: [Radiation], distance: TimeInterval) -> [Radiation] {
+        var interpolated: [Radiation] = []
+        if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
+            let unit = measurements[0].value.unit
+            var current = start
+            if var last = measurements.first {
+                while current <= end {
+                    if let match = measurements.first(where: { $0.timestamp == current }) {
+                        last = match
+                        interpolated.append(match)
         }
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
+                    else {
+                        interpolated
+                            .append(
+                                Radiation(
+                                    value: Measurement(value: last.value.value, unit: unit), quality: .uncertain,
+                                    timestamp: current))
+                    }
+                    current = current.addingTimeInterval(distance)
+                }
+            }
+        }
+        return interpolated
+    }
+
+    private static func forecastMeasurements(data: [Radiation], duration: TimeInterval) -> [Radiation] {
+        var forecast: [Radiation] = []
+        if data.count > 0 {
+            let unit = data[0].value.unit
+            let dataPoints = data.map { incidence in
             TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
         }
         let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .hourly)
         do {
-            try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 72 * 3600) // 3 days
+                try predictor.addData(dataPoints)
+                let prediction = try predictor.forecast(duration: duration)  // 3 days
             forecast = prediction.forecasts.map { forecast in
                 Radiation(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
         }
         catch {
-            print("Forecasting error: \(error)")
+                trace.error("Forecasting error: %@", error.localizedDescription)
+            }
         }
         return forecast
     }

@@ -1,9 +1,5 @@
 import Foundation
 
-protocol SubscriptionManagerDelegate: Identifiable where ID == UUID {
-    func refreshData(location: Location) async
-}
-
 class SubscriptionManager: LocationManagerDelegate {
     static let shared = SubscriptionManager()
 
@@ -12,16 +8,16 @@ class SubscriptionManager: LocationManagerDelegate {
 
     private let updateInterval: TimeInterval = 60
     private var subscriptions: [Subscription] = []
-    private var delegates: [UUID: any SubscriptionManagerDelegate] = [:]
+    private var delegates: [UUID: any SubscriberProtocol] = [:]
 
     private init() {
         self.locationManager.delegate = self
         Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
-            self.updateSubscriptions()
+            self.refreshSubscriptions()
         }
     }
 
-    private func updateSubscriptions() {
+    private func refreshSubscriptions() {
         for subscription in self.subscriptions {
             subscription.update(timeout: self.updateInterval)
             if subscription.isPending() {
@@ -58,7 +54,7 @@ class SubscriptionManager: LocationManagerDelegate {
     }
 
 
-    func addSubscription(id: UUID, delegate: any SubscriptionManagerDelegate, timeout: TimeInterval) {
+    func addSubscription(id: UUID, delegate: any SubscriberProtocol, timeout: TimeInterval) {
         self.subscriptions.append(Subscription(id: delegate.id, timeout: timeout * 60))
         self.delegates[delegate.id] = delegate
     }

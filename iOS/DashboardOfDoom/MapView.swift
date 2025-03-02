@@ -55,7 +55,7 @@ struct MapView: View {
                             VStack(alignment: .leading) {
                                 Text(
                                     String(
-                                        format: "\(GreekLetters.mathematicalBoldCapitalTau.rawValue): %.1f%@",
+                                        format: "\(MathematicalSymbols.mathematicalBoldCapitalTau.rawValue): %.1f%@",
                                         weather.actualTemperature?.value ?? Double.nan, weather.actualTemperature?.unit.symbol ?? ""))
                             }
                             Spacer()
@@ -112,7 +112,7 @@ struct MapView: View {
                                 .font(.title)
                             Spacer()
                             VStack(alignment: .leading) {
-                                Text(particle.faceplate(selector: .pm10))
+                                Text(particle.faceplate())
                             }
                             Spacer()
                         }

@@ -2,15 +2,12 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-@Observable class WeatherViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class WeatherViewModel: Identifiable, SubscriberProtocol {
     private let weatherController = WeatherController()
-
-    var actualTemperature: Measurement<UnitTemperature>?
-    var apparentTemperature: Measurement<UnitTemperature>?
 
     let id = UUID()
     var sensor: WeatherSensor?
-    var symbol: String = "questionmark.circle"
+    var measurements: [WeatherSelector: ProcessValue<Dimension>] = [:]
     var timestamp: Date? = nil
 
     init() {
@@ -18,34 +15,37 @@ import SwiftUI
         subscriptionManager.addSubscription(id: id, delegate: self, timeout: 5)  // 5 minutes
     }
 
-    var faceplate: String {
-        if let temperature = self.actualTemperature?.value, let symbol = self.actualTemperature?.unit.symbol {
-            return String(format: "%.1f%@", temperature, symbol)
+    func faceplate(selector: WeatherSelector) -> String {
+        guard let measurement = measurements[selector]?.value else {
+            return String(
+                format:
+                    "\(MathematicalSymbols.mathematicalBoldCapitalTau.rawValue): n/a")
         }
-        return "n/a"
+        return String(
+            format:
+                "\(MathematicalSymbols.mathematicalBoldCapitalTau.rawValue): %.1f%@", measurement.value, measurement.unit.symbol)
     }
 
-    var temperature: Measurement<UnitTemperature>? {
-        let showPerceivedTemperature = UserDefaults.standard.bool(forKey: "showPerceivedTemperature")
-        guard showPerceivedTemperature == true else {
-            return apparentTemperature
+    var icon: String {
+        if let customData = sensor?.customData {
+            if let icon = customData["icon"] as? String {
+                return icon
+            }
         }
-        return actualTemperature
+        return "questionmark.circle"
     }
 
     @MainActor func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await weatherController.refreshWeather(for: location) {
-                self.actualTemperature = sensor.measurements.temperature
-                self.apparentTemperature = sensor.measurements.apparentTemperature
-                self.symbol = sensor.measurements.symbol
                 self.sensor = sensor
+                self.measurements = sensor.measurements
                 self.timestamp = sensor.timestamp
                 MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
             }
         }
         catch {
-            print("Error refreshing data: \(error)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 }

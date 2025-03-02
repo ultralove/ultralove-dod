@@ -23,21 +23,21 @@ import SwiftUI
 
 struct MapSizeModifier: ViewModifier {
     func body(content: Content) -> some View {
-#if os(iOS)
+        #if os(iOS)
         if UIDevice.current.userInterfaceIdiom == .pad {
             content
                 .frame(height: 667)
-        } else {
+        }
+        else {
             content
                 .frame(height: 367)
         }
-#else
+        #else
         content
             .frame(height: 500)
-#endif
+        #endif
     }
 }
-
 
 struct ContentView: View {
     @State private var selectedScreen = Screen.home
@@ -47,6 +47,7 @@ struct ContentView: View {
     enum Screen {
         case home
         case weather
+        case covid
         case environment
         case airQuality
         case settings
@@ -57,77 +58,83 @@ struct ContentView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     switch selectedScreen {
-                    case .home:
-                        VStack {
-                            MapView()
-                                .modifier(MapSizeModifier())
-                            IncidenceView()
-                                .frame(height: 233)
-                            LevelView()
-                                .frame(height: 233)
-                            RadiationView()
-                                .frame(height: 233)
-                        }
-                        .onAppear {
-                            navigationVisible = .visible
-                            navigationTitle = "Home"
-                        }
-                    case .weather:
-                        VStack {
-                            ForecastView(header: "Temperature (actual)", selector: .actual)
-                                .frame(height: 233)
-                            ForecastView(header: "Temperature (feels like)", selector: .apparent)
-                                .frame(height: 233)
-                            ForecastView(header: "Dew point", selector: .dewPoint)
-                                .frame(height: 233)
-                            ForecastView(header: "Humidity", selector: .humidity)
-                                .frame(height: 233)
-                            ForecastView(header: "Precipitation chance", selector: .precipitationChance)
-                                .frame(height: 233)
-                            ForecastView(header: "Precipitation amount", selector: .precipitationAmount)
-                                .frame(height: 233)
-                            ForecastView(header: "Pressure", selector: .pressure)
-                                .frame(height: 233)
-                            ForecastView(header: "Visibility", selector: .visibility)
-                                .frame(height: 233)
-                        }
-                        .onAppear {
-                            navigationVisible = .visible
-                            navigationTitle = "Weather forecast"
-                        }
-
-                    case .environment:
-                        VStack {
-                            IncidenceView()
-                                .frame(height: 233)
-                            LevelView()
-                                .frame(height: 233)
-                            RadiationView()
-                                .frame(height: 233)
-                        }
-                        .onAppear {
-                            navigationVisible = .visible
-                            navigationTitle = "Environmental data"
-                        }
-                    case .airQuality:
-                        VStack {
-                            ParticleView(header: "PM\u{2081}\u{2080} at ", selector: .pm10)
-                                .frame(height: 233)
-                            ParticleView(header: "PM\u{2082}\u{2085} at ", selector: .pm25)
-                                .frame(height: 233)
-                            ParticleView(header: "NO\u{2082} at ", selector: .no2)
-                                .frame(height: 233)
-                        }
-                        .onAppear {
-                            navigationVisible = .visible
-                            navigationTitle = "Particulate matter"
-                        }
-                    case .settings:
-                        SettingsView()
+                        case .home:
+                            VStack {
+                                MapView()
+                                    .modifier(MapSizeModifier())
+                                IncidenceView()
+                                    .frame(height: 233)
+                                LevelView()
+                                    .frame(height: 233)
+                                RadiationView()
+                                    .frame(height: 233)
+                                ParticleView(selector: .pm10)
+                                    .frame(height: 233)
+                            }
                             .onAppear {
                                 navigationVisible = .visible
-                                navigationTitle = "Settings"
+                                navigationTitle = "Home"
                             }
+                        case .weather:
+                            VStack {
+                                ForecastView(header: "Temperature (actual)", selector: .actual)
+                                    .frame(height: 233)
+                                ForecastView(header: "Temperature (feels like)", selector: .apparent)
+                                    .frame(height: 233)
+                                ForecastView(header: "Dew point", selector: .dewPoint)
+                                    .frame(height: 233)
+                                ForecastView(header: "Humidity", selector: .humidity)
+                                    .frame(height: 233)
+                                ForecastView(header: "Precipitation chance", selector: .precipitationChance)
+                                    .frame(height: 233)
+                                ForecastView(header: "Precipitation amount", selector: .precipitationAmount)
+                                    .frame(height: 233)
+                                ForecastView(header: "Pressure", selector: .pressure)
+                                    .frame(height: 233)
+                                ForecastView(header: "Visibility", selector: .visibility)
+                                    .frame(height: 233)
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "Weather forecast"
+                            }
+                        case .covid:
+                            VStack {
+                                IncidenceView()
+                                    .frame(height: 233)
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "COVID-19 situation"
+                            }
+                        case .environment:
+                            VStack {
+                                LevelView()
+                                    .frame(height: 233)
+                                RadiationView()
+                                    .frame(height: 233)
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "Environmental data"
+                            }
+                        case .airQuality:
+                            VStack {
+                                ForEach(ParticleSelector.allCases, id: \.self) { selector in
+                                    ParticleView(selector: selector)
+                                        .frame(height: 233)
+                                }
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "Particulate matter"
+                            }
+                        case .settings:
+                            SettingsView()
+                                .onAppear {
+                                    navigationVisible = .visible
+                                    navigationTitle = "Settings"
+                                }
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -145,23 +152,29 @@ struct ContentView: View {
                     ToolbarItem(placement: .bottomBar) {
                         HStack {
                             Button(action: { selectedScreen = .home }) {
-                                Image(systemName: selectedScreen == .home ? "map.fill" : "map")
+                                Image(systemName: selectedScreen == .home ? "house.fill" : "house")
                                     .foregroundColor(selectedScreen == .home ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
                             Button(action: { selectedScreen = .weather }) {
-                                Image(systemName: selectedScreen == .weather ? "cloud.bolt.fill" : "cloud.bolt")
+                                Image(systemName: selectedScreen == .weather ? "cloud.bolt.fill" : "cloud.sun")
                                     .foregroundColor(selectedScreen == .weather ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
+                            Button(action: { selectedScreen = .covid }) {
+                                Image(systemName: selectedScreen == .covid ? "facemask.fill" : "facemask")
+                                    .foregroundColor(selectedScreen == .covid ? .accentColor : .accentColor.opacity(0.5))
+                            }
+                            Spacer()
                             Button(action: { selectedScreen = .environment }) {
-                                Image(systemName: selectedScreen == .environment ? "brain.head.profile.fill" : "brain.head.profile")
+                                Image(systemName: selectedScreen == .environment ? "tornado" : "ladybug")
                                     .foregroundColor(selectedScreen == .environment ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
                             Button(action: { selectedScreen = .airQuality }) {
-                                Image(systemName: selectedScreen == .airQuality ? "flame.fill" : "flame")
+                                Image(systemName: selectedScreen == .airQuality ? "aqi.medium" : "aqi.low")
                                     .foregroundColor(selectedScreen == .airQuality ? .accentColor : .accentColor.opacity(0.5))
+                                    .fontWeight(.black) // Workaround for "aqi.medium" icon being rather thin
                             }
                             Spacer()
                             Button(action: { selectedScreen = .settings }) {
@@ -186,4 +199,3 @@ struct ContentView: View {
         }
     }
 }
-

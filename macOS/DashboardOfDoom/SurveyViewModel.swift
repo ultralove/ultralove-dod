@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-@Observable class SurveyViewModel: Identifiable, SubscriptionManagerDelegate {
+@Observable class SurveyViewModel: Identifiable, SubscriberProtocol {
     private let surveyController = SurveyController()
 
     let id = UUID()
@@ -32,9 +32,18 @@ import SwiftUI
 
     func faceplate(selector: SurveySelector) -> String {
         guard let measurement = current(selector: selector)?.value else {
-            return "\(GreekLetters.mathematicalItalicCapitalNu.rawValue):n/a"
+            return "\(MathematicalSymbols.mathematicalItalicCapitalNu.rawValue):n/a"
         }
-        return String(format: "\(GreekLetters.mathematicalBoldCapitalNu.rawValue):%.0f%@", measurement.value, measurement.unit.symbol)
+        return String(format: "\(MathematicalSymbols.mathematicalBoldCapitalNu.rawValue):%.0f%@", measurement.value, measurement.unit.symbol)
+    }
+
+    var icon: String {
+        if let customData = sensor?.customData {
+            if let icon = customData["icon"] as? String {
+                return icon
+            }
+        }
+        return "questionmark.circle"
     }
 
     func trend(selector: SurveySelector) -> String {
@@ -86,7 +95,7 @@ import SwiftUI
         }
     }
 
-    @MainActor func refreshData(location: Location) async -> Void {
+    func refreshData(location: Location) async -> Void {
         do {
             if let sensor = try await surveyController.refreshFederalSurveys(for: location) {
                 let measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: sensor.measurements))
@@ -96,7 +105,7 @@ import SwiftUI
             }
         }
         catch {
-            print("Error refreshing data: \(error.localizedDescription)")
+            trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 

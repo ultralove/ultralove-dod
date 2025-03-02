@@ -1,12 +1,12 @@
-import SwiftUI
 import LaunchAtLogin
+import SwiftUI
 
 struct GrowingButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-//            .foregroundStyle(.black)
-//            .scaleEffect(configuration.isPressed ? 1.75 : 1.0)
-//            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+        //            .foregroundStyle(.black)
+        //            .scaleEffect(configuration.isPressed ? 1.75 : 1.0)
+        //            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
     }
 }
 
@@ -31,18 +31,19 @@ struct GrowingButton: ButtonStyle {
 
 struct MapSizeModifier: ViewModifier {
     func body(content: Content) -> some View {
-#if os(iOS)
+        #if os(iOS)
         if UIDevice.current.userInterfaceIdiom == .pad {
             content
                 .frame(height: 667)
-        } else {
+        }
+        else {
             content
                 .frame(height: 367)
         }
-#else
+        #else
         content
-            .frame(height: 500)
-#endif
+            .frame(height: 750)
+        #endif
     }
 }
 
@@ -58,7 +59,7 @@ struct ContentView: View {
                     .font(.headline)
                 Spacer()
                 HStack {
-                    Menu() {
+                    Menu {
                         Button("Settings...") {
                             openSettings()
                         }
@@ -87,7 +88,6 @@ struct ContentView: View {
                 VStack {
                     MapView()
                         .padding(.vertical, 5)
-//                        .frame(height: 500)
                         .modifier(MapSizeModifier())
                     IncidenceView()
                         .padding(.vertical, 5)
@@ -98,19 +98,19 @@ struct ContentView: View {
                     RadiationView()
                         .padding(.vertical, 5)
                         .frame(height: 200)
-                    ParticleView(header: "PM\u{2081}\u{2080} at ", selector: .pm10)
+                    ParticleView(selector: .pm10)
                         .padding(.vertical, 5)
                         .frame(height: 200)
-                    ParticleView(header: "PM\u{2082}\u{2085} at ", selector: .pm25)
+                    ParticleView(selector: .pm25)
                         .padding(.vertical, 5)
                         .frame(height: 200)
-                    ParticleView(header: "NO\u{2082} at ", selector: .no2)
+                    ParticleView(selector: .no2)
                         .padding(.vertical, 5)
                         .frame(height: 200)
-                    ForecastView(header: "Temperature (actual)", selector: .actual)
+                    ForecastView(header: "Temperature (actual)", selector: .temperature)
                         .padding(.vertical, 5)
                         .frame(height: 200)
-                    ForecastView(header: "Temperature (feels like)", selector: .apparent)
+                    ForecastView(header: "Temperature (feels like)", selector: .apparentTemperature)
                         .padding(.vertical, 5)
                         .frame(height: 200)
                     ForecastView(header: "Dew point", selector: .dewPoint)
@@ -133,12 +133,11 @@ struct ContentView: View {
                         .frame(height: 200)
                 }
             }
-
         }
-        .frame(width: 768, height: 1024)
+        .frame(width: 1024, height: 1024)
         .preferredColorScheme(.dark)
-        .background(colorScheme == .dark ? Color.black : Color.white)
         .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
+        .background(colorScheme == .dark ? Color.black : Color.white)
     }
 }
 
