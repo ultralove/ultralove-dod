@@ -11,7 +11,7 @@ struct LevelView: View {
                 ActivityIndicator()
             }
             else {
-                HeaderView(label: String(format: "%@ Water Level", viewModel.sensor?.id ?? "<Unknown>"))
+                HeaderView(label: String(format: "Water Level of the", viewModel.sensor?.id ?? "<Unknown>"), sensor: viewModel.sensor)
                 _view()
                 FooterView(sensor: viewModel.sensor)
             }

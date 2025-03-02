@@ -6,7 +6,7 @@ struct ParticleView: View {
     @State private var selectedDate: Date?
     let selector: ParticleSelector
 
-    private let chemicalSymbols: [ParticleSelector: ParticleSymbol] = [
+    private let symbols: [ParticleSelector: ParticleSymbol] = [
         .pm10: .pm10,
         .pm25: .pm25,
         .o3: .o3,
@@ -28,7 +28,7 @@ struct ParticleView: View {
                 ActivityIndicator()
             }
             else {
-                    HeaderView(label: "\((chemicalSymbols[selector] ?? .pm10).rawValue) at", sensor: viewModel.sensor)
+                    HeaderView(label: "\((symbols[selector] ?? .pm10).rawValue) at", sensor: viewModel.sensor)
                 _view()
                 FooterView(sensor: viewModel.sensor)
             }

@@ -10,11 +10,9 @@ struct HeaderView: View {
             HStack(alignment: .bottom) {
                 if let id = sensor?.id {
                     Text(String(format: "%@ %@:", label, id))
-                        .font(.headline)
                 }
                 else {
                     Text(String(format: "%@:", label))
-                        .font(.headline)
                 }
                 Spacer()
                 HStack {

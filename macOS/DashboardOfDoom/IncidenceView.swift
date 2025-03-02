@@ -11,7 +11,7 @@ struct IncidenceView: View {
                 ActivityIndicator()
             }
             else {
-                HeaderView(label: "COVID-19 Incidence in", sensor: viewModel.sensor)
+                HeaderView(label: "Weekly Incidence in", sensor: viewModel.sensor)
                 _view()
                 FooterView(sensor: viewModel.sensor)
             }

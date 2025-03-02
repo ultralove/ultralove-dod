@@ -20,6 +20,15 @@ import Foundation
         return String(format: "\(MathematicalSymbols.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f", measurement.unit.symbol, measurement.value)
     }
 
+    var label: String {
+        if let customData = sensor?.customData {
+            if let label = customData["label"] as? String {
+                return label
+            }
+        }
+        return "<Unknown>"
+    }
+
     var icon: String {
         if let customData = sensor?.customData {
             if let icon = customData["icon"] as? String {
