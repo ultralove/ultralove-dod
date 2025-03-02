@@ -24,7 +24,7 @@ class IncidenceController {
                 measurements.append(contentsOf: Self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
                     sensor = IncidenceSensor(
-                        id: district.name, placemark: placemark, customData: ["icon": "facemask"], location: district.location,
+                        id: district.name, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], location: district.location,
                         measurements: measurements, timestamp: Date.now)
                 }
             }

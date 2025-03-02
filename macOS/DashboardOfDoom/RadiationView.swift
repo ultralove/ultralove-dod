@@ -8,13 +8,13 @@ struct RadiationView: View {
     var body: some View {
         VStack {
             if viewModel.sensor?.timestamp == nil {
-            ActivityIndicator()
-        }
-        else {
+                ActivityIndicator()
+            }
+            else {
                 HeaderView(label: "Radiation in", sensor: viewModel.sensor)
-            _view()
+                _view()
                 FooterView(sensor: viewModel.sensor)
-        }
+            }
         }
         .padding()
         .cornerRadius(13)
@@ -56,7 +56,7 @@ struct RadiationView: View {
                                 Image(systemName: viewModel.trend)
                             }
                             .font(.headline)
-                    }
+                        }
                         .padding(7)
                         .padding(.horizontal, 7)
                         .quality(currentRadiation.quality)
@@ -77,9 +77,9 @@ struct RadiationView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.3f%@", selectedRadiation.value.value, selectedRadiation.value.unit.symbol))
-                            .font(.headline)
-                    }
-                    }
+                                    .font(.headline)
+                            }
+                        }
                         .padding(7)
                         .padding(.horizontal, 7)
                         .quality(selectedRadiation.quality)
@@ -98,15 +98,15 @@ struct RadiationView: View {
                                     let horizontalAmount = abs(value.translation.width)
                                     let verticalAmount = abs(value.translation.height)
                                     if horizontalAmount > verticalAmount * 2.0 {
-                                    if let plotFrame = geometryProxy.plotFrame {
-                                        let x = value.location.x - geometryReader[plotFrame].origin.x
-                                        if let source: Date = geometryProxy.value(atX: x) {
-                                            if let target = Date.roundToPreviousHour(from: source) {
-                                                self.selectedDate = target
+                                        if let plotFrame = geometryProxy.plotFrame {
+                                            let x = value.location.x - geometryReader[plotFrame].origin.x
+                                            if let source: Date = geometryProxy.value(atX: x) {
+                                                if let target = Date.roundToPreviousHour(from: source) {
+                                                    self.selectedDate = target
+                                                }
                                             }
                                         }
                                     }
-                                }
                                 }
                                 .onEnded { value in
                                     self.selectedDate = nil

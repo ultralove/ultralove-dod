@@ -8,6 +8,7 @@ struct DashboardOfDoomApp: App {
     @State var levelViewModel = LevelViewModel()
     @State var radiationViewModel = RadiationViewModel()
     @State var particleViewModel = ParticleViewModel()
+    @State var surveyViewModel = SurveyViewModel()
     @State var hotspotViewModel = HotspotViewModel()
 
     var body: some Scene {
@@ -21,6 +22,7 @@ struct DashboardOfDoomApp: App {
                 .environment(levelViewModel)
                 .environment(radiationViewModel)
                 .environment(particleViewModel)
+                .environment(surveyViewModel)
                 .environment(hotspotViewModel)
 
         } label: {
