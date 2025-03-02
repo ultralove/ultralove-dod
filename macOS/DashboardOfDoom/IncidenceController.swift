@@ -1,7 +1,5 @@
 import Foundation
 
-typealias Incidence = ProcessValue<UnitIncidence>
-
 struct District: Identifiable, Equatable {
     let id: String
     let name: String
@@ -21,7 +19,7 @@ class IncidenceController {
         var sensor: IncidenceSensor? = nil
         if let district = try await self.fetchDistrict(for: location) {
             if let incidence = try await self.fetchIncidence(for: district) {
-                var measurements: [Incidence] = []
+                var measurements: [ProcessValue<Dimension>] = []
                 measurements.append(contentsOf: Self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
                 measurements.append(contentsOf: Self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
@@ -79,8 +77,8 @@ class IncidenceController {
         return nearestDistrict
     }
 
-    static private func parseIncidence(data: Data, district: District) throws -> [Incidence]? {
-        var incidence: [Incidence]?
+    static private func parseIncidence(data: Data, district: District) throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]?
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let data = json["data"] as? [String: Any] {
                 if let district = data[district.id] as? [String: Any] {
@@ -92,16 +90,16 @@ class IncidenceController {
                                     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                                     dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
                                     if let date = dateFormatter.date(from: dateString) {
-                                        let newIncidence = Incidence(
-                                            value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
+                                        let newIncidence = ProcessValue<Dimension>(
+                                            value: Measurement<Dimension>(value: value, unit: UnitIncidence.casesPer100k), quality: .good,
                                             timestamp: date)
                                         if incidence == nil {
                                             incidence = [newIncidence]
                                         }
                                         else {
                                             incidence?.append(
-                                                Incidence(
-                                                    value: Measurement<UnitIncidence>(value: value, unit: .casesPer100k), quality: .good,
+                                                ProcessValue<Dimension>(
+                                                    value: Measurement<Dimension>(value: value, unit: UnitIncidence.casesPer100k), quality: .good,
                                                     timestamp: date))
                                         }
                                     }
@@ -115,8 +113,8 @@ class IncidenceController {
         return incidence
     }
 
-    private func fetchIncidence(for district: District) async throws -> [Incidence]? {
-        var incidence: [Incidence]? = nil
+    private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]? = nil
         if let data = try await IncidenceService.fetchIncidence(id: district.id) {
             if let measurements = try Self.parseIncidence(data: data, district: district) {
                 incidence = measurements
@@ -128,29 +126,29 @@ class IncidenceController {
         return incidence
     }
 
-    private static func nowCast(data: [Incidence]?, alpha: Double) -> Incidence? {
+    private static func nowCast(data: [ProcessValue<Dimension>]?, alpha: Double) -> ProcessValue<Dimension>? {
         guard let data = data, data.count > 0, alpha >= 0.0, alpha <= 1.0 else {
             return nil
         }
-        let historicalData = [Incidence](data.reversed())
+        let historicalData = [ProcessValue<Dimension>](data.reversed())
         if let current = historicalData.max(by: { $0.timestamp < $1.timestamp }) {
             if let timestamp = Calendar.current.date(byAdding: .day, value: 1, to: current.timestamp) {
                 let value = Self.nowCast(data: historicalData[1].value, previous: historicalData[0].value, alpha: alpha)
-                return Incidence(value: value, quality: .uncertain, timestamp: timestamp)
+                return ProcessValue<Dimension>(value: value, quality: .uncertain, timestamp: timestamp)
             }
         }
         return nil
     }
 
     private static func nowCast(
-        data: Measurement<UnitIncidence>, previous: Measurement<UnitIncidence>, alpha: Double
-    ) -> Measurement<UnitIncidence> {
+        data: Measurement<Dimension>, previous: Measurement<Dimension>, alpha: Double
+    ) -> Measurement<Dimension> {
         let value = alpha * data.value + (1 - alpha) * previous.value
-        return Measurement<UnitIncidence>(value: value, unit: data.unit)
+        return Measurement<Dimension>(value: value, unit: data.unit)
     }
 
-    private static func interpolateMeasurements(measurements: [Incidence], distance: TimeInterval) -> [Incidence] {
-        var interpolatedMeasurement: [Incidence] = []
+    private static func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
+        var interpolatedMeasurement: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
             if var last = measurements.first {
@@ -162,7 +160,7 @@ class IncidenceController {
                     else {
                         interpolatedMeasurement
                             .append(
-                                Incidence(
+                                ProcessValue<Dimension>(
                                     value: Measurement(value: last.value.value, unit: last.value.unit), quality: .uncertain,
                                     timestamp: current))
                     }
@@ -173,8 +171,8 @@ class IncidenceController {
         return interpolatedMeasurement
     }
 
-    private static func forecastMeasurements(data: [Incidence], duration: TimeInterval) -> [Incidence] {
-        var forecastMeasurements: [Incidence] = []
+    private static func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
+        var forecastMeasurements: [ProcessValue<Dimension>] = []
         if data.count > 0 {
             let unit = data[0].value.unit
             let dataPoints = data.map { incidence in
@@ -185,7 +183,7 @@ class IncidenceController {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
-                    Incidence(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                 }
             }
             catch {

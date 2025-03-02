@@ -1,7 +1,5 @@
 import Foundation
 
-typealias Radiation = ProcessValue<UnitRadiation>
-
 struct RadiationStation {
     let id: String
     let name: String
@@ -21,7 +19,7 @@ class RadiationController {
         var sensor: RadiationSensor? = nil
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
             if let radiation = try await Self.fetchMeasurements(station: nearestStation) {
-            var measurements: [Radiation] = []
+            var measurements: [ProcessValue<Dimension>] = []
                 measurements.append(contentsOf: Self.interpolateMeasurements(measurements: radiation, distance: self.measurementDistance))
                 measurements.append(contentsOf: Self.forecastMeasurements(data: measurements, duration: self.forecastDuration))
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
@@ -82,16 +80,16 @@ class RadiationController {
         return nearestStation
     }
 
-    private static func fetchMeasurements(station: RadiationStation) async throws -> [Radiation]? {
-        var radiation: [Radiation]? = nil
+    private static func fetchMeasurements(station: RadiationStation) async throws -> [ProcessValue<Dimension>]? {
+        var radiation: [ProcessValue<Dimension>]? = nil
         if let data = try await RadiationService.fetchMeasurements(for: station.id) {
             radiation = try Self.parseRadiation(data: data)
         }
         return radiation
     }
 
-    private static func parseRadiation(data: Data) throws -> [Radiation] {
-        var measurements: [Radiation] = []
+    private static func parseRadiation(data: Data) throws -> [ProcessValue<Dimension>] {
+        var measurements: [ProcessValue<Dimension>] = []
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let features = json["features"] as? [[String: Any]] {
                 for feature in features {
@@ -100,7 +98,7 @@ class RadiationController {
                             let isoFormatter = ISO8601DateFormatter()
                             if let timestamp = isoFormatter.date(from: dateString) {
                                 if let value = properties["value"] as? Double {
-                                    let measurement = Radiation(
+                                    let measurement = ProcessValue<Dimension>(
                                         value: Measurement(value: value, unit: UnitRadiation.microsieverts), quality: .good, timestamp: timestamp)
                                     measurements.append(measurement)
                                 }
@@ -113,8 +111,8 @@ class RadiationController {
         return measurements
     }
 
-    private static func interpolateMeasurements(measurements: [Radiation], distance: TimeInterval) -> [Radiation] {
-        var interpolated: [Radiation] = []
+    private static func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
+        var interpolated: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             let unit = measurements[0].value.unit
             var current = start
@@ -127,7 +125,7 @@ class RadiationController {
                     else {
                         interpolated
                             .append(
-                                Radiation(
+                                ProcessValue<Dimension>(
                                     value: Measurement(value: last.value.value, unit: unit), quality: .uncertain,
                                     timestamp: current))
                     }
@@ -138,8 +136,8 @@ class RadiationController {
         return interpolated
     }
 
-    private static func forecastMeasurements(data: [Radiation], duration: TimeInterval) -> [Radiation] {
-        var forecast: [Radiation] = []
+    private static func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
+        var forecast: [ProcessValue<Dimension>] = []
         if data.count > 0 {
             let unit = data[0].value.unit
             let dataPoints = data.map { incidence in
@@ -150,7 +148,7 @@ class RadiationController {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)  // 3 days
             forecast = prediction.forecasts.map { forecast in
-                Radiation(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
         }
         catch {

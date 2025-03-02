@@ -1,7 +1,5 @@
 import Foundation
 
-typealias Survey = ProcessValue<UnitPercentage>
-
 private struct Poll {
     let id: Int
     let parliament: Int
@@ -48,12 +46,12 @@ class SurveyController {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(47).reversed())
-                    var measurements: [SurveySelector: [Survey]] = [:]
+                    var measurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
 
-                    var values: [Survey] = []
+                    var values: [ProcessValue<Dimension>] = []
                     for poll in significantPolls {
-                        let measurement = Measurement(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
-                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        let measurement = Measurement<Dimension>(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
@@ -62,8 +60,8 @@ class SurveyController {
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
-                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        let measurement = Measurement<Dimension>(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
@@ -74,8 +72,8 @@ class SurveyController {
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
                         for poll in significantPolls {
-                            let measurement = Measurement(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
-                            let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                            let measurement = Measurement<Dimension>(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
+                            let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                             values.append(fascism)
                         }
                         if values.count > 0 {
@@ -117,12 +115,12 @@ class SurveyController {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(47).reversed())
-                    var measurements: [SurveySelector: [Survey]] = [:]
+                    var measurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
 
-                    var values: [Survey] = []
+                    var values: [ProcessValue<Dimension>] = []
                     for poll in significantPolls {
-                        let measurement = Measurement(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
-                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        let measurement = Measurement<Dimension>(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
@@ -131,8 +129,8 @@ class SurveyController {
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
-                        let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                        let measurement = Measurement<Dimension>(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
@@ -143,8 +141,8 @@ class SurveyController {
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
                         for poll in significantPolls {
-                            let measurement = Measurement(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
-                            let fascism = Survey(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
+                            let measurement = Measurement<Dimension>(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
+                            let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                             values.append(fascism)
                         }
                         if values.count > 0 {

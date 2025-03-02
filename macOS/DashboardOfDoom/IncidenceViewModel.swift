@@ -5,7 +5,7 @@ import Foundation
 
     let id = UUID()
     var sensor: IncidenceSensor?
-    var measurements: [Incidence] = []
+    var measurements: [ProcessValue<Dimension>] = []
     var timestamp: Date? = nil
 
     init() {
@@ -29,15 +29,15 @@ import Foundation
         return "questionmark.circle"
     }
 
-    var maxValue: Measurement<UnitIncidence> {
-        return measurements.map({ $0.value }).max() ?? Measurement<UnitIncidence>(value: 0.0, unit: .casesPer100k)
+    var maxValue: Measurement<Dimension> {
+        return measurements.map({ $0.value }).max() ?? Measurement<Dimension>(value: 0.0, unit: UnitIncidence.casesPer100k)
     }
 
-    var minValue: Measurement<UnitIncidence> {
-        return Measurement<UnitIncidence>(value: 0.0, unit: .casesPer100k)
+    var minValue: Measurement<Dimension> {
+        return Measurement<Dimension>(value: 0.0, unit: UnitIncidence.casesPer100k)
     }
 
-    var current: Incidence? {
+    var current: ProcessValue<Dimension>? {
         return measurements.last(where: { ($0.timestamp <= Date.now) && (($0.quality == .good) || ($0.quality == .uncertain)) })
     }
 

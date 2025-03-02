@@ -5,7 +5,7 @@ import SwiftUI
 
     let id = UUID()
     var sensor: LevelSensor?
-    var measurements: [Level] = []
+    var measurements: [ProcessValue<Dimension>] = []
     var timestamp: Date? = nil
 
     init() {
@@ -32,15 +32,15 @@ import SwiftUI
         return "questionmark.circle"
     }
 
-    var maxValue: Measurement<UnitLength> {
-        return measurements.map({ $0.value }).max() ?? Measurement<UnitLength>(value: 0, unit: .meters)
+    var maxValue: Measurement<Dimension> {
+        return measurements.map({ $0.value }).max() ?? Measurement<Dimension>(value: 0, unit: UnitLength.meters)
     }
 
-    var minValue: Measurement<UnitLength> {
-        return Measurement<UnitLength>(value: 0, unit: .meters)
+    var minValue: Measurement<Dimension> {
+        return Measurement<Dimension>(value: 0, unit: UnitLength.meters)
     }
 
-    var current: Level? {
+    var current: ProcessValue<Dimension>? {
         return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) })
     }
 
