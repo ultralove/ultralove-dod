@@ -1,6 +1,6 @@
 import Foundation
 
-enum HotspotSelector: Int {
+enum PointOfInterestSelector: Int {
     case pharmacy = 0
     case hospital = 1
     case liquor = 2
