@@ -1,6 +1,6 @@
 import Foundation
 
-class HotspotService {
+class PointOfInterestService {
     //[out:json][timeout:25];
     //(
     //    node["amenity"="pharmacy"](around:5000, 52.5199, 13.3652);

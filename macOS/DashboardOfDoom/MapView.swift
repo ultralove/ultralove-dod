@@ -1,13 +1,15 @@
 import MapKit
 import SwiftUI
 
-struct Hotspots: MapContent {
-    let hotspots: [Hotspot]
+struct PointOfInterestView: MapContent {
+    let pointOfInterest: PointOfInterest
     let color: Color
 
+    @State var showingSheet = false
+
     var body: some MapContent {
-        ForEach(self.hotspots, id: \.id) { hotspot in
-            Annotation("", coordinate: hotspot.location.coordinate, anchor: .center) {
+        Annotation("", coordinate: pointOfInterest.location.coordinate, anchor: .center) {
+            VStack {
                 if self.color == .green {
                     Circle()
                         .fill(Color.blendedBlue)
@@ -21,6 +23,12 @@ struct Hotspots: MapContent {
 
                 }
             }
+//            .onTapGesture {
+//                self.showingSheet = true
+//            }
+//            .sheet(isPresented: $showingSheet) {
+//                SheetView(isPresented: $showingSheet, name: pointOfInterest.name)
+//            }
         }
     }
 }
@@ -32,24 +40,34 @@ struct Faceplate: MapContent {
     let icon: String
     let anchor: UnitPoint
 
+    @State var showingSheet = false
+
     var body: some MapContent {
         Annotation("", coordinate: self.sensor.location.coordinate, anchor: .center) {
-            if user == true {
-                ZStack {
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 20, height: 20)
+            VStack {
+                if user == true {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 20, height: 20)
+                        Circle()
+                            .fill(Color.location)
+                            .frame(width: 11, height: 11)
+                    }
+                }
+                else {
                     Circle()
                         .fill(Color.location)
                         .frame(width: 11, height: 11)
+
                 }
             }
-            else {
-                Circle()
-                    .fill(Color.location)
-                    .frame(width: 11, height: 11)
-
-            }
+//            .onTapGesture {
+//                self.showingSheet = true
+//            }
+//            .sheet(isPresented: $showingSheet) {
+//                SheetView(isPresented: $showingSheet, name: self.sensor.id ?? "<Unknown>", label: self.sensor.placemark ?? "<Unknown>")
+//            }
         }
         Annotation("", coordinate: self.sensor.location.coordinate, anchor: self.anchor) {
             VStack {
@@ -77,7 +95,33 @@ struct Faceplate: MapContent {
                     .opacity(0.77)
             )
             .foregroundStyle(.black)
+//            .onTapGesture {
+//                self.showingSheet = true
+//            }
+//            .sheet(isPresented: $showingSheet) {
+//                SheetView(isPresented: $showingSheet, name: self.sensor.id ?? "<Unknown>", label: self.sensor.placemark ?? "<Unknown>")
+//            }
         }
+    }
+}
+
+struct SheetView: View {
+    @Binding var isPresented: Bool
+    let name: String
+    var label: String?
+
+    var body: some View {
+        VStack {
+            Text(name)
+            if let label = self.label {
+                Text(label)
+            }
+        }
+        .padding()
+        Button("Dismiss") {
+            isPresented = false
+        }
+        .padding()
     }
 }
 
@@ -87,16 +131,16 @@ struct MapView: View {
     @Environment(LevelViewModel.self) private var level
     @Environment(RadiationViewModel.self) private var radiation
     @Environment(ParticleViewModel.self) private var particle
-    @Environment(HotspotViewModel.self) private var hotspots
+    @Environment(PointOfInterestViewModel.self) private var pointsOfInterest
 
     private var viewModel = MapViewModel.shared
 
-    //    private var cameraPosition: Binding<MapCameraPosition> {
-    //        Binding(
-    //            get: { self.viewModel.region },
-    //            set: { self.viewModel.region = $0 }
-    //        )
-    //    }
+//    private var cameraPosition: Binding<MapCameraPosition> {
+//        Binding(
+//            get: { self.viewModel.region },
+//            set: { self.viewModel.region = $0 }
+//        )
+//    }
 
     var body: some View {
         VStack {
@@ -116,20 +160,30 @@ struct MapView: View {
     func _view() -> some View {
         VStack {
             Map(position: viewModel.binding(for: \.region), interactionModes: []) {
-                if let liquorStores = hotspots.liquorStores {
-                    Hotspots(hotspots: liquorStores, color: .green)
+                if let liquorStores = pointsOfInterest.liquorStores {
+                    ForEach(liquorStores, id: \.id) { liquorStore in
+                        PointOfInterestView(pointOfInterest: liquorStore, color: .green)
+                    }
                 }
-//                if let pharmacies = hotspots.pharmacies {
-//                    Hotspots(hotspots: pharmacies, color: .orange)
+//                if let pharmacies = parsePointsOfInterest.pharmacies {
+//                    ForEach(pharmacies, id: \.id) { pharmacy in
+//                        PointOfInterestView(pointOfInterest: pharmacy, color: .orange)
+//                    }
 //                }
-                if let hospitals = hotspots.hospitals {
-                    Hotspots(hotspots: hospitals, color: .red)
+                if let hospitals = pointsOfInterest.hospitals {
+                    ForEach(hospitals, id: \.id) { hospital in
+                        PointOfInterestView(pointOfInterest: hospital, color: .red)
+                    }
                 }
-                if let funeralDirectors = hotspots.funeralDirectors {
-                    Hotspots(hotspots: funeralDirectors, color: .purple)
+                if let funeralDirectors = pointsOfInterest.funeralDirectors {
+                    ForEach(funeralDirectors, id: \.id) { funeralDirector in
+                        PointOfInterestView(pointOfInterest: funeralDirector, color: .purple)
+                    }
                 }
-                if let cemeteries = hotspots.cemeteries {
-                    Hotspots(hotspots: cemeteries, color: .gray)
+                if let cemeteries = pointsOfInterest.cemeteries {
+                    ForEach(cemeteries, id: \.id) { cemetery in
+                        PointOfInterestView(pointOfInterest: cemetery, color: .gray)
+                    }
                 }
                 if let sensor = weather.sensor {
                     Faceplate(
