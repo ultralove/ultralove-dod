@@ -62,7 +62,7 @@ import SwiftUI
     func current(selector: ForecastSelector) -> ProcessValue<Dimension>? {
         var current: ProcessValue<Dimension>? = nil
         if let measurement = measurements[selector] {
-            current = measurement.last(where: { $0.timestamp == Date.round(from: Date.now, strategy: .previousHour) })
+            current = measurement.last(where: { $0.timestamp == Date.round(from: Date.now, strategy: .nextHour) })
         }
         return current
     }
