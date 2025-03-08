@@ -1,11 +1,5 @@
 import Foundation
 
-struct RadiationStation {
-    let id: String
-    let name: String
-    let location: Location
-}
-
 class RadiationController {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
@@ -32,8 +26,14 @@ class RadiationController {
         return sensor
     }
 
-    private static func fetchNearestStation(location: Location) async throws -> RadiationStation? {
-        var nearestStation: RadiationStation? = nil
+    struct Station {
+        let id: String
+        let name: String
+        let location: Location
+    }
+
+    private static func fetchNearestStation(location: Location) async throws -> Station? {
+        var nearestStation: Station? = nil
         if let data = try await RadiationService.fetchStations() {
             let stations = try await Self.parseStations(from: data)
             if stations.count > 0 {
@@ -43,8 +43,8 @@ class RadiationController {
         return nearestStation
     }
 
-    private static func parseStations(from data: Data) async throws -> [RadiationStation] {
-        var stations: [RadiationStation] = []
+    private static func parseStations(from data: Data) async throws -> [Station] {
+        var stations: [Station] = []
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let features = json["features"] as? [[String: Any]] {
                 for feature in features {
@@ -55,7 +55,7 @@ class RadiationController {
                                 if let name = properties["name"] as? String {
                                     let siteStatus = properties["site_status"] as? Int
                                     if siteStatus == 1 {
-                                        stations.append(RadiationStation(id: id, name: name, location: location))
+                                        stations.append(Station(id: id, name: name, location: location))
                                     }
                                 }
                             }
@@ -67,8 +67,8 @@ class RadiationController {
         return stations
     }
 
-    private static func nearestStation(stations: [RadiationStation], location: Location) -> RadiationStation? {
-        var nearestStation: RadiationStation? = nil
+    private static func nearestStation(stations: [Station], location: Location) -> Station? {
+        var nearestStation: Station? = nil
         var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
         for station in stations {
             let distance = haversineDistance(location_0: station.location, location_1: location)
@@ -80,7 +80,7 @@ class RadiationController {
         return nearestStation
     }
 
-    private static func fetchMeasurements(station: RadiationStation) async throws -> [ProcessValue<Dimension>]? {
+    private static func fetchMeasurements(station: Station) async throws -> [ProcessValue<Dimension>]? {
         var radiation: [ProcessValue<Dimension>]? = nil
         if let data = try await RadiationService.fetchMeasurements(for: station.id) {
             radiation = try Self.parseRadiation(data: data)

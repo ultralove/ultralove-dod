@@ -1,7 +1,6 @@
 import Foundation
 
 class PointOfInterestController {	
-//    private let radius = 2666.67
     private let radius = 6666.67
 
     func fetchPharmacies(location: Location) async -> [PointOfInterest]? {

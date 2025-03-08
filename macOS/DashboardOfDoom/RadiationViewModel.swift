@@ -10,7 +10,7 @@ import SwiftUI
 
     init() {
         let subscriptionManager = SubscriptionManager.shared
-        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+        subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
     }
 
     var faceplate: String {

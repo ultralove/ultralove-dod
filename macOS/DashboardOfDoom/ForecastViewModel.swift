@@ -10,7 +10,7 @@ import SwiftUI
 
     init() {
         let subscriptionManager = SubscriptionManager.shared
-        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 5)  // 5 minutes
+        subscriptionManager.addSubscription(delegate: self, timeout: 5)  // 5 minutes
     }
 
     func icon(selector: ForecastSelector) -> String? {
@@ -62,14 +62,14 @@ import SwiftUI
     func current(selector: ForecastSelector) -> ProcessValue<Dimension>? {
         var current: ProcessValue<Dimension>? = nil
         if let measurement = measurements[selector] {
-            current = measurement.last(where: { $0.timestamp == Date.roundToNextHour(from: Date.now) })
+            current = measurement.last(where: { $0.timestamp == Date.round(from: Date.now, strategy: .previousHour) })
         }
         return current
     }
 
     func trend(selector: ForecastSelector) -> String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.roundToPreviousHour(from: Date.now) {
+        if let currentDate = Date.round(from: Date.now, strategy: .previousHour) {
             if let currentForecast = self.measurements[selector]?.last(where: { $0.timestamp == currentDate }) {
                 if let previousForecast = self.measurements[selector]?.last(where: { $0.timestamp < currentForecast.timestamp }) {
                     let currentValue = currentForecast.value.value

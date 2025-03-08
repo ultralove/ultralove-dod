@@ -15,3 +15,18 @@ struct FooterView: View {
     }
 }
 
+struct ChartFooter: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    var sensor: ProcessSensor?
+
+    var body: some View {
+        HStack {
+            Text("Last update: \(Date.absoluteString(date: sensor?.timestamp))")
+                .font(.footnote)
+                .foregroundColor(.gray)
+            Spacer()
+        }
+    }
+}
+
