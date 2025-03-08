@@ -39,26 +39,6 @@ struct Faceplate: MapContent {
     @State var showingSheet = false
 
     var body: some MapContent {
-        Annotation("", coordinate: self.sensor.location.coordinate, anchor: .center) {
-            VStack {
-                if user == true {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 20, height: 20)
-                        Circle()
-                            .fill(Color.location)
-                            .frame(width: 11, height: 11)
-                    }
-                }
-                else {
-                    Circle()
-                        .fill(Color.location)
-                        .frame(width: 11, height: 11)
-
-                }
-            }
-        }
         Annotation("", coordinate: self.sensor.location.coordinate, anchor: self.anchor) {
             VStack {
                 Spacer()
@@ -85,6 +65,26 @@ struct Faceplate: MapContent {
                     .opacity(0.77)
             )
             .foregroundStyle(.black)
+        }
+        Annotation("", coordinate: self.sensor.location.coordinate, anchor: .center) {
+            VStack {
+                if user == true {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 15, height: 15)
+                        Circle()
+                            .fill(Color.location)
+                            .frame(width: 11, height: 11)
+                    }
+                }
+                else {
+                    Circle()
+                        .fill(Color.location)
+                        .frame(width: 11, height: 11)
+
+                }
+            }
         }
     }
 }
