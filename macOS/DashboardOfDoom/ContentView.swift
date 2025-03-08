@@ -34,8 +34,11 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Text(String(format: "%@", viewModel.sensor?.placemark ?? "<Unknown>"))
-                    .font(.headline)
+                Image("dashboard-of-doom-logo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 200, height: 34)
+                    .padding(.top, 10)
                 Spacer()
                 HStack {
                     Menu {
