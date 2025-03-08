@@ -1,5 +1,9 @@
 import Foundation
 
+protocol SubscriberProtocol: Identifiable where ID == UUID {
+    func refreshData(location: Location) async
+}
+
 class SubscriptionManager: LocationManagerDelegate {
     static let shared = SubscriptionManager()
 
@@ -54,7 +58,7 @@ class SubscriptionManager: LocationManagerDelegate {
     }
 
 
-    func addSubscription(id: UUID, delegate: any SubscriberProtocol, timeout: TimeInterval) {
+    func addSubscription(delegate: any SubscriberProtocol, timeout: TimeInterval) {
         self.subscriptions.append(Subscription(id: delegate.id, timeout: timeout * 60))
         self.delegates[delegate.id] = delegate
     }

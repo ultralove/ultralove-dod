@@ -23,19 +23,19 @@ struct ParticleView: View {
 
     var body: some View {
         if viewModel.hasMeasurements(selector: selector) {
-        VStack {
-            if viewModel.timestamp == nil {
-                ActivityIndicator()
-            }
-            else {
+            VStack {
+                if viewModel.timestamp == nil {
+                    ActivityIndicator()
+                }
+                else {
                     HeaderView(label: "\((symbols[selector] ?? .pm10).rawValue) at", sensor: viewModel.sensor)
-                _view()
-                FooterView(sensor: viewModel.sensor)
+                    _view()
+                    FooterView(sensor: viewModel.sensor)
+                }
             }
+            .padding()
+            .cornerRadius(13)
         }
-        .padding()
-        .cornerRadius(13)
-    }
     }
 
     func _view() -> some View {
@@ -70,11 +70,11 @@ struct ParticleView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }
                     AreaMark(
-                        x: .value("Date", Date.roundToPreviousHour(from: measurement.timestamp) ?? Date.now),
+                        x: .value("Date", Date.round(from: measurement.timestamp, strategy: .previousHour) ?? Date.now),
                         yStart: .value("Particle", viewModel.minValue(selector: selector).value),
                         yEnd: .value("Particle", measurement.value.value)
                     )
-                    .interpolationMethod(.catmullRom)
+                    .interpolationMethod(.catmullRom(alpha: 0.33))
                     .foregroundStyle(Gradient.linear)
                 }
 
@@ -104,7 +104,7 @@ struct ParticleView: View {
 
                 if let selectedDate {
                     if let selectedValue = viewModel.measurements[selector]?.first(where: { $0.timestamp == selectedDate }) {
-                        RuleMark(x: .value("Date", Date.roundToPreviousHour(from: selectedDate) ?? Date.now))
+                        RuleMark(x: .value("Date", Date.round(from: selectedDate, strategy: .previousHour) ?? Date.now))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
                             x: .value("Date", selectedDate),
@@ -142,7 +142,7 @@ struct ParticleView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.roundToPreviousHour(from: source) {
+                                                if let target = Date.round(from: source, strategy: .previousHour) {
                                                     self.selectedDate = target
                                                 }
                                             }

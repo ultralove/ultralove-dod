@@ -1,7 +1,33 @@
 import Foundation
 
+enum RoundingStrategy {
+    case previousQuarterHour
+    case nextQuarterHour
+    case previousHour
+    case nextHour
+    case lastDayChange
+    case lastUTCDayChange
+}
+
 extension Date {
-    static func roundToPreviousQuarterHour(from: Date) -> Date? {
+    static func round(from: Date, strategy: RoundingStrategy) -> Date? {
+        switch strategy {
+            case .previousQuarterHour:
+                return roundToPreviousQuarterHour(from: from)
+            case .nextQuarterHour:
+                return roundToNextQuarterHour(from: from)
+            case .previousHour:
+                return roundToPreviousHour(from: from)
+            case .nextHour:
+                return roundToNextHour(from: from)
+            case .lastDayChange:
+                return roundToLastDayChange(from: from)
+            case .lastUTCDayChange:
+                return roundToLastUTCDayChange(from: from)
+        }
+    }
+
+    private static func roundToPreviousQuarterHour(from: Date) -> Date? {
         let calendar = Calendar.current
 
         // Extract hour, minute, and second components from the input date
@@ -21,7 +47,7 @@ extension Date {
         return calendar.date(from: adjustedComponents)
     }
 
-    static func roundToPreviousHour(from: Date) -> Date? {
+    private static func roundToPreviousHour(from: Date) -> Date? {
         let calendar = Calendar.current
 
         // Extract year, month, day, hour components from the input date
@@ -32,14 +58,14 @@ extension Date {
         // Adjust to the previous hour
         var adjustedComponents = components
         adjustedComponents.hour = hour
-        adjustedComponents.minute = 0 // Reset minutes to 0
-        adjustedComponents.second = 0 // Reset seconds to 0
+        adjustedComponents.minute = 0  // Reset minutes to 0
+        adjustedComponents.second = 0  // Reset seconds to 0
 
         // Create a new date using the adjusted components
         return calendar.date(from: adjustedComponents)
     }
 
-    static func roundToLastDayChange(from: Date) -> Date? {
+    private static func roundToLastDayChange(from: Date) -> Date? {
         let calendar = Calendar.current
 
         // Extract year, month, day, hour components from the input date
@@ -47,7 +73,7 @@ extension Date {
 
         // Adjust to the previous hour
         var adjustedComponents = components
-        adjustedComponents.hour = 0    // Reset hours to 0
+        adjustedComponents.hour = 0  // Reset hours to 0
         adjustedComponents.minute = 0  // Reset minutes to 0
         adjustedComponents.second = 0  // Reset seconds to 0
         adjustedComponents.timeZone = TimeZone(abbreviation: "UTC")
@@ -56,7 +82,7 @@ extension Date {
         return calendar.date(from: adjustedComponents)
     }
 
-    static func roundToLastUTCDayChange(from: Date) -> Date? {
+    private static func roundToLastUTCDayChange(from: Date) -> Date? {
         let calendar = Calendar.current
 
         // Extract year, month, day, hour components from the input date
@@ -64,7 +90,7 @@ extension Date {
 
         // Adjust to the previous hour
         var adjustedComponents = components
-        adjustedComponents.hour = 0    // Reset hours to 0
+        adjustedComponents.hour = 0  // Reset hours to 0
         adjustedComponents.minute = 0  // Reset minutes to 0
         adjustedComponents.second = 0  // Reset seconds to 0
         adjustedComponents.timeZone = TimeZone(abbreviation: "UTC")
@@ -73,7 +99,7 @@ extension Date {
         return calendar.date(from: adjustedComponents)
     }
 
-    static func roundToNextQuarterHour(from date: Date) -> Date? {
+    private static func roundToNextQuarterHour(from date: Date) -> Date? {
         // Get the current calendar
         let calendar = Calendar.current
 
@@ -87,7 +113,7 @@ extension Date {
 
             // Add the minutes to reach the next quarter
             components.minute = minute + minutesToAdd
-            components.second = 0 // Reset seconds to zero
+            components.second = 0  // Reset seconds to zero
 
             if let minutes = components.minute {
                 if minutes >= 60 {
@@ -111,7 +137,7 @@ extension Date {
         return calendar.date(from: components)
     }
 
-    static func roundToNextHour(from date: Date) -> Date? {
+    private static func roundToNextHour(from date: Date) -> Date? {
         // Get the current calendar
         let calendar = Calendar.current
 
@@ -120,8 +146,8 @@ extension Date {
 
         // Increment the hour
         components.hour = (components.hour ?? 0) + 1
-        components.minute = 0 // Reset minutes to zero
-        components.second = 0 // Reset seconds to zero
+        components.minute = 0  // Reset minutes to zero
+        components.second = 0  // Reset seconds to zero
 
         // Handle day rollover
         if components.hour == 24 {

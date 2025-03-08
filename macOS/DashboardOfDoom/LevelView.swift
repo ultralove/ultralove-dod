@@ -1,29 +1,16 @@
 import Charts
 import SwiftUI
 
-struct LevelView: View {
+struct LevelChart: View {
     @Environment(LevelViewModel.self) private var viewModel
-    @State private var selectedDate: Date?
+    @State private var timestamp: Date?
+    let selector: ProcessSelector
+    let rounding: RoundingStrategy
 
     var body: some View {
         VStack {
-            if viewModel.sensor?.timestamp == nil {
-                ActivityIndicator()
-            }
-            else {
-                HeaderView(label: String(format: "Water Level of the", viewModel.sensor?.id ?? "<Unknown>"), sensor: viewModel.sensor)
-                _view()
-                FooterView(sensor: viewModel.sensor)
-            }
-        }
-        .padding()
-        .cornerRadius(13)
-    }
-
-    func _view() -> some View {
-        VStack {
             Chart {
-                ForEach(viewModel.measurements) { level in
+                ForEach(viewModel.measurements[selector] ?? []) { level in
                     LineMark(
                         x: .value("Date", level.timestamp),
                         y: .value("Level", level.value.value)
@@ -39,54 +26,58 @@ struct LevelView: View {
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let currentLevel = viewModel.current {
-                    RuleMark(x: .value("Date", currentLevel.timestamp))
+                if let current = viewModel.current[selector] {
+                    RuleMark(x: .value("Date", current.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
-                        x: .value("Date", currentLevel.timestamp),
-                        y: .value("Level", currentLevel.value.value)
+                        x: .value("Date", current.timestamp),
+                        y: .value("Level", current.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
-                            Text(String(format: "%@ %@", currentLevel.timestamp.dateString(), currentLevel.timestamp.timeString()))
+                            Text(String(format: "%@ %@", current.timestamp.dateString(), current.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.2f%@", currentLevel.value.value, currentLevel.value.unit.symbol))
-                                Image(systemName: viewModel.trend)
+                                Text(String(format: "%.2f%@", current.value.value, current.value.unit.symbol))
+                                if let icon = viewModel.trend[selector] {
+                                    Image(systemName: icon)
+                                }
                             }
                             .font(.headline)
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .quality(currentLevel.quality)
+                        .quality(current.quality)
                     }
                 }
 
-                if let selectedDate, let selectedLevel = viewModel.measurements.first(where: { $0.timestamp == selectedDate }) {
-                    RuleMark(x: .value("Date", selectedDate))
-                        .lineStyle(StrokeStyle(lineWidth: 1))
-                    PointMark(
-                        x: .value("Date", selectedDate),
-                        y: .value("Level", selectedLevel.value.value)
-                    )
-                    .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
-                        VStack {
-                            Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
-                                .font(.footnote)
-                            HStack {
-                                Text(String(format: "%.2f%@", selectedLevel.value.value, selectedLevel.value.unit.symbol))
-                                    .font(.headline)
+                if let timestamp = self.timestamp {
+                    if let value = viewModel.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
+                        RuleMark(x: .value("Date", timestamp))
+                            .lineStyle(StrokeStyle(lineWidth: 1))
+                        PointMark(
+                            x: .value("Date", timestamp),
+                            y: .value("Level", value.value.value)
+                        )
+                        .symbolSize(CGSize(width: 7, height: 7))
+                        .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
+                            VStack {
+                                Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
+                                    .font(.footnote)
+                                HStack {
+                                    Text(String(format: "%.2f%@", value.value.value, value.value.unit.symbol))
+                                        .font(.headline)
+                                }
                             }
+                            .padding(7)
+                            .padding(.horizontal, 7)
+                            .quality(value.quality)
                         }
-                        .padding(7)
-                        .padding(.horizontal, 7)
-                        .quality(selectedLevel.quality)
                     }
                 }
             }
-            .chartYScale(domain: viewModel.minValue.value ... (viewModel.maxValue.value * 1.67))
+            .chartYScale(domain: viewModel.range[selector] ?? 0.0 ... 0.0)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle()
@@ -101,19 +92,40 @@ struct LevelView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.roundToPreviousQuarterHour(from: source) {
-                                                    self.selectedDate = target
+                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                    self.timestamp = target
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 .onEnded { value in
-                                    self.selectedDate = nil
+                                    self.timestamp = nil
                                 }
                         )
                 }
             }
         }
+    }
+}
+
+struct LevelView: View {
+    @Environment(LevelViewModel.self) private var viewModel
+    let label: String
+    let selector: ProcessSelector
+
+    var body: some View {
+        VStack {
+            if viewModel.sensor?.timestamp == nil {
+                ActivityIndicator()
+            }
+            else {
+                ChartHeader(label: String(format: "Water Level", viewModel.sensor?.id ?? "<Unknown>"), sensor: viewModel.sensor)
+                LevelChart(selector: selector, rounding: .previousQuarterHour)
+                ChartFooter(sensor: viewModel.sensor)
+            }
+        }
+        .padding()
+        .cornerRadius(13)
     }
 }

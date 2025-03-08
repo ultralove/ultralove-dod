@@ -1,20 +1,23 @@
+import AppKit
 import SwiftUI
 
 @main
 struct DashboardOfDoomApp: App {
     @State var weatherViewModel = WeatherViewModel()
     @State var forecastViewModel = ForecastViewModel()
-    @State var incidenceViewModel = IncidenceViewModel()
+    @State var incidenceViewModel = CovidViewModel()
     @State var levelViewModel = LevelViewModel()
     @State var radiationViewModel = RadiationViewModel()
     @State var particleViewModel = ParticleViewModel()
     @State var surveyViewModel = SurveyViewModel()
     @State var pointOfInterestViewModel = PointOfInterestViewModel()
 
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         MenuBarExtra {
             ContentView()
-                .preferredColorScheme(.dark) 
+                .preferredColorScheme(.dark)
 //                .accentColor(.init(light: .blue, dark: .orange))
                 .environment(weatherViewModel)
                 .environment(forecastViewModel)
@@ -31,9 +34,28 @@ struct DashboardOfDoomApp: App {
         }
         .menuBarExtraStyle(.window)
         #if os(macOS)
-        Settings {
-            SettingsView()
-        }
+//        Settings {
+//            SettingsView()
+//        }
         #endif
     }
 }
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Force the appearance for the entire application
+        NSApp.appearance = NSAppearance(named: .darkAqua)
+
+        // Make sure any new windows/popovers also use dark mode
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: nil
+        ) { notification in
+            if let window = notification.object as? NSWindow {
+                window.appearance = NSAppearance(named: .darkAqua)
+            }
+        }
+    }
+}
+

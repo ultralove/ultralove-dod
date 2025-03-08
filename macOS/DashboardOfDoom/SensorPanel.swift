@@ -55,3 +55,38 @@ struct SensorPanel<Content: View>: View {
     }
 }
 
+struct SensorPanel2<Content: View>: View {
+    let label: String
+    let icon: String
+    let placemark: String?
+    @State private var isExpanded: Bool = false
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        DisclosureGroup(
+            isExpanded: $isExpanded,
+            content: {
+                content()
+            },
+            label: {
+                VStack {
+                    HStack {
+                        Image(systemName: self.icon)
+                            .imageScale(.large)
+                            .frame(width: 23)
+                        Text(self.label)
+                    }
+                    .padding()
+                    .fontWeight(.light)
+                    HStack {
+                        Image(systemName: "globe")
+                        Text(String(format: "%@", self.placemark ?? "<Unknown>"))
+                    }
+                    .font(.footnote)
+                }
+            }
+        )
+        .disclosureGroupStyle(SensorPanelStyle())
+    }
+}
+

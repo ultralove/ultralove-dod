@@ -1,16 +1,5 @@
 import Foundation
 
-struct LevelStation {
-    let id: String
-    let name: String
-    let location: Location
-}
-
-struct Waterway {
-    let name: String
-    let location: Location
-}
-
 class LevelController {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
@@ -20,26 +9,34 @@ class LevelController {
         self.forecastDuration = 36 * 4 * self.measurementDistance  // 3 days
     }
 
-    func refreshLevel(for location: Location) async throws -> LevelSensor? {
+    func refreshData(for location: Location) async throws -> ProcessSensor? {
         if let nearestStation = try await fetchNearestStation(location: location) {
             trace.debug("Nearest station: \(nearestStation)")
+            var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
             if let level = try await fetchMeasurements(station: nearestStation) {
-                var measurements: [ProcessValue<Dimension>] = []
-                measurements.append(contentsOf: Self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
-                measurements.append(contentsOf: Self.forecastMeasurements(data: measurements, duration: self.forecastDuration))
-                if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                    return LevelSensor(
-                        id: nearestStation.name, placemark: placemark, customData: ["icon": "water.waves"], location: nearestStation.location,
-                        measurements: measurements,
-                        timestamp: Date.now)
-                }
+                var measurement: [ProcessValue<Dimension>] = []
+                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
+                measurement.append(contentsOf: Self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
+                measurements[.water(.level)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+            if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
+                return ProcessSensor(
+                    id: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "water.waves"],
+                    measurements: measurements,
+                    timestamp: Date.now)
             }
         }
         return nil
     }
 
-    private func fetchNearestStation(location: Location) async throws -> LevelStation? {
-        var nearestStation: LevelStation? = nil
+    struct Station {
+        let id: String
+        let name: String
+        let location: Location
+    }
+
+    private func fetchNearestStation(location: Location) async throws -> Station? {
+        var nearestStation: Station? = nil
         if let data = try await LevelService.fetchStations() {
             if let stations = try Self.parseStations(from: data) {
                 if let waterways = try await fetchNearestWaterways(for: location) {
@@ -47,14 +44,14 @@ class LevelController {
                         trace.debug("Nearest waterway: \(nearestWaterway)")
                         if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
                             if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
-                                nearestStation = LevelStation(
+                                nearestStation = Station(
                                     id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
                             }
                         }
                         else {
                             trace.warning("No synchronized stations found, falling back to nearest station")
                             if let station = Self.nearestStation(stations: stations, location: location) {
-                                nearestStation = LevelStation(
+                                nearestStation = Station(
                                     id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
                             }
                         }
@@ -71,9 +68,9 @@ class LevelController {
         return nearestStation
     }
 
-    private static func parseStations(from data: Data) throws -> [LevelStation]? {
+    private static func parseStations(from data: Data) throws -> [Station]? {
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [[String: Any]] {
-            var stations: [LevelStation] = []
+            var stations: [Station] = []
             for item in json {
                 if let id = item["uuid"] as? String {
                     if let latitude = item["latitude"] as? Double {
@@ -81,7 +78,7 @@ class LevelController {
                             if let water = item["water"] as? [String: Any] {
                                 if let name = water["longname"] as? String {
                                     let location = Location(latitude: latitude, longitude: longitude)
-                                    stations.append(LevelStation(id: id, name: name, location: location))
+                                    stations.append(Station(id: id, name: name, location: location))
                                 }
                             }
                         }
@@ -93,8 +90,8 @@ class LevelController {
         return nil
     }
 
-    private static func nearestStation(stations: [LevelStation], location: Location) -> LevelStation? {
-        var nearestStation: LevelStation? = nil
+    private static func nearestStation(stations: [Station], location: Location) -> Station? {
+        var nearestStation: Station? = nil
         var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
         for station in stations {
             let distance = haversineDistance(location_0: station.location, location_1: location)
@@ -106,6 +103,11 @@ class LevelController {
         return nearestStation
     }
 
+    struct Waterway {
+        let name: String
+        let location: Location
+    }
+
     private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
         var waterways: [Waterway]? = nil
         if let data = try await LevelService.fetchWaterways(for: location, radius: 10000) {
@@ -114,9 +116,9 @@ class LevelController {
         return waterways
     }
 
-    static private func synchronize(_ stations: [LevelStation], with waterway: Waterway) -> [LevelStation]? {
-        var synchronizedStations: [LevelStation]? = nil
-        var foundStations: [LevelStation] = []
+    static private func synchronize(_ stations: [Station], with waterway: Waterway) -> [Station]? {
+        var synchronizedStations: [Station]? = nil
+        var foundStations: [Station] = []
         for station in stations where station.name.lowercased().contains(waterway.name.lowercased()) {
             let maxDistance = Measurement(value: 16.67, unit: UnitLength.kilometers)
             if haversineDistance(location_0: station.location, location_1: waterway.location) < maxDistance {
@@ -166,7 +168,7 @@ class LevelController {
         return nearestWaterway
     }
 
-    private func fetchMeasurements(station: LevelStation) async throws -> [ProcessValue<Dimension>]? {
+    private func fetchMeasurements(station: Station) async throws -> [ProcessValue<Dimension>]? {
         var measurements: [ProcessValue<Dimension>]? = nil
         if let data = try await LevelService.fetchMeasurements(for: station.id) {
             measurements = try Self.parseLevels(data: data)
@@ -233,7 +235,8 @@ class LevelController {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
-                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                    ProcessValue<Dimension>(
+                        value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                 }
             }
             catch {

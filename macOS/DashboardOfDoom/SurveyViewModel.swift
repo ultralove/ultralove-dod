@@ -11,7 +11,7 @@ import SwiftUI
 
     init() {
         let subscriptionManager = SubscriptionManager.shared
-        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+        subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
     }
 
     var maxValue: Measurement<Dimension> {
@@ -48,7 +48,7 @@ import SwiftUI
 
     func trend(selector: SurveySelector) -> String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.roundToLastUTCDayChange(from: Date.now) {
+        if let currentDate = Date.round(from: Date.now, strategy: .lastUTCDayChange) {
             if let currentSurvey = measurements[selector]?.last(where: { $0.timestamp < currentDate }) {
                 if let previousSurvey = measurements[selector]?.last(where: { $0.timestamp < currentSurvey.timestamp }) {
                     let currentValue = currentSurvey.value

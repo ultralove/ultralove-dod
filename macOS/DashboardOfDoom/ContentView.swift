@@ -29,6 +29,7 @@ struct ContentView: View {
     @Environment(\.openSettings) private var openSettings
     @Environment(\.colorScheme) var colorScheme
     @Environment(WeatherViewModel.self) private var viewModel
+    @Environment(CovidViewModel.self) private var covidPresenter
 
     var body: some View {
         VStack {
@@ -39,10 +40,8 @@ struct ContentView: View {
                 HStack {
                     Menu {
                         Button("Settings...") {
-                            openSettings()
                         }
                         .keyboardShortcut(",", modifiers: .command)
-                        .disabled(true)
                         Divider()
                         LaunchAtLogin.Toggle()
                         Button("About...") {
@@ -94,13 +93,22 @@ struct ContentView: View {
                     }
                     Divider()
                     SensorPanel(label: "COVID-19", icon: "facemask") {
-                        IncidenceView()
+                        CovidView(label: "Weekly incidence", selector: .covid(.incidence))
+                            .padding(.vertical, 5)
+                            .frame(height: 200)
+                        CovidView(label: "Cases", selector: .covid(.cases))
+                            .padding(.vertical, 5)
+                            .frame(height: 200)
+                        CovidView(label: "Deaths", selector: .covid(.deaths))
+                            .padding(.vertical, 5)
+                            .frame(height: 200)
+                        CovidView(label: "Recovered", selector: .covid(.recovered))
                             .padding(.vertical, 5)
                             .frame(height: 200)
                     }
                     Divider()
                     SensorPanel(label: "Water Level", icon: "water.waves") {
-                        LevelView()
+                        LevelView(label: "Water Level", selector: .water(.level))
                             .padding(.vertical, 5)
                             .frame(height: 200)
                     }

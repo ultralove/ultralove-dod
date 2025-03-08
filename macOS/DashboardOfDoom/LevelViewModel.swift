@@ -1,72 +1,24 @@
 import SwiftUI
 
-@Observable class LevelViewModel: Identifiable, SubscriberProtocol {
+@Observable class LevelViewModel: ProcessPresenter, SubscriberProtocol {
     private let levelController = LevelController()
 
-    let id = UUID()
-    var sensor: LevelSensor?
-    var measurements: [ProcessValue<Dimension>] = []
-    var timestamp: Date? = nil
+    var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
+    var faceplate: [ProcessSelector: String] = [:]
+    var maxValue: [ProcessSelector: Double] = [:]
+    var minValue: [ProcessSelector: Double] = [:]
+    var range: [ProcessSelector: ClosedRange<Double>] = [:]
+    var trend: [ProcessSelector: String] = [:]
 
-    init() {
+    override init() {
+        super.init()
         let subscriptionManager = SubscriptionManager.shared
-        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 15)  // 15 minutes
-    }
-
-    var faceplate: String {
-        guard let measurement = current?.value else {
-            //            return "\(GreekLetters.levelLeft.rawValue)n/a\(GreekLetters.levelRight.rawValue)"
-            return "\(MathematicalSymbols.mathematicalItalicCapitalEta.rawValue):n/a"
-        }
-        return String(
-            //            format: "\(GreekLetters.levelLeft.rawValue)%.2f%@\(GreekLetters.levelRight.rawValue)",
-            format: "\(MathematicalSymbols.mathematicalBoldCapitalEta.rawValue): %.2f%@", measurement.value, measurement.unit.symbol)
-    }
-
-    var icon: String {
-        if let customData = sensor?.customData {
-            if let icon = customData["icon"] as? String {
-                return icon
-            }
-        }
-        return "questionmark.circle"
-    }
-
-    var maxValue: Measurement<Dimension> {
-        return measurements.map({ $0.value }).max() ?? Measurement<Dimension>(value: 0, unit: UnitLength.meters)
-    }
-
-    var minValue: Measurement<Dimension> {
-        return Measurement<Dimension>(value: 0, unit: UnitLength.meters)
-    }
-
-    var current: ProcessValue<Dimension>? {
-        return measurements.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) })
-    }
-
-    var trend: String {
-        var symbol = "questionmark.circle"
-        if let currentLevel = self.current {
-            if let previousLevel = measurements.last(where: { $0.timestamp < currentLevel.timestamp }) {
-                let currentValue = currentLevel.value
-                let previousValue = previousLevel.value
-                if currentValue < previousValue {
-                    symbol = "arrow.down.forward.circle"
-                }
-                else if currentValue > previousValue {
-                    symbol = "arrow.up.forward.circle"
-                }
-                else {
-                    symbol = "arrow.right.circle"
-                }
-            }
-        }
-        return symbol
+        subscriptionManager.addSubscription(delegate: self, timeout: 15)  // 15 minutes
     }
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await levelController.refreshLevel(for: location) {
+            if let sensor = try await levelController.refreshData(for: location) {
                 await self.synchronizeData(sensor: sensor)
             }
         }
@@ -75,10 +27,68 @@ import SwiftUI
         }
     }
 
-    @MainActor func synchronizeData(sensor: LevelSensor) async -> Void {
+    @MainActor func synchronizeData(sensor: ProcessSensor) async -> Void {
         self.sensor = sensor
         self.measurements = sensor.measurements
         self.timestamp = sensor.timestamp
+        self.current = Self.renderCurrent(measurements: self.measurements)
+        self.faceplate = Self.renderFaceplate(current: self.current)
+        self.range = Self.renderRange(measurements: self.measurements)
+        self.trend = Self.renderTrend(measurements: self.measurements)
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+    }
+
+    private static func renderCurrent(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: ProcessValue<Dimension>] {
+        var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
+        for(selector, values) in measurements {
+            current[selector] = values.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) })
+        }
+        return current
+    }
+
+    private static func renderFaceplate(current: [ProcessSelector: ProcessValue<Dimension>]) -> [ProcessSelector: String] {
+        var faceplate: [ProcessSelector: String] = [:]
+        for(selector, current) in current {
+            switch selector {
+                case .water:
+                    faceplate[selector] = String(
+                        format: "\(MathematicalSymbols.mathematicalBoldCapitalEta.rawValue): %.2f%@", current.value.value, current.value.unit.symbol)
+                default:
+                    faceplate[selector] = "\(MathematicalSymbols.mathematicalItalicCapitalEta.rawValue):n/a"
+            }
+        }
+        return faceplate
+    }
+
+    private static func renderRange(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: ClosedRange<Double>] {
+        var scale: [ProcessSelector: ClosedRange<Double>] = [:]
+        for(selector, values) in measurements {
+            scale[selector] = 0.0...(values.map({ $0.value }).max()?.value ?? 0.0) * 1.67
+        }
+        return scale
+    }
+
+    private static func renderTrend(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: String] {
+        var trend: [ProcessSelector: String] = [:]
+        for(selector, values) in measurements {
+            trend[selector] = "questionmark.circle"
+            if let current = values.last(where: { ($0.timestamp <= Date.now) && ($0.quality == .good) }) {
+                if let past = values.last(where: { $0.timestamp < current.timestamp }) {
+                    if past.value < current.value {
+                        print("LEVEL: \(past.timestamp):\(past.value) < \(current.timestamp):\(current.value) -> UP")
+                        trend[selector] = "arrow.up.forward.circle"
+                    }
+                    else if past.value > current.value {
+                        print("LEVEL: \(past.timestamp):\(past.value) > \(current.timestamp):\(current.value) -> DOWN")
+                        trend[selector] = "arrow.down.forward.circle"
+                    }
+                    else {
+                        print("LEVEL: \(past.timestamp):\(past.value) = \(current.timestamp):\(current.value) -> UNCHANGED")
+                        trend[selector] = "arrow.right.circle"
+                    }
+                }
+            }
+        }
+        return trend
     }
 }

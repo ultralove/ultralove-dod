@@ -4,7 +4,11 @@ import SwiftUI
 extension Color {
     init(light: Color, dark: Color) {
         self.init(NSColor(name: nil, dynamicProvider: { appearance in
-            return (appearance.name) == .darkAqua ? NSColor(dark) : NSColor(light)
+            if let appearance = NSApp.appearance, appearance.name == .darkAqua {
+                return NSColor(dark)
+            } else {
+                return NSColor(light)
+            }
         }))
     }
 
@@ -17,10 +21,12 @@ extension Color {
     static let location: Color = Color(light: Color.blue, dark: Color.cyan)
     static let faceplate = Color(light: Color.blendedBlue, dark: Color.cyan)
     static let chart = Color(light: Color.blendedBlue, dark: Color.cyan)
+    static let spaeti = Color(light: Color.blendedBlue, dark: Color.cyan.opacity(0.5))
     #else
     static let location: Color = .accentColor
     static let faceplate = Self.accentColor
     static let chart = Self.accentColor
+    static let spaeti = Self.accentColor
     #endif
 
     static let brandPrimary = Color(hex: "#FF5733") // Using hex code

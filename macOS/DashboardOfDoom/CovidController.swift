@@ -1,12 +1,6 @@
 import Foundation
 
-struct District: Identifiable, Equatable {
-    let id: String
-    let name: String
-    let location: Location
-}
-
-class IncidenceController {
+class CovidController {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 
@@ -15,21 +9,64 @@ class IncidenceController {
         self.forecastDuration = 37 * self.measurementDistance  // 37 days
     }
 
-    func refreshIncidence(for location: Location) async throws -> IncidenceSensor? {
-        var sensor: IncidenceSensor? = nil
+    func refreshData(for location: Location) async throws -> ProcessSensor? {
+        var sensor: ProcessSensor? = nil
         if let district = try await self.fetchDistrict(for: location) {
+            var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
             if let incidence = try await self.fetchIncidence(for: district) {
-                var measurements: [ProcessValue<Dimension>] = []
-                measurements.append(contentsOf: Self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
-                measurements.append(contentsOf: Self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
-                if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
-                    sensor = IncidenceSensor(
-                        id: district.name, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], location: district.location,
-                        measurements: measurements, timestamp: Date.now)
-                }
+                var measurement: [ProcessValue<Dimension>] = []
+                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
+                measurement.append(contentsOf: Self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
+                measurements[.covid(.incidence)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+            if let cases = try await self.fetchCases(for: district) {
+                var measurement: [ProcessValue<Dimension>] = []
+                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: cases, distance: self.measurementDistance))
+                measurement.append(contentsOf: Self.forecastMeasurements(data: cases, duration: self.forecastDuration))
+                measurements[.covid(.cases)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+            if let deaths = try await self.fetchDeaths(for: district) {
+                var measurement: [ProcessValue<Dimension>] = []
+                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: deaths, distance: self.measurementDistance))
+                measurement.append(contentsOf: Self.forecastMeasurements(data: deaths, duration: self.forecastDuration))
+                measurements[.covid(.deaths)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+            if let recovered = try await self.fetchRecovered(for: district) {
+                var measurement: [ProcessValue<Dimension>] = []
+                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: recovered, distance: self.measurementDistance))
+                measurement.append(contentsOf: Self.forecastMeasurements(data: recovered, duration: self.forecastDuration))
+                measurements[.covid(.recovered)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+            if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
+                sensor = ProcessSensor(
+                    id: district.name, location: district.location, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], measurements: measurements, timestamp: Date.now)
             }
         }
         return sensor
+    }
+
+    struct District: Identifiable, Equatable {
+        let id: String
+        let name: String
+        let location: Location
+    }
+
+    private func fetchDistrict(for location: Location) async throws -> District? {
+        var nearestDistrict: District? = nil
+        if let data = try await CovidService.fetchDistricts(for: location, radius: 30000) {
+            if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
+                var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
+                for candidateDistrict in candidateDistricts {
+                    let candidateLocation = candidateDistrict.location
+                    let distance = haversineDistance(location_0: candidateLocation, location_1: location).converted(to: .kilometers)
+                    if distance < minDistance {
+                        minDistance = distance
+                        nearestDistrict = candidateDistrict
+                    }
+                }
+            }
+        }
+        return nearestDistrict
     }
 
     static private func parseDistricts(data: Data) async throws -> [District]? {
@@ -59,39 +96,74 @@ class IncidenceController {
         return districts
     }
 
-    private func fetchDistrict(for location: Location) async throws -> District? {
-        var nearestDistrict: District? = nil
-        if let data = try await IncidenceService.fetchDistricts(for: location, radius: 30000) {
-            if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
-                var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
-                for candidateDistrict in candidateDistricts {
-                    let candidateLocation = candidateDistrict.location
-                    let distance = haversineDistance(location_0: candidateLocation, location_1: location).converted(to: .kilometers)
-                    if distance < minDistance {
-                        minDistance = distance
-                        nearestDistrict = candidateDistrict
-                    }
+
+    private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]? = nil
+        if let data = try await CovidService.fetchIncidence(id: district.id) {
+            if let measurements = try Self.parseData(data: data, district: district, tag: "weekIncidence", unit: UnitIncidence.casesPer100k) {
+                incidence = measurements
+                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
+                    incidence?.append(current)
                 }
             }
         }
-        return nearestDistrict
+        return incidence
     }
 
-    static private func parseIncidence(data: Data, district: District) throws -> [ProcessValue<Dimension>]? {
+    private func fetchCases(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]? = nil
+        if let data = try await CovidService.fetchCases(id: district.id) {
+            if let measurements = try Self.parseData(data: data, district: district, tag: "cases", unit: UnitPopulation.people) {
+                incidence = measurements
+                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
+                    incidence?.append(current)
+                }
+            }
+        }
+        return incidence
+    }
+
+    private func fetchDeaths(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]? = nil
+        if let data = try await CovidService.fetchDeaths(id: district.id) {
+            if let measurements = try Self.parseData(data: data, district: district, tag: "deaths", unit: UnitPopulation.people) {
+                incidence = measurements
+                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
+                    incidence?.append(current)
+                }
+            }
+        }
+        return incidence
+    }
+
+    private func fetchRecovered(for district: District) async throws -> [ProcessValue<Dimension>]? {
+        var incidence: [ProcessValue<Dimension>]? = nil
+        if let data = try await CovidService.fetchRecovered(id: district.id) {
+            if let measurements = try Self.parseData(data: data, district: district, tag: "recovered", unit: UnitPopulation.people) {
+                incidence = measurements
+                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
+                    incidence?.append(current)
+                }
+            }
+        }
+        return incidence
+    }
+
+    static private func parseData(data: Data, district: District, tag: String, unit: Dimension) throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]?
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let data = json["data"] as? [String: Any] {
                 if let district = data[district.id] as? [String: Any] {
                     if let history = district["history"] as? [[String: Any]] {
                         for entry in history {
-                            if let value = entry["weekIncidence"] as? Double {
+                            if let value = entry[tag] as? Double {
                                 if let dateString = entry["date"] as? String {
                                     let dateFormatter = DateFormatter()
                                     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                                     dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
                                     if let date = dateFormatter.date(from: dateString) {
                                         let newIncidence = ProcessValue<Dimension>(
-                                            value: Measurement<Dimension>(value: value, unit: UnitIncidence.casesPer100k), quality: .good,
+                                            value: Measurement<Dimension>(value: value, unit: unit), quality: .good,
                                             timestamp: date)
                                         if incidence == nil {
                                             incidence = [newIncidence]
@@ -99,7 +171,7 @@ class IncidenceController {
                                         else {
                                             incidence?.append(
                                                 ProcessValue<Dimension>(
-                                                    value: Measurement<Dimension>(value: value, unit: UnitIncidence.casesPer100k), quality: .good,
+                                                    value: Measurement<Dimension>(value: value, unit: unit), quality: .good,
                                                     timestamp: date))
                                         }
                                     }
@@ -107,19 +179,6 @@ class IncidenceController {
                             }
                         }
                     }
-                }
-            }
-        }
-        return incidence
-    }
-
-    private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
-        var incidence: [ProcessValue<Dimension>]? = nil
-        if let data = try await IncidenceService.fetchIncidence(id: district.id) {
-            if let measurements = try Self.parseIncidence(data: data, district: district) {
-                incidence = measurements
-                if let current = Self.nowCast(data: incidence, alpha: 0.33) {
-                    incidence?.append(current)
                 }
             }
         }

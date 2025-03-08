@@ -1,30 +1,5 @@
 import Foundation
 
-struct ParticleStation {
-    let id: String
-    let code: String
-    let name: String
-    let location: Location
-}
-
-enum ParticleStationType: Int {
-    case background = 1
-    case industry = 2
-    case traffic = 3
-}
-
-enum ParticleStationSettings: Int {
-    case urban = 1
-    case suburban = 2
-    case rural = 3
-    case ruralSecluded = 4
-    case ruralRegional = 5
-    case ruralNearTown = 6
-}
-
-struct ParticleComponent {
-}
-
 class ParticleController {
     private let measurementDuration: TimeInterval
     private let forecastDuration: TimeInterval
@@ -79,7 +54,7 @@ class ParticleController {
     }
 
     private static func calculateForecastTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
-        if let next = Date.roundToNextHour(from: Date.now) {
+        if let next = Date.round(from: Date.now, strategy: .previousQuarterHour) {
             let components = Calendar.current.dateComponents([.year, .month, .day, .hour], from: next)
             var adjustedComponents = components
             adjustedComponents.minute = 0  // Reset minutes to 0
@@ -92,8 +67,15 @@ class ParticleController {
         return nil
     }
 
-    private static func fetchNearestStation(location: Location) async -> ParticleStation? {
-        var nearestStation: ParticleStation? = nil
+    struct Station {
+        let id: String
+        let code: String
+        let name: String
+        let location: Location
+    }
+
+    private static func fetchNearestStation(location: Location) async -> Station? {
+        var nearestStation: Station? = nil
         do {
             if let data = try await ParticleService.fetchStations() {
                 let stations = try await Self.parseStations(from: data)
@@ -108,8 +90,8 @@ class ParticleController {
         return nearestStation
     }
 
-    private static func parseStations(from data: Data) async throws -> [ParticleStation] {
-        var stations: [ParticleStation] = []
+    private static func parseStations(from data: Data) async throws -> [Station] {
+        var stations: [Station] = []
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let features = json["data"] as? [String: [Any]] {
                 for (id, elements) in features {
@@ -117,7 +99,7 @@ class ParticleController {
                         if let longitudeString = elements[7] as? String, let latitudeString = elements[8] as? String {
                             if let longitude = Double(longitudeString), let latitude = Double(latitudeString) {
                                 stations.append(
-                                    ParticleStation(
+                                    Station(
                                         id: id, code: code, name: name,
                                         location: Location(latitude: Double(latitude), longitude: Double(longitude))))
                             }
@@ -129,8 +111,8 @@ class ParticleController {
         return stations
     }
 
-    private static func nearestStation(stations: [ParticleStation], location: Location) -> ParticleStation? {
-        var nearestStation: ParticleStation? = nil
+    private static func nearestStation(stations: [Station], location: Location) -> Station? {
+        var nearestStation: Station? = nil
         var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
         for station in stations {
             let distance = haversineDistance(location_0: station.location, location_1: location)
@@ -142,7 +124,7 @@ class ParticleController {
         return nearestStation
     }
 
-    private static func fetchMeasurements(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
+    private static func fetchMeasurements(station: Station, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
         var measurements: [ParticleSelector: [ProcessValue<Dimension>]]? = nil
         do {
             if let data = try await ParticleService.fetchMeasurements(code: station.code, from: from, to: to) {
@@ -197,7 +179,7 @@ class ParticleController {
         return measurements
     }
 
-    private static func fetchForecasts(station: ParticleStation, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
+    private static func fetchForecasts(station: Station, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
         var measurements: [ParticleSelector: [ProcessValue<Dimension>]]? = nil
         if let data = try await ParticleService.fetchForecasts(code: station.code, from: from, to: to) {
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {

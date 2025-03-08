@@ -1,6 +1,6 @@
 import Foundation
 
-class IncidenceService {
+class CovidService {
     static func fetchDistricts(for location: Location, radius: Double) async throws -> Data? {
         let query =
             """
@@ -31,7 +31,9 @@ class IncidenceService {
         guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/cases/100") else {
             return nil
         }
+        trace.debug("Fetching covid cases measurements...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched covid cases measurements.")
         return data
     }
 
@@ -39,7 +41,9 @@ class IncidenceService {
         guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/deaths/100") else {
             return nil
         }
+        trace.debug("Fetching covid deaths measurements...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched covid deaths measurements.")
         return data
     }
 
@@ -47,7 +51,9 @@ class IncidenceService {
         guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/recovered/100") else {
             return nil
         }
+        trace.debug("Fetching covid recovered measurements...")
         let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
+        trace.debug("Fetched covid recovered measurements.")
         return data
     }
 }

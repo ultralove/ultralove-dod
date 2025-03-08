@@ -107,7 +107,7 @@ struct SurveyView: View {
                                     if let plotFrame = geometryProxy.plotFrame {
                                         let x = value.location.x - geometryReader[plotFrame].origin.x
                                         if let source: Date = geometryProxy.value(atX: x) {
-                                            if let target = Date.roundToLastUTCDayChange(from: source) {
+                                            if let target = Date.round(from: source, strategy: .lastUTCDayChange) {
                                                 self.selectedDate = target
                                             }
                                         }

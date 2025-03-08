@@ -10,7 +10,7 @@ import SwiftUI
 
     init() {
         let subscriptionManager = SubscriptionManager.shared
-        subscriptionManager.addSubscription(id: id, delegate: self, timeout: 30)  // 30 minutes
+        subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
     }
 
     func hasMeasurements(selector: ParticleSelector) -> Bool {
@@ -44,7 +44,7 @@ import SwiftUI
             return nil
         }
         if let lastKnownGood = findLastKnownGoodMeasurement(measurements: measurement) {
-            if let current = measurement.last(where: { $0.timestamp == Date.roundToPreviousHour(from: lastKnownGood.timestamp) }) {
+            if let current = measurement.last(where: { $0.timestamp == Date.round(from: lastKnownGood.timestamp, strategy: .previousHour) }) {
                 return current
             }
         }
@@ -103,7 +103,7 @@ import SwiftUI
 
     func trend(selector: ParticleSelector) -> String {
         var symbol = "questionmark.circle"
-        if let currentDate = Date.roundToPreviousHour(from: Date.now) {
+        if let currentDate = Date.round(from: Date.now, strategy: .previousHour) {
             if let currentForecast = self.measurements[selector]?.last(where: { $0.timestamp == currentDate }) {
                 if let previousForecast = self.measurements[selector]?.last(where: { $0.timestamp < currentForecast.timestamp }) {
                     let currentValue = currentForecast.value.value
