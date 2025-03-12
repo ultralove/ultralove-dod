@@ -6,17 +6,18 @@ protocol LocationManagerDelegate {
 }
 
 class LocationManager: NSObject, CLLocationManagerDelegate {
+    private static let houseOfWorldCultures = Location(latitude: 52.5186, longitude: 13.3644)
     private var locationManager = CLLocationManager()
     private var location: Location?
     var delegate: LocationManagerDelegate?
 
     override init() {
         super.init()
-
-        locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
-        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
-        locationManager.startUpdatingLocation()
+        self.location = Self.houseOfWorldCultures
+        self.locationManager.delegate = self
+        self.locationManager.requestWhenInUseAuthorization()
+        self.locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+        self.locationManager.startUpdatingLocation()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
