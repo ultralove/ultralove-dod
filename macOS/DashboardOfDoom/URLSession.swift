@@ -44,13 +44,12 @@ class ReachabilityManager {
     }
 }
 
-enum NetworkError: Error {
-    case invalidURL
-    case invalidResponse
-    case serverError(statusCode: Int)
-    case noData
-    case decodingFailed
-}
+//enum NetworkError: Error {
+//    case invalidURL
+//    case invalidResponse
+//    case serverError(statusCode: Int)
+//    case noData
+//}
 
 extension URLSession {
     func dataWithRetry (from url: URL, retryCount: Int = 3, retryInterval: TimeInterval = 1.0, delegate: (any URLSessionTaskDelegate)? = nil
