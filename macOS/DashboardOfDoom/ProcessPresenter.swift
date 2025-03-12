@@ -6,7 +6,7 @@ protocol PresenterProtocol: Identifiable {
     func minValue(selector: ProcessSelector) -> Double
 }
 
-class ProcessPresenter {
+@Observable class ProcessPresenter {
     let id = UUID()
     var sensor: ProcessSensor?
     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
@@ -28,6 +28,18 @@ class ProcessPresenter {
             }
         }
         return "questionmark.circle"
+    }
+
+    var name: String {
+        return sensor?.name ?? "<Unknown>"
+    }
+
+    var location: Location? {
+        return sensor?.location
+    }
+
+    var placemark: String? {
+        return sensor?.placemark
     }
 }
 

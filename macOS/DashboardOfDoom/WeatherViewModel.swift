@@ -2,7 +2,7 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-@Observable class WeatherViewModel: Identifiable, SubscriberProtocol {
+@Observable class WeatherViewModel: Identifiable, ProcessSubscriberProtocol {
     private let weatherController = WeatherController()
 
     let id = UUID()
@@ -11,7 +11,7 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 5)  // 5 minutes
     }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-class RadiationController {
+class RadiationControllergit  {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 

@@ -54,7 +54,7 @@ struct ChartHeader: View {
         VStack {
 #if os(macOS)
             HStack(alignment: .bottom) {
-                if let id = sensor?.id {
+                if let id = sensor?.name {
                     Text(String(format: "%@ %@:", id, label))
                 }
                 else {

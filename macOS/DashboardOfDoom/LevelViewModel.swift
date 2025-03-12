@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class LevelViewModel: ProcessPresenter, SubscriberProtocol {
+@Observable class LevelViewModel: ProcessPresenter, ProcessSubscriberProtocol {
     private let levelController = LevelController()
 
     var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
@@ -12,7 +12,7 @@ import SwiftUI
 
     override init() {
         super.init()
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 15)  // 15 minutes
     }
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class ForecastViewModel: Identifiable, SubscriberProtocol {
+@Observable class ForecastViewModel: Identifiable, ProcessSubscriberProtocol {
     private let forecastController = ForecastController()
 
     let id = UUID()
@@ -9,7 +9,7 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 5)  // 5 minutes
     }
 

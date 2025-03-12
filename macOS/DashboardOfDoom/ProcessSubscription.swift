@@ -1,6 +1,6 @@
 import Foundation
 
-class Subscription: Identifiable {
+class ProcessSubscription: Identifiable {
     let id: UUID
     let timeout: TimeInterval
     var remaining: TimeInterval

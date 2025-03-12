@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class ParticleViewModel: Identifiable, SubscriberProtocol {
+@Observable class ParticleViewModel: Identifiable, ProcessSubscriberProtocol {
     private let particleController = ParticleController()
 
     let id = UUID()
@@ -9,7 +9,7 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
     }
 

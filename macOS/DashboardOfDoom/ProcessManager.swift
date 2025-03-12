@@ -1,18 +1,22 @@
 import Foundation
 
-protocol SubscriberProtocol: Identifiable where ID == UUID {
+protocol ProcessControllerProtocol {
+    func refreshData(for location: Location) async throws -> ProcessSensor?
+}
+
+protocol ProcessSubscriberProtocol: Identifiable where ID == UUID {
     func refreshData(location: Location) async
 }
 
-class SubscriptionManager: LocationManagerDelegate {
-    static let shared = SubscriptionManager()
+class ProcessManager: LocationManagerDelegate {
+    static let shared = ProcessManager()
 
     private let locationManager = LocationManager()
     private var location: Location?
 
     private let updateInterval: TimeInterval = 60
-    private var subscriptions: [Subscription] = []
-    private var delegates: [UUID: any SubscriberProtocol] = [:]
+    private var subscriptions: [ProcessSubscription] = []
+    private var delegates: [UUID: any ProcessSubscriberProtocol] = [:]
 
     private init() {
         self.locationManager.delegate = self
@@ -58,8 +62,8 @@ class SubscriptionManager: LocationManagerDelegate {
     }
 
 
-    func addSubscription(delegate: any SubscriberProtocol, timeout: TimeInterval) {
-        self.subscriptions.append(Subscription(id: delegate.id, timeout: timeout * 60))
+    func addSubscription(delegate: any ProcessSubscriberProtocol, timeout: TimeInterval) {
+        self.subscriptions.append(ProcessSubscription(id: delegate.id, timeout: timeout * 60))
         self.delegates[delegate.id] = delegate
     }
 

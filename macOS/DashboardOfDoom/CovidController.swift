@@ -1,6 +1,6 @@
 import Foundation
 
-class CovidController {
+class CovidController: ProcessControllerProtocol {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 
@@ -39,7 +39,7 @@ class CovidController {
             }
             if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
                 sensor = ProcessSensor(
-                    id: district.name, location: district.location, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], measurements: measurements, timestamp: Date.now)
+                    name: district.name, location: district.location, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], measurements: measurements, timestamp: Date.now)
             }
         }
         return sensor

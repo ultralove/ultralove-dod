@@ -21,7 +21,7 @@ class LevelController {
             }
             if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                 return ProcessSensor(
-                    id: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "water.waves"],
+                    name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "water.waves"],
                     measurements: measurements,
                     timestamp: Date.now)
             }

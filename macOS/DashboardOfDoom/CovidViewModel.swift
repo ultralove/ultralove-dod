@@ -1,11 +1,11 @@
 import Foundation
 
-@Observable class CovidViewModel: ProcessPresenter, PresenterProtocol, SubscriberProtocol {
+@Observable class CovidViewModel: ProcessPresenter, PresenterProtocol, ProcessSubscriberProtocol {
     private let incidenceController = CovidController()
 
     override init() {
         super.init()
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 360)  // 6  hours
     }
 

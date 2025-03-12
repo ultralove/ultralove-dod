@@ -120,7 +120,7 @@ struct LevelView: View {
                 ActivityIndicator()
             }
             else {
-                ChartHeader(label: String(format: "Water Level", viewModel.sensor?.id ?? "<Unknown>"), sensor: viewModel.sensor)
+                ChartHeader(label: String(format: "Water Level", viewModel.sensor?.name ?? "<Unknown>"), sensor: viewModel.sensor)
                 LevelChart(selector: selector, rounding: .previousQuarterHour)
                 ChartFooter(sensor: viewModel.sensor)
             }

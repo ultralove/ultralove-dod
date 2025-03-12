@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class RadiationViewModel: Identifiable, SubscriberProtocol {
+@Observable class RadiationViewModel: Identifiable, ProcessSubscriberProtocol {
     private let radiationController = RadiationController()
 
     let id = UUID()
@@ -9,7 +9,7 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
     }
 

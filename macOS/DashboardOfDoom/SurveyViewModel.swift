@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-@Observable class SurveyViewModel: Identifiable, SubscriberProtocol {
+@Observable class SurveyViewModel: Identifiable, ProcessSubscriberProtocol {
     private let surveyController = SurveyController()
 
     let id = UUID()
@@ -10,7 +10,7 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = SubscriptionManager.shared
+        let subscriptionManager = ProcessManager.shared
         subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
     }
 
@@ -99,9 +99,7 @@ import SwiftUI
         do {
             if let sensor = try await surveyController.refreshFederalSurveys(for: location) {
                 let measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: sensor.measurements))
-                print("\(Date.now): Survey: Refreshing data...")
                 await self.synchronizeData(sensor: sensor, measurements: measurements)
-                print("\(Date.now): Survey: Done.")
             }
         }
         catch {
