@@ -4,8 +4,13 @@ import SwiftUI
 struct CovidView: View {
     @Environment(CovidViewModel.self) private var viewModel
     @State private var selectedDate: Date?
-    let label: String
     let selector: ProcessSelector
+
+    private let labels: [ProcessSelector: String] = [
+        .covid(.incidence): "Weekly Incidence",
+        .covid(.cases): "Cases",
+        .covid(.deaths): "Deaths",
+        .covid(.recovered): "Recovered"]
 
     var body: some View {
         VStack {
@@ -13,7 +18,7 @@ struct CovidView: View {
                 ActivityIndicator()
             }
             else {
-                ChartHeader(label: label, sensor: viewModel.sensor)
+                ChartHeader(label: self.labels[selector] ?? "<Unknown>", sensor: viewModel.sensor)
                 _view()
                 ChartFooter(sensor: viewModel.sensor)
             }

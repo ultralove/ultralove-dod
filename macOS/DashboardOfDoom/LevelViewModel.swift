@@ -31,10 +31,12 @@ import SwiftUI
         self.sensor = sensor
         self.measurements = sensor.measurements
         self.timestamp = sensor.timestamp
+
         self.current = Self.renderCurrent(measurements: self.measurements)
         self.faceplate = Self.renderFaceplate(current: self.current)
         self.range = Self.renderRange(measurements: self.measurements)
         self.trend = Self.renderTrend(measurements: self.measurements)
+        
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 

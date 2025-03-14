@@ -96,18 +96,10 @@ struct ContentView: View {
                     }
                     Divider()
                     SensorPanel(label: "COVID-19", icon: "facemask") {
-                        CovidView(label: "Weekly incidence", selector: .covid(.incidence))
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        CovidView(label: "Cases", selector: .covid(.cases))
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        CovidView(label: "Deaths", selector: .covid(.deaths))
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        CovidView(label: "Recovered", selector: .covid(.recovered))
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
+                        ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
+                            CovidView(selector: .covid(selector))
+                                .frame(height: 200)
+                        }
                     }
                     Divider()
                     SensorPanel(label: "Water Level", icon: "water.waves") {
@@ -117,7 +109,7 @@ struct ContentView: View {
                     }
                     Divider()
                     SensorPanel(label: "Radiation", icon: "atom") {
-                        RadiationView()
+                        RadiationView(label: "Radiation", selector: .radiation(.total))
                             .padding(.vertical, 5)
                             .frame(height: 200)
                     }

@@ -247,7 +247,7 @@ struct MapView: View {
                     Faceplate2(sensor: sensor, label: water.faceplate[.water(.level)], icon: water.icon, anchor: .bottomLeading)
                 }
                 if let sensor = radiation.sensor {
-                    Faceplate(sensor: sensor, label: radiation.faceplate, icon: radiation.icon, anchor: .bottomLeading)
+                    Faceplate2(sensor: sensor, label: radiation.faceplate[.radiation(.total)], icon: radiation.icon, anchor: .bottomLeading)
                 }
 //                if let sensor = surveys.sensor {
 //                    Faceplate(sensor: sensor, label: surveys.faceplate(selector: .fascists), icon: surveys.icon, anchor: .bottomLeading)

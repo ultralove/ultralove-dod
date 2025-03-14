@@ -13,7 +13,7 @@ import Foundation
         let invalid = "\(MathematicalSymbols.mathematicalItalicCapitalOmicron.rawValue):n/a"
         if let current = self.current(selector: selector)?.value {
             switch selector {
-                case .covid:
+                case .covid(.incidence):
                     return String(
                         format: "\(MathematicalSymbols.mathematicalBoldCapitalOmicron.rawValue)%@: %.1f",
                         current.unit.symbol, current.value)

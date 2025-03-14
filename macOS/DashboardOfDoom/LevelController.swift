@@ -1,6 +1,6 @@
 import Foundation
 
-class LevelController {
+class LevelController: ProcessControllerProtocol {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 

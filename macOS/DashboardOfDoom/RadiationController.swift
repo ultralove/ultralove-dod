@@ -1,6 +1,6 @@
 import Foundation
 
-class RadiationControllergit  {
+class RadiationController: ProcessControllerProtocol {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 
@@ -9,18 +9,20 @@ class RadiationControllergit  {
         self.forecastDuration = 3 * 24 * self.measurementDistance  // 3 days
     }
 
-    func refreshRadiation(for location: Location) async throws -> RadiationSensor? {
-        var sensor: RadiationSensor? = nil
+    func refreshData(for location: Location) async throws -> ProcessSensor? {
+        var sensor: ProcessSensor? = nil
         if let nearestStation = try await Self.fetchNearestStation(location: location) {
+            var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
             if let radiation = try await Self.fetchMeasurements(station: nearestStation) {
-            var measurements: [ProcessValue<Dimension>] = []
-                measurements.append(contentsOf: Self.interpolateMeasurements(measurements: radiation, distance: self.measurementDistance))
-                measurements.append(contentsOf: Self.forecastMeasurements(data: measurements, duration: self.forecastDuration))
-                if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                    sensor = RadiationSensor(
-                        id: nearestStation.name, placemark: placemark, customData: ["icon": "atom"], location: nearestStation.location, measurements: measurements,
-                        timestamp: Date.now)
-                }
+                var measurement: [ProcessValue<Dimension>] = []
+                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: radiation, distance: self.measurementDistance))
+                measurement.append(contentsOf: Self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
+                measurements[.radiation(.total)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
+            }
+            if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
+                sensor = ProcessSensor(
+                    name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "atom"], measurements: measurements,
+                    timestamp: Date.now)
             }
         }
         return sensor
@@ -146,7 +148,7 @@ class RadiationControllergit  {
         let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .hourly)
         do {
                 try predictor.addData(dataPoints)
-                let prediction = try predictor.forecast(duration: duration)  // 3 days
+                let prediction = try predictor.forecast(duration: duration)  
             forecast = prediction.forecasts.map { forecast in
                 ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
