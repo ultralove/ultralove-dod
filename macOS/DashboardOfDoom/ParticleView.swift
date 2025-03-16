@@ -57,7 +57,7 @@ struct ParticleChart: View {
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
-                            Text(String(format: "%@ %@", current.timestamp.dateString(), current.timestamp.timeString()))
+                            Text(current.timestamp.absoluteString())
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.0f%@", current.value.value, current.value.unit.symbol))
@@ -84,7 +84,7 @@ struct ParticleChart: View {
                         .symbolSize(CGSize(width: 7, height: 7))
                         .annotation(position: .bottomTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                             VStack {
-                                Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
+                                Text(timestamp.absoluteString())
                                     .font(.footnote)
                                 HStack {
                                     Text(String(format: "%.0f%@", value.value.value, value.value.unit.symbol))
@@ -176,9 +176,9 @@ struct ParticleView: View {
                     }
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: self.presenter.sensor?.timestamp))")
-                        .font(.footnote)
                         .foregroundColor(.gray)
                 }
+                .font(.footnote)
 
                 ForEach(ProcessSelector.Particle.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .particle(selector)) {
@@ -195,7 +195,8 @@ struct ParticleView: View {
                 }
             }
         }
-        .padding()
+        .padding(5)
+        .padding(.trailing)
         .cornerRadius(13)
     }
 }

@@ -1,33 +1,13 @@
 import Charts
 import SwiftUI
 
-struct CovidView: View {
+struct CovidChart: View {
     @Environment(CovidViewModel.self) private var viewModel
-    @State private var selectedDate: Date?
+    @State private var timestamp: Date?
     let selector: ProcessSelector
-
-    private let labels: [ProcessSelector: String] = [
-        .covid(.incidence): "Weekly Incidence",
-        .covid(.cases): "Cases",
-        .covid(.deaths): "Deaths",
-        .covid(.recovered): "Recovered"]
+    let rounding: RoundingStrategy
 
     var body: some View {
-        VStack {
-            if viewModel.sensor?.timestamp == nil {
-                ActivityIndicator()
-            }
-            else {
-                ChartHeader(label: self.labels[selector] ?? "<Unknown>", sensor: viewModel.sensor)
-                _view()
-                ChartFooter(sensor: viewModel.sensor)
-            }
-        }
-        .padding()
-        .cornerRadius(13)
-    }
-
-    func _view() -> some View {
         VStack {
             Chart {
                 ForEach(viewModel.measurements[selector] ?? []) { incidence in
@@ -56,7 +36,7 @@ struct CovidView: View {
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
-                            Text(String(format: "%@ %@", current.timestamp.dateString(), current.timestamp.timeString()))
+                            Text(current.timestamp.absoluteString())
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.1f%@", current.value.value, current.value.unit.symbol))
@@ -71,27 +51,28 @@ struct CovidView: View {
                         .quality(current.quality)
                     }
                 }
-                if let selectedDate {
-                    if let selectedValue = viewModel.measurements[selector]?.first(where: { $0.timestamp == selectedDate }) {
-                        RuleMark(x: .value("Date", selectedDate))
+
+                if let timestamp = self.timestamp {
+                    if let value = viewModel.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
+                        RuleMark(x: .value("Date", timestamp))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
-                            x: .value("Date", selectedDate),
-                            y: .value("Incidence", selectedValue.value.value)
+                            x: .value("Date", timestamp),
+                            y: .value("Incidence", value.value.value)
                         )
                         .symbolSize(CGSize(width: 7, height: 7))
                         .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                             VStack {
-                                Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
+                                Text(timestamp.absoluteString())
                                     .font(.footnote)
                                 HStack {
-                                    Text(String(format: "%.1f%@", selectedValue.value.value, selectedValue.value.unit.symbol))
+                                    Text(String(format: "%.1f%@", value.value.value, value.value.unit.symbol))
                                         .font(.headline)
                                 }
                             }
                             .padding(7)
                             .padding(.horizontal, 7)
-                            .quality(selectedValue.quality)
+                            .quality(value.quality)
                         }
                     }
                 }
@@ -111,19 +92,67 @@ struct CovidView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: .lastDayChange) {
-                                                    self.selectedDate = target
+                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                    self.timestamp = target
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 .onEnded { value in
-                                    self.selectedDate = nil
+                                    self.timestamp = nil
                                 }
                         )
                 }
             }
         }
+    }
+}
+
+struct CovidView: View {
+    @Environment(CovidViewModel.self) private var presenter
+
+    private let labels: [ProcessSelector: String] = [
+        .covid(.incidence): "Weekly Incidence",
+        .covid(.cases): "Cases",
+        .covid(.deaths): "Deaths",
+        .covid(.recovered): "Recovered"
+    ]
+
+    var body: some View {
+        VStack {
+            if self.presenter.sensor?.timestamp == nil {
+                ActivityIndicator()
+            }
+            else {
+                HStack(alignment: .bottom) {
+                    HStack {
+                        Image(systemName: "safari")
+                        Text(String(format: "%@", self.presenter.sensor?.placemark ?? "<Unknown>"))
+                    }
+                    Spacer()
+                    Text("Last update: \(Date.absoluteString(date: self.presenter.sensor?.timestamp))")
+                        .foregroundColor(.gray)
+                }
+                .font(.footnote)
+
+                ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
+                    if self.presenter.isAvailable(selector: .covid(selector)) {
+                        VStack {
+                            HStack(alignment: .bottom) {
+                                Text("\(self.presenter.sensor?.name ?? "<Unknown>") \(self.labels[.covid(selector)] ?? "<Unknown>")")
+                                Spacer()
+                            }
+                            CovidChart(selector: .covid(selector), rounding: .lastDayChange)
+                        }
+                        .padding(.vertical, 5)
+                        .frame(height: 167)
+                    }
+                }
+            }
+        }
+        .padding(5)
+        .padding(.trailing)
+        .cornerRadius(13)
     }
 }

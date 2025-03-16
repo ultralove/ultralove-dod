@@ -96,10 +96,7 @@ struct ContentView: View {
                     }
                     Divider()
                     SensorPanel(label: "COVID-19", icon: "facemask") {
-                        ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
-                            CovidView(selector: .covid(selector))
-                                .frame(height: 200)
-                        }
+                        CovidView()
                     }
                     Divider()
                     SensorPanel(label: "Water Level", icon: "water.waves") {
