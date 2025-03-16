@@ -115,12 +115,7 @@ struct ContentView: View {
                     }
                     Divider()
                     SensorPanel(label: "Particulate Matter", icon: "aqi.medium") {
-                        ParticleView(selector: .pm10)
-                            .frame(height: 200)
-                        ParticleView(selector: .pm25)
-                            .frame(height: 200)
-                        ParticleView(selector: .no2)
-                            .frame(height: 200)
+                        ParticleView()
                     }
                     Divider()
                     SensorPanel(label: "Election Polls", icon: "popcorn") {

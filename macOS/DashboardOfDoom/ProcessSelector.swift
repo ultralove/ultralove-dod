@@ -41,7 +41,7 @@ enum ProcessSelector: Hashable {
         case terrestrial = 2
     }
 
-    enum Particle: Int, CaseIterable {
+    enum Particle: Int, CaseIterable, RawRepresentable {
         case pm10 = 1  // Particulate matter < 10µm
         case pm25 = 9  // Particulate matter < 2.5µm
         case o3 = 3  // Ozone
@@ -56,7 +56,14 @@ enum ProcessSelector: Hashable {
         case nickel = 12  // Nickel in particulate matter < 10µm
     }
 
-    enum Survey: Int, CaseIterable {
+    static func particle(from rawValue: Int) -> ProcessSelector? {
+        guard let particle = Particle(rawValue: rawValue) else {
+            return nil
+        }
+        return .particle(particle)
+    }
+
+    enum Survey: Int, CaseIterable, RawRepresentable {
         case sonstige = 0
         case cducsu = 1
         case spd = 2
@@ -86,6 +93,14 @@ enum ProcessSelector: Hashable {
         case clowns = 998
         case fascists = 999
     }
+
+    static func survey(from rawValue: Int) -> ProcessSelector? {
+        guard let survey = Survey(rawValue: rawValue) else {
+            return nil
+        }
+        return .survey(survey)
+    }
+
 }
 
 

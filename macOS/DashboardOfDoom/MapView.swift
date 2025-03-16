@@ -151,26 +151,6 @@ struct Faceplate2: MapContent {
     }
 }
 
-struct SheetView: View {
-    @Binding var isPresented: Bool
-    let name: String
-    var label: String?
-
-    var body: some View {
-        VStack {
-            Text(name)
-            if let label = self.label {
-                Text(label)
-            }
-        }
-        .padding()
-        Button("Dismiss") {
-            isPresented = false
-        }
-        .padding()
-    }
-}
-
 struct MapView: View {
     @Environment(WeatherViewModel.self) private var weather
     @Environment(CovidViewModel.self) private var incidence
@@ -241,7 +221,7 @@ struct MapView: View {
                     Faceplate2(sensor: sensor, label: incidence.faceplate(selector: .covid(.incidence)), icon: incidence.icon, anchor: .bottomLeading)
                 }
                 if let sensor = particle.sensor {
-                    Faceplate(sensor: sensor, label: particle.faceplate(), icon: particle.icon, anchor: .topLeading)
+                    Faceplate2(sensor: sensor, label: particle.faceplate[.particle(.pm10)], icon: particle.icon, anchor: .topLeading)
                 }
                 if let sensor = water.sensor {
                     Faceplate2(sensor: sensor, label: water.faceplate[.water(.level)], icon: water.icon, anchor: .bottomLeading)

@@ -1,6 +1,6 @@
 import Foundation
 
-class ParticleController {
+class ParticleController: ProcessControllerProtocol {
     private let measurementDuration: TimeInterval
     private let forecastDuration: TimeInterval
 
@@ -9,7 +9,7 @@ class ParticleController {
         self.forecastDuration = 14 * 24 * 60 * 60  // 7 days
     }
 
-    func refreshParticles(for location: Location) async -> ParticleSensor? {
+    func refreshData(for location: Location) async throws -> ProcessSensor? {
         do {
             if let nearestStation = await Self.fetchNearestStation(location: location) {
                 if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
@@ -20,14 +20,14 @@ class ParticleController {
                                     station: nearestStation, from: forecastInterval.from, to: forecastInterval.to)
                                 {
                                     for (selector, values) in measurements {
-                                        var actual = values
+                                        var actual = self.interpolateMeasurement(measurements: values)
                                         actual.append(contentsOf: forecast[selector] ?? [])
                                         measurements[selector] = actual
                                     }
                                 }
-                                return ParticleSensor(
-                                    id: nearestStation.name, placemark: placemark, customData: ["icon": "aqi.medium"],
-                                    location: nearestStation.location, measurements: measurements,
+                                return ProcessSensor(
+                                    name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "aqi.medium"],
+                                    measurements: measurements,
                                     timestamp: Date.now)
                             }
                         }
@@ -39,6 +39,31 @@ class ParticleController {
             trace.error("Error refreshing particulate matter: %@", error.localizedDescription)
         }
         return nil
+    }
+
+    private func interpolateMeasurement(measurements: [ProcessValue<Dimension>]) -> [ProcessValue<Dimension>] {
+        var interpolatedMeasurement: [ProcessValue<Dimension>] = []
+        if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
+            let unit = measurements[0].value.unit
+            var current = start
+            if var last = measurements.first {
+                while current <= end {
+                    if let match = measurements.first(where: { $0.timestamp == current }) {
+                        last = match
+                        interpolatedMeasurement.append(match)
+                    }
+                    else {
+                        interpolatedMeasurement
+                            .append(
+                                ProcessValue<Dimension>(
+                                    value: Measurement(value: last.value.value, unit: unit), quality: .uncertain,
+                                    timestamp: current))
+                    }
+                    current = current.addingTimeInterval(60 * 60)
+                }
+            }
+        }
+        return interpolatedMeasurement
     }
 
     private static func calculateMeasurementTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
@@ -124,8 +149,8 @@ class ParticleController {
         return nearestStation
     }
 
-    private static func fetchMeasurements(station: Station, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
-        var measurements: [ParticleSelector: [ProcessValue<Dimension>]]? = nil
+    private static func fetchMeasurements(station: Station, from: Date, to: Date) async throws -> [ProcessSelector: [ProcessValue<Dimension>]]? {
+        var measurements: [ProcessSelector: [ProcessValue<Dimension>]]? = nil
         do {
             if let data = try await ParticleService.fetchMeasurements(code: station.code, from: from, to: to) {
                 if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
@@ -138,7 +163,7 @@ class ParticleController {
                                             for measurementItems in measurementValues[3...] {
                                                 if let measurementItem = measurementItems as? [Any] {
                                                     if let componentId = measurementItem[0] as? Int {
-                                                        if let selector = ParticleSelector(rawValue: componentId) {
+                                                        if let selector = ProcessSelector.particle(from: componentId) {
                                                             if let unit = Self.selectMeasurementUnit(component: selector) {
                                                                 if let value = measurementItem[1] as? Double {
                                                                     let measurement = ProcessValue<Dimension>(
@@ -179,8 +204,8 @@ class ParticleController {
         return measurements
     }
 
-    private static func fetchForecasts(station: Station, from: Date, to: Date) async throws -> [ParticleSelector: [ProcessValue<Dimension>]]? {
-        var measurements: [ParticleSelector: [ProcessValue<Dimension>]]? = nil
+    private static func fetchForecasts(station: Station, from: Date, to: Date) async throws -> [ProcessSelector: [ProcessValue<Dimension>]]? {
+        var measurements: [ProcessSelector: [ProcessValue<Dimension>]]? = nil
         if let data = try await ParticleService.fetchForecasts(code: station.code, from: from, to: to) {
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                 if let features = json["data"] as? [String: Any] {
@@ -192,7 +217,7 @@ class ParticleController {
                                         for measurementItems in measurementValues[4...] {
                                             if let measurementItem = measurementItems as? [Any] {
                                                 if let componentId = measurementItem[0] as? Int {
-                                                    if let selector = ParticleSelector(rawValue: componentId) {
+                                                    if let selector = ProcessSelector.particle(from: componentId) {
                                                         if let unit = Self.selectMeasurementUnit(component: selector) {
                                                             if let value = measurementItem[1] as? Double {
                                                                 let measurement = ProcessValue<Dimension>(
@@ -229,32 +254,34 @@ class ParticleController {
         return measurements
     }
 
-    static private func selectMeasurementUnit(component: ParticleSelector) -> UnitConcentrationMass? {
+    static private func selectMeasurementUnit(component: ProcessSelector) -> UnitConcentrationMass? {
         switch component {
-            case .pm10:
+            case .particle(.pm10):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .co:
+            case .particle(.co):
                 return UnitConcentrationMass.milligramsPerCubicMeter
-            case .o3:
+            case .particle(.o3):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .so2:
+            case .particle(.so2):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .no2:
+            case .particle(.no2):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .lead:
+            case .particle(.lead):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .benzoapyrene:
+            case .particle(.benzoapyrene):
                 return UnitConcentrationMass.nanogramsPerCubicMeter
-            case .benzene:
+            case .particle(.benzene):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .pm25:
+            case .particle(.pm25):
                 return UnitConcentrationMass.microgramsPerCubicMeter
-            case .arsenic:
+            case .particle(.arsenic):
                 return UnitConcentrationMass.nanogramsPerCubicMeter
-            case .cadmium:
+            case .particle(.cadmium):
                 return UnitConcentrationMass.nanogramsPerCubicMeter
-            case .nickel:
+            case .particle(.nickel):
                 return UnitConcentrationMass.nanogramsPerCubicMeter
+            default:
+                return nil
         }
     }
 }

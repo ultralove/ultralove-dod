@@ -1,48 +1,17 @@
 import Charts
 import SwiftUI
 
-struct ParticleView: View {
+struct ParticleChart: View {
     @Environment(ParticleViewModel.self) private var viewModel
-    @State private var selectedDate: Date?
-    let selector: ParticleSelector
-
-    private let symbols: [ParticleSelector: ParticleSymbol] = [
-        .pm10: .pm10,
-        .pm25: .pm25,
-        .o3: .o3,
-        .no2: .no2,
-        .co: .co,
-        .so2: .so2,
-        .lead: .lead,
-        .benzoapyrene: .benzoapyrene,
-        .benzene: .benzene,
-        .arsenic: .arsenic,
-        .cadmium: .cadmium,
-        .nickel: .nickel
-    ]
+    @State private var timestamp: Date?
+    let selector: ProcessSelector
+    let rounding: RoundingStrategy
 
     var body: some View {
-        if viewModel.hasMeasurements(selector: selector) {
-            VStack {
-                if viewModel.timestamp == nil {
-                    ActivityIndicator()
-                }
-                else {
-                    HeaderView(label: "\((symbols[selector] ?? .pm10).rawValue) at", sensor: viewModel.sensor)
-                    _view()
-                    FooterView(sensor: viewModel.sensor)
-                }
-            }
-            .padding()
-            .cornerRadius(13)
-        }
-    }
-
-    func _view() -> some View {
         VStack {
             Chart {
                 ForEach(viewModel.measurements[selector] ?? []) { measurement in
-                    if selector == .pm10 {
+                    if selector == .particle(.pm10) {
                         LineMark(
                             x: .value("Date", measurement.timestamp),
                             y: .value("Particle", 40.0)
@@ -51,7 +20,7 @@ struct ParticleView: View {
                         .foregroundStyle(.black.opacity(0.33))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }
-                    else if selector == .pm25 {
+                    else if selector == .particle(.pm25) {
                         LineMark(
                             x: .value("Date", measurement.timestamp),
                             y: .value("Particle", 25.0)
@@ -60,7 +29,7 @@ struct ParticleView: View {
                         .foregroundStyle(.black.opacity(0.33))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }
-                    else if selector == .no2 {
+                    else if selector == .particle(.no2) {
                         LineMark(
                             x: .value("Date", measurement.timestamp),
                             y: .value("Particle", 40.0)
@@ -71,14 +40,14 @@ struct ParticleView: View {
                     }
                     AreaMark(
                         x: .value("Date", Date.round(from: measurement.timestamp, strategy: .previousHour) ?? Date.now),
-                        yStart: .value("Particle", viewModel.minValue(selector: selector).value),
+                        yStart: .value("Particle", viewModel.range[selector]?.lowerBound ?? 0.0),
                         yEnd: .value("Particle", measurement.value.value)
                     )
                     .interpolationMethod(.catmullRom(alpha: 0.33))
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let current = viewModel.current(selector: selector) {
+                if let current = viewModel.current[selector] {
                     RuleMark(x: .value("Date", current.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
@@ -92,7 +61,9 @@ struct ParticleView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.0f%@", current.value.value, current.value.unit.symbol))
-                                Image(systemName: viewModel.trend(selector: selector))
+                                if let icon = viewModel.trend[selector] {
+                                    Image(systemName: icon)
+                                }
                             }
                             .font(.headline)
                         }
@@ -102,32 +73,32 @@ struct ParticleView: View {
                     }
                 }
 
-                if let selectedDate {
-                    if let selectedValue = viewModel.measurements[selector]?.first(where: { $0.timestamp == selectedDate }) {
-                        RuleMark(x: .value("Date", Date.round(from: selectedDate, strategy: .previousHour) ?? Date.now))
+                if let timestamp = self.timestamp {
+                    if let value = viewModel.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
+                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: self.rounding) ?? Date.now))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
-                            x: .value("Date", selectedDate),
-                            y: .value("Particle", selectedValue.value.value)
+                            x: .value("Date", timestamp),
+                            y: .value("Particle", value.value.value)
                         )
                         .symbolSize(CGSize(width: 7, height: 7))
                         .annotation(position: .bottomTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                             VStack {
-                                Text(String(format: "%@ %@", selectedDate.dateString(), selectedDate.timeString()))
+                                Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
                                     .font(.footnote)
                                 HStack {
-                                    Text(String(format: "%.0f%@", selectedValue.value.value, selectedValue.value.unit.symbol))
+                                    Text(String(format: "%.0f%@", value.value.value, value.value.unit.symbol))
                                         .font(.headline)
                                 }
                             }
                             .padding(7)
                             .padding(.horizontal, 7)
-                            .quality(selectedValue.quality)
+                            .quality(value.quality)
                         }
                     }
                 }
             }
-            .chartYScale(domain: viewModel.minValue(selector: selector).value ... viewModel.maxValue(selector: selector).value)
+            .chartYScale(domain: viewModel.range[selector] ?? 0.0 ... 0.0)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle()
@@ -142,19 +113,89 @@ struct ParticleView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: .previousHour) {
-                                                    self.selectedDate = target
+                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                    self.timestamp = target
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 .onEnded { value in
-                                    self.selectedDate = nil
+                                    self.timestamp = nil
                                 }
                         )
                 }
             }
         }
+    }
+}
+
+struct ParticleView: View {
+    @Environment(ParticleViewModel.self) private var presenter
+
+    enum ParticleSymbol: String, CaseIterable {
+        case pm10 = "\u{1D40F}\u{1D40C}\u{2081}\u{2080}"  // PM10, Particulate matter < 10µm
+        case co = "\u{1D402}\u{1D40E}"  // CO, Carbon monoxide
+        case o3 = "\u{1D40E}\u{2083}"  // O3, Ozone
+        case so2 = "\u{1D412}\u{1D40E}\u{2082}"  // SO2, Sulfur dioxide
+        case no2 = "\u{1D40D}\u{1D40E}\u{2082}"  // NO2, Nitrogen dioxide
+        case lead = "\u{1D40F}\u{1D41B}"  // Pb, Lead in particulate matter < 10µm
+        case benzoapyrene = "\u{1D402}\u{2082}\u{2080}\u{1D407}\u{2081}\u{2082}"  // C20H12, Benzo(a)pyrene in particulate matter < 10µm
+        case benzene = "\u{1D402}\u{2086}\u{1D407}\u{2086}"  // C6H6, Benzene
+        case pm25 = "\u{1D40F}\u{1D40C}\u{2082}\u{2085}"  // Particulate matter < 2.5µm
+        case arsenic = "\u{1D400}\u{1D42C}"  // As, Arsenic in particulate matter < 10µm
+        case cadmium = "\u{1D402}\u{1D41D}"  // Cd, Cadmium in particulate matter < 10µm
+        case nickel = "\u{1D40D}\u{1D422}"  // Ni, Nickel in particulate matter < 10µm
+    }
+
+    private let symbols: [ProcessSelector: ParticleSymbol] = [
+        .particle(.pm10): .pm10,
+        .particle(.pm25): .pm25,
+        .particle(.o3): .o3,
+        .particle(.no2): .no2,
+        .particle(.co): .co,
+        .particle(.so2): .so2,
+        .particle(.lead): .lead,
+        .particle(.benzoapyrene): .benzoapyrene,
+        .particle(.benzene): .benzene,
+        .particle(.arsenic): .arsenic,
+        .particle(.cadmium): .cadmium,
+        .particle(.nickel): .nickel
+    ]
+
+    var body: some View {
+        VStack {
+            if self.presenter.sensor?.timestamp == nil {
+                ActivityIndicator()
+            }
+            else {
+                HStack(alignment: .bottom) {
+                    HStack {
+                        Image(systemName: "safari")
+                        Text(String(format: "%@", self.presenter.sensor?.placemark ?? "<Unknown>"))
+                    }
+                    Spacer()
+                    Text("Last update: \(Date.absoluteString(date: self.presenter.sensor?.timestamp))")
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                }
+
+                ForEach(ProcessSelector.Particle.allCases, id: \.self) { selector in
+                    if self.presenter.isAvailable(selector: .particle(selector)) {
+                        VStack {
+                            HStack(alignment: .bottom) {
+                                Text("\((symbols[.particle(selector)] ?? .pm10).rawValue)")
+                                Spacer()
+                            }
+                            ParticleChart(selector: .particle(selector), rounding: .previousHour)
+                        }
+                        .padding(.vertical, 5)
+                        .frame(height: 167)
+                    }
+                }
+            }
+        }
+        .padding()
+        .cornerRadius(13)
     }
 }

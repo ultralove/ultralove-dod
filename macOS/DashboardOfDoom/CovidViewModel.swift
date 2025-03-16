@@ -1,6 +1,6 @@
 import Foundation
 
-@Observable class CovidViewModel: ProcessPresenter, PresenterProtocol, ProcessSubscriberProtocol {
+@Observable class CovidViewModel: ProcessPresenter, ProcessSubscriberProtocol {
     private let incidenceController = CovidController()
 
     override init() {

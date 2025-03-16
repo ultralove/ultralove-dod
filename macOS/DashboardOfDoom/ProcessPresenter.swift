@@ -1,11 +1,5 @@
 import Foundation
 
-protocol PresenterProtocol: Identifiable {
-    func faceplate(selector: ProcessSelector) -> String
-    func maxValue(selector: ProcessSelector) -> Double
-    func minValue(selector: ProcessSelector) -> Double
-}
-
 @Observable class ProcessPresenter {
     let id = UUID()
     var sensor: ProcessSensor?
@@ -40,6 +34,10 @@ protocol PresenterProtocol: Identifiable {
 
     var placemark: String? {
         return sensor?.placemark
+    }
+
+    func isAvailable(selector: ProcessSelector) -> Bool {
+        return self.measurements[selector]?.isEmpty == false
     }
 }
 

@@ -5,8 +5,6 @@ import SwiftUI
 
     var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
     var faceplate: [ProcessSelector: String] = [:]
-    var maxValue: [ProcessSelector: Double] = [:]
-    var minValue: [ProcessSelector: Double] = [:]
     var range: [ProcessSelector: ClosedRange<Double>] = [:]
     var trend: [ProcessSelector: String] = [:]
 
