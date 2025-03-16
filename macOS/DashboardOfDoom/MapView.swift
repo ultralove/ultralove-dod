@@ -218,7 +218,7 @@ struct MapView: View {
                         anchor: .topTrailing)
                 }
                 if let sensor = incidence.sensor {
-                    Faceplate2(sensor: sensor, label: incidence.faceplate(selector: .covid(.incidence)), icon: incidence.icon, anchor: .bottomLeading)
+                    Faceplate2(sensor: sensor, label: incidence.faceplate[.covid(.incidence)], icon: incidence.icon, anchor: .bottomLeading)
                 }
                 if let sensor = particle.sensor {
                     Faceplate2(sensor: sensor, label: particle.faceplate[.particle(.pm10)], icon: particle.icon, anchor: .topLeading)

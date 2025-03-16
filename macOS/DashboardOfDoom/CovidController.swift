@@ -2,11 +2,14 @@ import Foundation
 
 class CovidController: ProcessControllerProtocol {
     private let measurementDistance: TimeInterval
+    private let measurementDuration: Double
     private let forecastDuration: TimeInterval
 
     init() {
         self.measurementDistance = 24 * 60 * 60  // 1 day
-        self.forecastDuration = 37 * self.measurementDistance  // 37 days
+        self.measurementDuration = 167.0  // 167 days
+        self.forecastDuration = Double(Int(self.measurementDuration / 3)) * self.measurementDistance
+//        self.forecastDuration = 37 * self.measurementDistance // 37 days
     }
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {
@@ -99,7 +102,7 @@ class CovidController: ProcessControllerProtocol {
 
     private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
-        if let data = try await CovidService.fetchIncidence(id: district.id) {
+        if let data = try await CovidService.fetchIncidence(id: district.id, duration: self.measurementDuration) {
             if let measurements = try Self.parseData(data: data, district: district, tag: "weekIncidence", unit: UnitIncidence.casesPer100k) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
@@ -112,7 +115,7 @@ class CovidController: ProcessControllerProtocol {
 
     private func fetchCases(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
-        if let data = try await CovidService.fetchCases(id: district.id) {
+        if let data = try await CovidService.fetchCases(id: district.id, duration: self.measurementDuration) {
             if let measurements = try Self.parseData(data: data, district: district, tag: "cases", unit: UnitPopulation.people) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
@@ -125,7 +128,7 @@ class CovidController: ProcessControllerProtocol {
 
     private func fetchDeaths(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
-        if let data = try await CovidService.fetchDeaths(id: district.id) {
+        if let data = try await CovidService.fetchDeaths(id: district.id, duration: self.measurementDuration) {
             if let measurements = try Self.parseData(data: data, district: district, tag: "deaths", unit: UnitPopulation.people) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
@@ -138,7 +141,7 @@ class CovidController: ProcessControllerProtocol {
 
     private func fetchRecovered(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
-        if let data = try await CovidService.fetchRecovered(id: district.id) {
+        if let data = try await CovidService.fetchRecovered(id: district.id, duration: self.measurementDuration) {
             if let measurements = try Self.parseData(data: data, district: district, tag: "recovered", unit: UnitPopulation.people) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {

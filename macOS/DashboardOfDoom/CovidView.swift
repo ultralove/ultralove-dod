@@ -46,7 +46,7 @@ struct CovidView: View {
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let current = viewModel.current(selector: selector) {
+                if let current = viewModel.current[selector] {
                     RuleMark(x: .value("Date", current.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
@@ -60,7 +60,9 @@ struct CovidView: View {
                                 .font(.footnote)
                             HStack {
                                 Text(String(format: "%.1f%@", current.value.value, current.value.unit.symbol))
-                                Image(systemName: viewModel.trend(selector: selector))
+                                if let icon = viewModel.trend[selector] {
+                                    Image(systemName: icon)
+                                }
                             }
                             .font(.headline)
                         }
@@ -94,7 +96,7 @@ struct CovidView: View {
                     }
                 }
             }
-            .chartYScale(domain: viewModel.minValue(selector: selector) ... viewModel.maxValue(selector: selector) * 1.33)
+            .chartYScale(domain: viewModel.range[selector] ?? 0.0 ... 0.0)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle()

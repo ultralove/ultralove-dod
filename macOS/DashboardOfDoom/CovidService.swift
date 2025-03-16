@@ -17,8 +17,8 @@ class CovidService {
         return data
     }
 
-    static func fetchIncidence(id: String) async throws -> Data? {
-        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/incidence/100") else {
+    static func fetchIncidence(id: String, duration: Double = 100.0) async throws -> Data? {
+        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/incidence/\(Int(duration))") else {
             return nil
         }
         trace.debug("Fetching covid incidence measurements...")
@@ -27,8 +27,8 @@ class CovidService {
         return data
     }
 
-    static func fetchCases(id: String) async throws -> Data? {
-        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/cases/100") else {
+    static func fetchCases(id: String, duration: Double = 100.0) async throws -> Data? {
+        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/cases/\(Int(duration))") else {
             return nil
         }
         trace.debug("Fetching covid cases measurements...")
@@ -37,8 +37,8 @@ class CovidService {
         return data
     }
 
-    static func fetchDeaths(id: String) async throws -> Data? {
-        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/deaths/100") else {
+    static func fetchDeaths(id: String, duration: Double = 100.0) async throws -> Data? {
+        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/deaths/\(Int(duration))") else {
             return nil
         }
         trace.debug("Fetching covid deaths measurements...")
@@ -47,8 +47,8 @@ class CovidService {
         return data
     }
 
-    static func fetchRecovered(id: String) async throws -> Data? {
-        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/recovered/100") else {
+    static func fetchRecovered(id: String, duration: Double = 100.0) async throws -> Data? {
+        guard let url = URL(string: "https://api.corona-zahlen.org/districts/\(id)/history/recovered/\(Int(duration))") else {
             return nil
         }
         trace.debug("Fetching covid recovered measurements...")

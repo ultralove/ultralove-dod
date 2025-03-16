@@ -3,7 +3,7 @@ import Foundation
 class ParticleRenderer: ProcessRenderer {
     override func renderFaceplate(current: [ProcessSelector: ProcessValue<Dimension>]) -> [ProcessSelector: String] {
         var faceplate: [ProcessSelector: String] = [:]
-        for (selector, current) in current {
+        for (selector, current) in self.current {
             switch selector {
                 case .particle(.pm10):
                     faceplate[selector] = String(
