@@ -41,6 +41,15 @@ struct ContentView: View {
                     .padding(.top, 10)
                 Spacer()
                 HStack {
+#if DEBUG
+                    HStack {
+                        Image(systemName: "ladybug")
+                            .foregroundColor(.red)
+                            .imageScale(.large)
+                        Text("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")")
+                        Text("Build: \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown")")
+                    }
+#endif
                     Menu {
                         Button("Settings...") {
                         }
