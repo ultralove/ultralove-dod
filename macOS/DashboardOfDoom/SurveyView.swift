@@ -3,7 +3,7 @@ import SwiftUI
 
 struct SurveyView: View {
     @Environment(SurveyViewModel.self) private var viewModel
-    @State private var selectedDate: Date?
+    @State private var timestamp: Date?
     let header: String
     let selector: SurveySelector
 
@@ -28,52 +28,52 @@ struct SurveyView: View {
                 ForEach(viewModel.measurements[selector] ?? []) { measurement in
                     if selector != .fascists && selector != .clowns && selector != .sonstige {
                         LineMark(
-                            x: .value("Date", measurement.timestamp),
-                            y: .value("Survey", 5.0)
+                            x: .value("Timestamp", measurement.timestamp),
+                            y: .value("Value", 5.0)
                         )
                         .interpolationMethod(.linear)
-                        .foregroundStyle(.black.opacity(0.33))
+                        .foregroundStyle(Color.treshold)
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }
                     AreaMark(
-                        x: .value("Date", measurement.timestamp),
-                        y: .value("Survey", measurement.value.value)
+                        x: .value("Timestamp", measurement.timestamp),
+                        y: .value("Value", measurement.value.value)
                     )
                     .interpolationMethod(.monotone)
                     .foregroundStyle(viewModel.gradient(selector: selector))
                 }
 
-                if let currentValue = viewModel.current(selector: selector) {
-                    RuleMark(x: .value("Date", currentValue.timestamp))
+                if let measurement = viewModel.current(selector: selector) {
+                    RuleMark(x: .value("Timestamp", measurement.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
-                        x: .value("Date", currentValue.timestamp),
-                        y: .value("Survey", currentValue.value.value)
+                        x: .value("Timestamp", measurement.timestamp),
+                        y: .value("Value", measurement.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
                     .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
-                            Text(String(format: "%@ %@", currentValue.timestamp.dateString(), currentValue.timestamp.timeString()))
+                            Text(String(format: "%@ %@", measurement.timestamp.dateString(), measurement.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                Text(String(format: "%.1f%@", currentValue.value.value, currentValue.value.unit.symbol))
+                                Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
                                 Image(systemName: viewModel.trend(selector: selector))
                             }
                             .font(.headline)
                         }
                         .padding(7)
                         .padding(.horizontal, 7)
-                        .quality(currentValue.quality)
+                        .quality(measurement.quality)
                     }
                 }
 
-                if let timestamp = selectedDate {
-                    if let measurement = viewModel.measurements[selector]?.first(where: { $0.timestamp == selectedDate }) {
-                        RuleMark(x: .value("Date", timestamp))
+                if let timestamp = timestamp {
+                    if let measurement = viewModel.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
+                        RuleMark(x: .value("Timestamp", timestamp))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
-                            x: .value("Date", timestamp),
-                            y: .value("Survey", measurement.value.value)
+                            x: .value("Timestamp", timestamp),
+                            y: .value("Value", measurement.value.value)
                         )
                         .symbolSize(CGSize(width: 7, height: 7))
                         .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
@@ -108,14 +108,14 @@ struct SurveyView: View {
                                         let x = value.location.x - geometryReader[plotFrame].origin.x
                                         if let source: Date = geometryProxy.value(atX: x) {
                                             if let target = Date.round(from: source, strategy: .lastUTCDayChange) {
-                                                self.selectedDate = target
+                                                self.timestamp = target
                                             }
                                         }
                                     }
                                 }
                                 }
                                 .onEnded { value in
-                                    self.selectedDate = nil
+                                    self.timestamp = nil
                                 }
                         )
                 }

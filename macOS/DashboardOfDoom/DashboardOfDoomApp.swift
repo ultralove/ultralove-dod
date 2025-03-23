@@ -5,10 +5,10 @@ import SwiftUI
 struct DashboardOfDoomApp: App {
     @State var weatherViewModel = WeatherViewModel()
     @State var forecastViewModel = ForecastViewModel()
-    @State var incidenceViewModel = CovidViewModel()
-    @State var levelViewModel = LevelViewModel()
-    @State var radiationViewModel = RadiationViewModel()
-    @State var particleViewModel = ParticleViewModel()
+    @State var incidenceViewModel = CovidPresenter()
+    @State var levelViewModel = LevelPresenter()
+    @State var radiationViewModel = RadiationPresenter()
+    @State var particleViewModel = ParticlePresenter()
     @State var surveyViewModel = SurveyViewModel()
     @State var pointOfInterestViewModel = PointOfInterestViewModel()
 

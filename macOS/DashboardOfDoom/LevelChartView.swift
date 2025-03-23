@@ -1,58 +1,56 @@
 import Charts
 import SwiftUI
 
-struct ForecastView: View {
-    @Environment(ForecastViewModel.self) private var viewModel
+struct LevelChartView: View {
+    @Environment(LevelPresenter.self) private var presenter
     @State private var timestamp: Date?
-    let header: String
-    let selector: ForecastSelector
+    let selector: ProcessSelector
+    let rounding: RoundingStrategy
+
+    private let labels: [ProcessSelector: String] = [
+        .water(.level): "Level"
+    ]
 
     var body: some View {
         VStack {
-            if viewModel.timestamp == nil {
-                ActivityIndicator()
+            HStack(alignment: .bottom) {
+                Text("\(self.presenter.name) \(self.labels[selector] ?? "<Unknown>")")
+                Spacer()
             }
-            else {
-                HeaderView(label: header, sensor: viewModel.sensor)
-                _view()
-                FooterView(sensor: viewModel.sensor)
-            }
-        }
-        .padding()
-        .cornerRadius(13)
-    }
-
-    func _view() -> some View {
-        VStack {
             Chart {
-                ForEach(viewModel.measurements[selector] ?? []) { measurement in
+                ForEach(presenter.measurements[selector] ?? []) { level in
+                    LineMark(
+                        x: .value("Date", level.timestamp),
+                        y: .value("Level", level.value.value)
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(.gray.opacity(0.0))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
                     AreaMark(
-                        x: .value("Date", Date.round(from: measurement.timestamp, strategy: .previousHour) ?? Date.now),
-                        yStart: .value("Forecast", viewModel.minValue(selector: selector).value),
-                        yEnd: .value("Forecast", measurement.value.value)
+                        x: .value("Date", level.timestamp),
+                        y: .value("Level", level.value.value)
                     )
                     .interpolationMethod(.catmullRom)
                     .foregroundStyle(Gradient.linear)
                 }
 
-                if let measurement = viewModel.current(selector: selector) {
+                if let measurement = presenter.current[selector] {
                     RuleMark(x: .value("Date", measurement.timestamp))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     PointMark(
                         x: .value("Date", measurement.timestamp),
-                        y: .value("Forecast", measurement.value.value)
+                        y: .value("Level", measurement.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .topTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
+                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
                             Text(String(format: "%@ %@", measurement.timestamp.dateString(), measurement.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                if let icon = measurement.customData?["icon"] as? String {
+                                Text(String(format: "%.2f%@", measurement.value.value, measurement.value.unit.symbol))
+                                if let icon = presenter.trend[selector] {
                                     Image(systemName: icon)
                                 }
-                                Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
-                                Image(systemName: viewModel.trend(selector: selector))
                             }
                             .font(.headline)
                         }
@@ -63,23 +61,20 @@ struct ForecastView: View {
                 }
 
                 if let timestamp = self.timestamp {
-                    if let measurement = viewModel.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
-                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: .previousHour) ?? Date.now))
+                    if let measurement = presenter.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
+                        RuleMark(x: .value("Date", timestamp))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
                             x: .value("Date", timestamp),
-                            y: .value("Forecast", measurement.value.value)
+                            y: .value("Level", measurement.value.value)
                         )
                         .symbolSize(CGSize(width: 7, height: 7))
-                        .annotation(position: .bottomTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
+                        .annotation(position: .bottomLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                             VStack {
                                 Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
                                     .font(.footnote)
                                 HStack {
-                                    if let icon = measurement.customData?["icon"] as? String {
-                                        Image(systemName: icon)
-                                    }
-                                    Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
+                                    Text(String(format: "%.2f%@", measurement.value.value, measurement.value.unit.symbol))
                                         .font(.headline)
                                 }
                             }
@@ -90,7 +85,7 @@ struct ForecastView: View {
                     }
                 }
             }
-            .chartYScale(domain: viewModel.minValue(selector: selector).value ... viewModel.maxValue(selector: selector).value)
+            .chartYScale(domain: presenter.range[selector] ?? 0.0 ... 0.0)
             .chartOverlay { geometryProxy in
                 GeometryReader { geometryReader in
                     Rectangle()
@@ -105,7 +100,7 @@ struct ForecastView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: .previousHour) {
+                                                if let target = Date.round(from: source, strategy: self.rounding) {
                                                     self.timestamp = target
                                                 }
                                             }

@@ -1,16 +1,6 @@
 import Foundation
 
-protocol ProcessRendererProtocol {
-    func renderCurrent(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: ProcessValue<Dimension>]
-
-    func renderFaceplate(current: [ProcessSelector: ProcessValue<Dimension>]) -> [ProcessSelector: String]
-
-    func renderRange(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: ClosedRange<Double>]
-
-    func renderTrend(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: String]
-}
-
-class ProcessRenderer: ProcessRendererProtocol {
+class ProcessTransformer: ProcessTransformerProtocol {
     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
     var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
     var faceplate: [ProcessSelector: String] = [:]

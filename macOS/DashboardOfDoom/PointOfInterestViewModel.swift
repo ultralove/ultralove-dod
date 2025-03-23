@@ -1,7 +1,9 @@
 import Foundation
 import SwiftUI
 
-@Observable class PointOfInterestViewModel: LocationManagerDelegate {
+@Observable class PointOfInterestViewModel: Identifiable, LocationManagerDelegate {
+    let id = UUID()
+    
     private let pointOfInterestController = PointOfInterestController()
     private let locationManager = LocationManager()
     private var location: Location?

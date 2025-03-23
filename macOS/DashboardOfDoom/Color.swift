@@ -23,6 +23,7 @@ extension Color {
     static let faceplate = Color(light: Color.blendedBlue, dark: Color.cyan)
     static let chart = Color(light: Color.blendedBlue, dark: Color.cyan)
     static let spaeti = Color(light: Color.blendedBlue, dark: Color.cyan.opacity(0.5))
+    static let treshold = Color(light: Color.black.opacity(0.33), dark: Color.white.opacity(0.33))
     #else
     static let location: Color = .accentColor
     static let userLocation: Color = .accentColor

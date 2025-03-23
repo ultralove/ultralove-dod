@@ -1,6 +1,6 @@
 import Foundation
 
-class ParticleRenderer: ProcessRenderer {
+class ParticleTransformer: ProcessTransformer {
     override func renderFaceplate(current: [ProcessSelector: ProcessValue<Dimension>]) -> [ProcessSelector: String] {
         var faceplate: [ProcessSelector: String] = [:]
         for (selector, current) in self.current {

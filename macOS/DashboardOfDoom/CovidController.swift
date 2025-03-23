@@ -8,8 +8,7 @@ class CovidController: ProcessControllerProtocol {
     init() {
         self.measurementDistance = 24 * 60 * 60  // 1 day
         self.measurementDuration = 167.0  // 167 days
-        self.forecastDuration = Double(Int(self.measurementDuration / 3)) * self.measurementDistance
-//        self.forecastDuration = 37 * self.measurementDistance // 37 days
+        self.forecastDuration = Double(Int(self.measurementDuration / 4)) * self.measurementDistance
     }
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {

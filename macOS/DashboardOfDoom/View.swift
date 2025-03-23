@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct QualityCodeViewModifier: ViewModifier {
-    var qualityCode: ProcessValueQuality
+    var qualityCode: ProcessQuality
 
     var backgroundColor: Color {
         switch qualityCode {
@@ -35,7 +35,7 @@ struct QualityCodeViewModifier: ViewModifier {
 }
 
 extension View {
-    func quality(_ quality: ProcessValueQuality) -> some View {
+    func quality(_ quality: ProcessQuality) -> some View {
         self.modifier(QualityCodeViewModifier(qualityCode: quality))
     }
 }

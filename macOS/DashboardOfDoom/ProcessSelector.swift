@@ -42,6 +42,7 @@ enum ProcessSelector: Hashable {
     }
 
     enum Particle: Int, CaseIterable, RawRepresentable {
+        case all = -1
         case pm10 = 1  // Particulate matter < 10µm
         case pm25 = 9  // Particulate matter < 2.5µm
         case o3 = 3  // Ozone
@@ -100,7 +101,6 @@ enum ProcessSelector: Hashable {
         }
         return .survey(survey)
     }
-
 }
 
 
