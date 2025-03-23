@@ -2,10 +2,10 @@ import CoreLocation
 import Foundation
 import WeatherKit
 
-class ForecastController {
-    func refreshForecast(for location: Location) async throws -> ForecastSensor? {
+class ForecastController: ProcessControllerProtocol {
+    func refreshData(for location: Location) async throws -> ProcessSensor? {
         if let placemark = await LocationManager.reverseGeocodeLocation(location: location) {
-            var measurements: [ForecastSelector: [ProcessValue<Dimension>]] = [:]
+            var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
             let weather = try await WeatherService.shared.weather(for: CLLocation(latitude: location.latitude, longitude: location.longitude))
             let forecast = weather.hourlyForecast.forecast.prefix(111)
@@ -13,40 +13,40 @@ class ForecastController {
             let cloudCover = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.cloudCover * 100, unit: UnitPercentage.percent), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.cloudCover] = cloudCover
+            measurements[.forecast(.cloudCover)] = cloudCover
 
             let dewPoint = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.dewPoint.value, unit: $0.dewPoint.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.dewPoint] = dewPoint
+            measurements[.forecast(.dewPoint)] = dewPoint
 
             let humidity = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.humidity * 100, unit: UnitPercentage.percent), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.humidity] = humidity
+            measurements[.forecast(.humidity)] = humidity
 
             let precipitationChance = forecast.map {
                 ProcessValue<Dimension>(
                     value: Measurement(value: $0.precipitationChance * 100, unit: UnitPercentage.percent), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.precipitationChance] = precipitationChance
+            measurements[.forecast(.precipitationChance)] = precipitationChance
 
             let precipitationAmount = forecast.map {
                 ProcessValue<Dimension>(
                     value: Measurement(value: $0.precipitationAmount.value, unit: $0.precipitationAmount.unit), quality: .uncertain, timestamp: $0.date
                 )
             }
-            measurements[.precipitationAmount] = precipitationAmount
+            measurements[.forecast(.precipitationAmount)] = precipitationAmount
 
             let snowfallAmount = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.snowfallAmount.value, unit: $0.snowfallAmount.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.snowfallAmount] = snowfallAmount
+            measurements[.forecast(.snowfallAmount)] = snowfallAmount
 
             let pressure = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.pressure.value, unit: $0.pressure.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.pressure] = pressure
+            measurements[.forecast(.pressure)] = pressure
 
             let temperature = forecast.map {
                 ProcessValue<Dimension>(
@@ -55,27 +55,27 @@ class ForecastController {
                     timestamp: $0.date
                 )
             }
-            measurements[.temperature] = temperature
+            measurements[.forecast(.temperature)] = temperature
 
             let apparentTemperature = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.apparentTemperature.value, unit: $0.temperature.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.apparentTemperature] = apparentTemperature
+            measurements[.forecast(.apparentTemperature)] = apparentTemperature
 
             let visibility = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.visibility.value, unit: $0.visibility.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.visibility] = visibility
+            measurements[.forecast(.visibility)] = visibility
 
             let windDirection = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.wind.direction.value, unit: $0.wind.direction.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.windDirection] = windDirection
+            measurements[.forecast(.windDirection)] = windDirection
 
             let windSpeed = forecast.map {
                 ProcessValue<Dimension>(value: Measurement(value: $0.wind.speed.value, unit: $0.wind.speed.unit), quality: .uncertain, timestamp: $0.date)
             }
-            measurements[.windSpeed] = windSpeed
+            measurements[.forecast(.windSpeed)] = windSpeed
 
             let windGust = forecast.map {
                 if let gust = $0.wind.gust {
@@ -86,9 +86,9 @@ class ForecastController {
                 }
 
             }
-            measurements[.windGust] = windGust
+            measurements[.forecast(.windGust)] = windGust
 
-            return ForecastSensor(id: nil, placemark: placemark, location: location, measurements: measurements, timestamp: Date.now)
+            return ProcessSensor(name: "", location: location, placemark: placemark, measurements: measurements, timestamp: Date.now)
         }
 
         return nil
