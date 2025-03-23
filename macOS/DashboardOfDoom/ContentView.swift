@@ -29,7 +29,6 @@ struct ContentView: View {
     @Environment(\.openSettings) private var openSettings
     @Environment(\.colorScheme) var colorScheme
     @Environment(WeatherViewModel.self) private var viewModel
-    @Environment(CovidViewModel.self) private var covidPresenter
 
     var body: some View {
         VStack {
@@ -40,7 +39,14 @@ struct ContentView: View {
                     .frame(width: 200, height: 34)
                     .padding(.top, 10)
                 Spacer()
-                HStack {
+                HStack(alignment: .bottom) {
+                    HStack(alignment: .bottom) {
+                        Image(systemName: "ladybug")
+                            .foregroundColor(.red)
+                            .imageScale(.large)
+                        Text("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")")
+                        Text("Build: \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown")")
+                    }
                     Menu {
                         Button("Settings...") {
                         }
@@ -99,14 +105,14 @@ struct ContentView: View {
                         CovidView()
                     }
                     Divider()
-                    SensorPanel(label: "Water Level", icon: "water.waves") {
-                        LevelView(label: "Water Level", selector: .water(.level))
+                    SensorPanel(label: "Water", icon: "water.waves") {
+                        LevelView()
                             .padding(.vertical, 5)
                             .frame(height: 200)
                     }
                     Divider()
                     SensorPanel(label: "Radiation", icon: "atom") {
-                        RadiationView(label: "Radiation", selector: .radiation(.total))
+                        RadiationView()
                             .padding(.vertical, 5)
                             .frame(height: 200)
                     }

@@ -1,8 +1,8 @@
 import Foundation
 
-@Observable class CovidViewModel: ProcessPresenter, ProcessSubscriberProtocol {
-    private let covidController = CovidController()
-    private let covidRenderer = CovidRenderer()
+@Observable class CovidPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+    private let processController = CovidController()
+    private let processTransformer = CovidTransformer()
 
     var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
     var faceplate: [ProcessSelector: String] = [:]
@@ -11,14 +11,14 @@ import Foundation
 
     override init() {
         super.init()
-        let subscriptionManager = ProcessManager.shared
-        subscriptionManager.addSubscription(delegate: self, timeout: 360)  // 6  hours
+        let processManager = ProcessManager.shared
+        processManager.add(subscriber: self, timeout: 360)  // 6  hours
     }
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await covidController.refreshData(for: location) {
-                try self.covidRenderer.renderData(sensor: sensor)
+            if let sensor = try await processController.refreshData(for: location) {
+                try self.processTransformer.renderData(sensor: sensor)
                 await self.publishData(sensor: sensor)
             }
         }
@@ -30,11 +30,11 @@ import Foundation
     @MainActor func publishData(sensor: ProcessSensor) async {
         self.sensor = sensor
         self.timestamp = sensor.timestamp
-        self.measurements = self.covidRenderer.measurements
-        self.current = self.covidRenderer.current
-        self.faceplate = self.covidRenderer.faceplate
-        self.range = self.covidRenderer.range
-        self.trend = self.covidRenderer.trend
+        self.measurements = self.processTransformer.measurements
+        self.current = self.processTransformer.current
+        self.faceplate = self.processTransformer.faceplate
+        self.range = self.processTransformer.range
+        self.trend = self.processTransformer.trend
 
         MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }

@@ -1,14 +1,7 @@
 import Foundation
 
-protocol ProcessControllerProtocol {
-    func refreshData(for location: Location) async throws -> ProcessSensor?
-}
-
-protocol ProcessSubscriberProtocol: Identifiable where ID == UUID {
-    func refreshData(location: Location) async
-}
-
-class ProcessManager: LocationManagerDelegate {
+class ProcessManager: Identifiable, LocationManagerDelegate {
+    let id = UUID()
     static let shared = ProcessManager()
 
     private let locationManager = LocationManager()
@@ -16,7 +9,7 @@ class ProcessManager: LocationManagerDelegate {
 
     private let updateInterval: TimeInterval = 60
     private var subscriptions: [ProcessSubscription] = []
-    private var delegates: [UUID: any ProcessSubscriberProtocol] = [:]
+    private var subscribers: [UUID: any ProcessSubscriberProtocol] = [:]
 
     private init() {
         self.locationManager.delegate = self
@@ -29,7 +22,7 @@ class ProcessManager: LocationManagerDelegate {
         for subscription in self.subscriptions {
             subscription.update(timeout: self.updateInterval)
             if subscription.isPending() {
-                if let delegate = self.delegates[subscription.id], let location = self.location {
+                if let delegate = self.subscribers[subscription.id], let location = self.location {
                     Task {
                         await delegate.refreshData(location: location)
                     }
@@ -52,7 +45,7 @@ class ProcessManager: LocationManagerDelegate {
 
     func refresh() {
         if let location = self.location {
-        for delegate in self.delegates.values {
+        for delegate in self.subscribers.values {
                 Task {
             await delegate.refreshData(location: location)
         }
@@ -62,13 +55,13 @@ class ProcessManager: LocationManagerDelegate {
     }
 
 
-    func addSubscription(delegate: any ProcessSubscriberProtocol, timeout: TimeInterval) {
-        self.subscriptions.append(ProcessSubscription(id: delegate.id, timeout: timeout * 60))
-        self.delegates[delegate.id] = delegate
+    func add(subscriber: any ProcessSubscriberProtocol, timeout: TimeInterval) {
+        self.subscriptions.append(ProcessSubscription(id: subscriber.id, timeout: timeout * 60))
+        self.subscribers[subscriber.id] = subscriber
     }
 
-    func removeSubscription(id: UUID) {
+    func remove(subscriber: any ProcessSubscriberProtocol) {
         self.subscriptions.removeAll { $0.id == id }
-        self.delegates.removeValue(forKey: id)
+        self.subscribers.removeValue(forKey: subscriber.id)
     }
 }

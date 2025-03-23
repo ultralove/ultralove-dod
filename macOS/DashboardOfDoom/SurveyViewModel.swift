@@ -10,8 +10,8 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = ProcessManager.shared
-        subscriptionManager.addSubscription(delegate: self, timeout: 30)  // 30 minutes
+        let processManager = ProcessManager.shared
+        processManager.add(subscriber: self, timeout: 30)  // 30 minutes
     }
 
     var maxValue: Measurement<Dimension> {
@@ -163,7 +163,7 @@ import SwiftUI
         return aggregatedMeasurements
     }
 
-    private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessValueQuality) -> ProcessValue<Dimension> {
+    private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessQuality) -> ProcessValue<Dimension> {
         let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
         let unit = measurements.count > 0 ? measurements[0].value.unit : UnitPercentage.percent // Use hardcoded unit if no measurements are available
         return ProcessValue<Dimension>(value: Measurement<Dimension>(value: value, unit: unit), quality: quality, timestamp: timestamp)

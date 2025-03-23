@@ -32,8 +32,8 @@ import Foundation
         return sensor?.location
     }
 
-    var placemark: String? {
-        return sensor?.placemark
+    var placemark: String {
+        return sensor?.placemark ?? "<Unknown>"
     }
 
     func isAvailable(selector: ProcessSelector) -> Bool {

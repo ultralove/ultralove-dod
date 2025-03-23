@@ -9,8 +9,8 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = ProcessManager.shared
-        subscriptionManager.addSubscription(delegate: self, timeout: 5)  // 5 minutes
+        let processManager = ProcessManager.shared
+        processManager.add(subscriber: self, timeout: 5)  // 5 minutes
     }
 
     func icon(selector: ForecastSelector) -> String? {
@@ -115,7 +115,7 @@ import SwiftUI
         for (selector, forecast) in measurements {
             var sanitizedForecast: [ProcessValue<Dimension>] = []
             for value in forecast {
-                let quality = (value.timestamp < Date.now) ? ProcessValueQuality.good : ProcessValueQuality.uncertain
+                let quality = (value.timestamp < Date.now) ? ProcessQuality.good : ProcessQuality.uncertain
                 sanitizedForecast.append(
                     ProcessValue<Dimension>(
                         value: Measurement(value: value.value.value, unit: value.value.unit),

@@ -1,6 +1,6 @@
 import Foundation
 
-class CovidRenderer: ProcessRenderer {
+class CovidTransformer: ProcessTransformer {
     override func renderCurrent(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: ProcessValue<Dimension>] {
         var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
         for (selector, values) in measurements {

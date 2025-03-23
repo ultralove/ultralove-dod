@@ -12,8 +12,8 @@ struct PointOfInterestView: MapContent {
             VStack {
                 if self.color == .green {
                     Circle()
-//                        .fill(Color.blendedBlue)
-//                        .fill(Color.blue.opacity(0.5))
+                        //                        .fill(Color.blendedBlue)
+                        //                        .fill(Color.blue.opacity(0.5))
                         .fill(Color.spaeti)
                         .frame(width: 6, height: 6)
 
@@ -151,12 +151,46 @@ struct Faceplate2: MapContent {
     }
 }
 
+struct PulsatingImage: View {
+    let systemName: String
+    let scale: ClosedRange<Double>
+    let opacity: ClosedRange<Double>
+    let duration: Double
+    @State private var isPulsing = false
+
+    init(
+        systemName: String = "heart.fill", scale: ClosedRange<Double> = 1.0 ... 1.1, opacity: ClosedRange<Double> = 0.9 ... 1.0,
+        duration: Double = 3.0
+    ) {
+        self.systemName = systemName
+        self.scale = scale
+        self.opacity = opacity
+        self.duration = duration
+    }
+
+    var body: some View {
+        ZStack {
+            Image(systemName: systemName)
+                .scaleEffect(isPulsing ? self.scale.upperBound : self.scale.lowerBound)
+                .opacity(isPulsing ? self.opacity.upperBound : self.opacity.lowerBound)
+        }
+        .onAppear {
+            withAnimation(
+                Animation.easeInOut(duration: self.duration)
+                    .repeatForever(autoreverses: true)
+            ) {
+                isPulsing = true
+            }
+        }
+    }
+}
+
 struct MapView: View {
     @Environment(WeatherViewModel.self) private var weather
-    @Environment(CovidViewModel.self) private var incidence
-    @Environment(LevelViewModel.self) private var water
-    @Environment(RadiationViewModel.self) private var radiation
-    @Environment(ParticleViewModel.self) private var particle
+    @Environment(CovidPresenter.self) private var incidence
+    @Environment(LevelPresenter.self) private var water
+    @Environment(RadiationPresenter.self) private var radiation
+    @Environment(ParticlePresenter.self) private var particle
     @Environment(SurveyViewModel.self) private var surveys
     @Environment(PointOfInterestViewModel.self) private var pointsOfInterest
 
@@ -171,16 +205,37 @@ struct MapView: View {
 
     var body: some View {
         VStack {
-            HeaderView(label: "Environmental conditions", sensor: weather.sensor)
+            HStack {
+                Image(systemName: "stethoscope")
+                    .imageScale(.large)
+                    .frame(width: 23)
+                Text("Environmental conditions:")
+                Spacer()
+            }
+            .fontWeight(.light)
+
+            if let sensor = weather.sensor {
+                HStack(alignment: .bottom) {
+                    Image(systemName: "safari")
+                    Text(String(format: "%@", sensor.placemark ?? "<Unknown>"))
+                    Spacer()
+                    Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
+                        .foregroundColor(.gray)
+
+                }
+                .padding(.vertical, 5)
+                .padding(.leading, 5)
+                .font(.footnote)
+            }
+
             if weather.timestamp == nil {
                 ActivityIndicator()
             }
             else {
                 _view()
             }
-            FooterView(sensor: weather.sensor)
         }
-        .padding()
+        .padding(.horizontal)
         .cornerRadius(13)
     }
 
@@ -229,9 +284,9 @@ struct MapView: View {
                 if let sensor = radiation.sensor {
                     Faceplate2(sensor: sensor, label: radiation.faceplate[.radiation(.total)], icon: radiation.icon, anchor: .bottomLeading)
                 }
-//                if let sensor = surveys.sensor {
-//                    Faceplate(sensor: sensor, label: surveys.faceplate(selector: .fascists), icon: surveys.icon, anchor: .bottomLeading)
-//                }
+                //                if let sensor = surveys.sensor {
+                //                    Faceplate(sensor: sensor, label: surveys.faceplate(selector: .fascists), icon: surveys.icon, anchor: .bottomLeading)
+                //                }
             }
             .allowsHitTesting(false)
         }

@@ -11,8 +11,8 @@ import SwiftUI
     var timestamp: Date? = nil
 
     init() {
-        let subscriptionManager = ProcessManager.shared
-        subscriptionManager.addSubscription(delegate: self, timeout: 5)  // 5 minutes
+        let processManager = ProcessManager.shared
+        processManager.add(subscriber: self, timeout: 5)  // 5 minutes
     }
 
     func faceplate(selector: WeatherSelector) -> String {
