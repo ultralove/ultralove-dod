@@ -3,7 +3,7 @@ import Foundation
 class RadiationService {
     static func fetchStations() async throws -> Data? {
         let endpoint =
-            "https://www.imis.bfs.de/ogc/opendata/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=opendata:odlinfo_odl_1h_latest&outputFormat=application/json"
+        "https://www.imis.bfs.de/ogc/opendata/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=opendata:odlinfo_odl_1h_latest&outputFormat=application/json"
         guard let url = URL(string: endpoint) else {
             return nil
         }
