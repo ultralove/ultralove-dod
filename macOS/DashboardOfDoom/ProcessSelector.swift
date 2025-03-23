@@ -2,7 +2,7 @@ import Foundation
 
 enum ProcessSelector: Hashable {
     case weather(Weather)
-    case forecast(Weather)
+    case forecast(Forecast)
     case covid(Covid)
     case water(Water)
     case particle(Particle)
@@ -26,17 +26,15 @@ enum ProcessSelector: Hashable {
     }
 
     enum Forecast: Int, CaseIterable {
-        case cloudCover = 0
+        case temperature = 7
+        case apparentTemperature = 8
         case dewPoint = 1
         case humidity = 2
         case precipitationChance = 3
         case precipitationAmount = 4
-        case snowfallAmount = 5
         case pressure = 6
-        case temperature = 7
-        case apparentTemperature = 8
         case visibility = 9
-        case windDirection = 10
+        case cloudCover = 0
         case windSpeed = 11
         case windGust = 12
     }

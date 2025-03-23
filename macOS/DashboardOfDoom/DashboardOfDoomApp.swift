@@ -4,7 +4,7 @@ import SwiftUI
 @main
 struct DashboardOfDoomApp: App {
     @State var weatherViewModel = WeatherViewModel()
-    @State var forecastViewModel = ForecastViewModel()
+    @State var forecastPresenter = ForecastPresenter()
     @State var covidPresenter = CovidPresenter()
     @State var levelPresenter = LevelPresenter()
     @State var radiationPresenter = RadiationPresenter()
@@ -20,7 +20,7 @@ struct DashboardOfDoomApp: App {
                 .preferredColorScheme(.dark)
 //                .accentColor(.init(light: .blue, dark: .orange))
                 .environment(weatherViewModel)
-                .environment(forecastViewModel)
+                .environment(forecastPresenter)
                 .environment(covidPresenter)
                 .environment(levelPresenter)
                 .environment(radiationPresenter)

@@ -1,8 +1,8 @@
-import Foundation
+import SwiftUI
 
-@Observable class CovidPresenter: ProcessPresenter, ProcessSubscriberProtocol {
-    private let processController = CovidController()
-    private let processTransformer = CovidTransformer()
+@Observable class ForecastPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+    private let processController = ForecastController()
+    private let processTransformer = ForecastTransformer()
 
     var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
     var faceplate: [ProcessSelector: String] = [:]
@@ -12,7 +12,7 @@ import Foundation
     override init() {
         super.init()
         let processManager = ProcessManager.shared
-        processManager.add(subscriber: self, timeout: 360)  // 6  hours
+        processManager.add(subscriber: self, timeout: 5)  // 5 minutes
     }
 
     func refreshData(location: Location) async -> Void {
@@ -27,7 +27,7 @@ import Foundation
         }
     }
 
-    @MainActor func publishData(sensor: ProcessSensor) async {
+    @MainActor func publishData(sensor: ProcessSensor) async -> Void {
         self.sensor = sensor
         self.timestamp = sensor.timestamp
 
@@ -36,7 +36,5 @@ import Foundation
         self.faceplate = self.processTransformer.faceplate
         self.range = self.processTransformer.range
         self.trend = self.processTransformer.trend
-
-        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
     }
 }

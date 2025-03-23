@@ -2,122 +2,39 @@ import Charts
 import SwiftUI
 
 struct ForecastView: View {
-    @Environment(ForecastViewModel.self) private var viewModel
-    @State private var timestamp: Date?
-    let header: String
-    let selector: ForecastSelector
+    @Environment(ForecastPresenter.self) private var presenter
 
     var body: some View {
         VStack {
-            if viewModel.timestamp == nil {
+            if self.presenter.timestamp == nil {
                 ActivityIndicator()
             }
             else {
-                HeaderView(label: header, sensor: viewModel.sensor)
-                _view()
-                FooterView(sensor: viewModel.sensor)
+                HStack(alignment: .bottom) {
+                    HStack {
+                        Image(systemName: "safari")
+                        Text(String(format: "%@", self.presenter.placemark))
+                    }
+                    Spacer()
+                    Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
+                        .foregroundColor(.gray)
+                }
+                .font(.footnote)
+
+                ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
+                    if self.presenter.isAvailable(selector: .forecast(selector)) {
+                        VStack {
+                            ForecastChartView(selector: .forecast(selector), rounding: .previousHour)
+                        }
+                        .padding(.vertical, 5)
+                        .frame(height: 167)
+                    }
+                }
             }
         }
-        .padding()
+        .padding(5)
+        .padding(.trailing, 10)
         .cornerRadius(13)
     }
-
-    func _view() -> some View {
-        VStack {
-            Chart {
-                ForEach(viewModel.measurements[selector] ?? []) { measurement in
-                    AreaMark(
-                        x: .value("Date", Date.round(from: measurement.timestamp, strategy: .previousHour) ?? Date.now),
-                        yStart: .value("Forecast", viewModel.minValue(selector: selector).value),
-                        yEnd: .value("Forecast", measurement.value.value)
-                    )
-                    .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Gradient.linear)
-                }
-
-                if let measurement = viewModel.current(selector: selector) {
-                    RuleMark(x: .value("Date", measurement.timestamp))
-                        .lineStyle(StrokeStyle(lineWidth: 1))
-                    PointMark(
-                        x: .value("Date", measurement.timestamp),
-                        y: .value("Forecast", measurement.value.value)
-                    )
-                    .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .topTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
-                        VStack {
-                            Text(String(format: "%@ %@", measurement.timestamp.dateString(), measurement.timestamp.timeString()))
-                                .font(.footnote)
-                            HStack {
-                                if let icon = measurement.customData?["icon"] as? String {
-                                    Image(systemName: icon)
-                                }
-                                Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
-                                Image(systemName: viewModel.trend(selector: selector))
-                            }
-                            .font(.headline)
-                        }
-                        .padding(7)
-                        .padding(.horizontal, 7)
-                        .quality(measurement.quality)
-                    }
-                }
-
-                if let timestamp = self.timestamp {
-                    if let measurement = viewModel.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
-                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: .previousHour) ?? Date.now))
-                            .lineStyle(StrokeStyle(lineWidth: 1))
-                        PointMark(
-                            x: .value("Date", timestamp),
-                            y: .value("Forecast", measurement.value.value)
-                        )
-                        .symbolSize(CGSize(width: 7, height: 7))
-                        .annotation(position: .bottomTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
-                            VStack {
-                                Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
-                                    .font(.footnote)
-                                HStack {
-                                    if let icon = measurement.customData?["icon"] as? String {
-                                        Image(systemName: icon)
-                                    }
-                                    Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
-                                        .font(.headline)
-                                }
-                            }
-                            .padding(7)
-                            .padding(.horizontal, 7)
-                            .quality(measurement.quality)
-                        }
-                    }
-                }
-            }
-            .chartYScale(domain: viewModel.minValue(selector: selector).value ... viewModel.maxValue(selector: selector).value)
-            .chartOverlay { geometryProxy in
-                GeometryReader { geometryReader in
-                    Rectangle()
-                        .fill(.clear)
-                        .contentShape(Rectangle())
-                        .simultaneousGesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    let horizontalAmount = abs(value.translation.width)
-                                    let verticalAmount = abs(value.translation.height)
-                                    if horizontalAmount > verticalAmount * 2.0 {
-                                        if let plotFrame = geometryProxy.plotFrame {
-                                            let x = value.location.x - geometryReader[plotFrame].origin.x
-                                            if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: .previousHour) {
-                                                    self.timestamp = target
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                .onEnded { value in
-                                    self.timestamp = nil
-                                }
-                        )
-                }
-            }
-        }
-    }
 }
+
