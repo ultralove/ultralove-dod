@@ -24,7 +24,7 @@ struct SurveyView: View {
                 ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .survey(selector)) {
                         VStack {
-                            SurveyChartView(selector: .survey(selector), rounding: .previousHour)
+                            SurveyChartView(selector: .survey(selector), rounding: .lastUTCDayChange)
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

@@ -16,8 +16,7 @@ struct SurveyChartView: View {
         .survey(.afd): "AfD",
         .survey(.fdp): "FDP",
         .survey(.bsw): "BSW",
-        .survey(.cducsu): "CDU/CSU",
-        .survey(.sonstige): "Sonstige"
+        .survey(.cducsu): "CDU/CSU"
     ]
 
     var body: some View {
@@ -111,7 +110,7 @@ struct SurveyChartView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: .lastUTCDayChange) {
+                                                if let target = Date.round(from: source, strategy: self.rounding) {
                                                     self.timestamp = target
                                                 }
                                             }

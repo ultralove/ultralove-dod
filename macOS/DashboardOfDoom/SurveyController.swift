@@ -80,8 +80,7 @@ class SurveyController: ProcessControllerProtocol {
                         ProcessSelector.survey(.afd).rawValue,
                         ProcessSelector.survey(.fdp).rawValue,
                         ProcessSelector.survey(.bsw).rawValue,
-                        ProcessSelector.survey(.cducsu).rawValue,
-                        ProcessSelector.survey(.sonstige).rawValue
+                        ProcessSelector.survey(.cducsu).rawValue
                     ]
                     let descriptors = try await parseParties(from: data, constraints: constraints)
                     for (selector, _) in descriptors {
