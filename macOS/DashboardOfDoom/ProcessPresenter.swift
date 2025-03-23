@@ -37,7 +37,10 @@ import Foundation
     }
 
     func isAvailable(selector: ProcessSelector) -> Bool {
-        return self.measurements[selector]?.isEmpty == false
+        guard let measurements = self.measurements[selector] else {
+            return false
+        }
+        return measurements.count > 0
     }
 }
 

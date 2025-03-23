@@ -80,14 +80,17 @@ enum ProcessSelector: Hashable {
     }
 
     enum Survey: Int, CaseIterable, RawRepresentable {
-        case sonstige = 0
-        case cducsu = 1
+        case fascists = 999
+        case clowns = 998
+        case linke = 5
+        case gruene = 4
         case spd = 2
         case fdp = 3
-        case gruene = 4
-        case linke = 5
-        case piraten = 6
         case afd = 7
+        case bsw = 23
+        case cducsu = 1
+        case sonstige = 0
+        case piraten = 6
         case freie_waehler = 8
         case npd = 9
         case ssw = 10
@@ -101,13 +104,10 @@ enum ProcessSelector: Hashable {
         case volt = 18
         case bunt_saar = 21
         case bfth = 22
-        case bsw = 23
         case plus_brandenburg = 24
         case werte_union = 25
         case cdu = 101
         case csu = 102
-        case clowns = 998
-        case fascists = 999
     }
 
     static func survey(from rawValue: Int) -> ProcessSelector? {
@@ -115,6 +115,25 @@ enum ProcessSelector: Hashable {
             return nil
         }
         return .survey(survey)
+    }
+
+    var rawValue: Int {
+        switch self {
+            case .weather(let weatherType):
+                return weatherType.rawValue
+            case .forecast(let forecastType):
+                return forecastType.rawValue
+            case .covid(let covidType):
+                return covidType.rawValue
+            case .water(let waterType):
+                return waterType.rawValue
+            case .particle(let particleType):
+                return particleType.rawValue
+            case .radiation(let radiationType):
+                return radiationType.rawValue
+            case .survey(let surveyType):
+                return surveyType.rawValue
+        }
     }
 }
 

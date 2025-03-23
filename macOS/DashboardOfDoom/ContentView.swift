@@ -86,14 +86,12 @@ struct ContentView: View {
                     Divider()
                     SensorPanel(label: "Water", icon: "water.waves") {
                         LevelView()
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
                     }
                     Divider()
                     SensorPanel(label: "Radiation", icon: "atom") {
                         RadiationView()
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
+//                            .padding(.vertical, 5)
+//                            .frame(height: 200)
                     }
                     Divider()
                     SensorPanel(label: "Particulate Matter", icon: "aqi.medium") {
@@ -101,36 +99,7 @@ struct ContentView: View {
                     }
                     Divider()
                     SensorPanel(label: "Election Polls", icon: "popcorn") {
-                        SurveyView(header: "Fascists vote share in", selector: .fascists)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "Clowns vote share in", selector: .clowns)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "Die Linke vote share in", selector: .linke)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "Die Grünen vote share in", selector: .gruene)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "SPD vote share in", selector: .spd)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "AfD vote share in", selector: .afd)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "FDP vote share in", selector: .fdp)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "BSW vote share in", selector: .bsw)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "CDU/CSU vote share in", selector: .cducsu)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
-                        SurveyView(header: "Sonstige vote share in", selector: .sonstige)
-                            .padding(.vertical, 5)
-                            .frame(height: 200)
+                        SurveyView()
                     }
                 }
             }

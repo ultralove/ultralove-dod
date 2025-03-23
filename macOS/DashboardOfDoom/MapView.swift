@@ -191,7 +191,7 @@ struct MapView: View {
     @Environment(LevelPresenter.self) private var water
     @Environment(RadiationPresenter.self) private var radiation
     @Environment(ParticlePresenter.self) private var particle
-    @Environment(SurveyViewModel.self) private var surveys
+    @Environment(SurveyPresenter.self) private var surveys
     @Environment(PointOfInterestViewModel.self) private var pointsOfInterest
 
     private var viewModel = MapViewModel.shared

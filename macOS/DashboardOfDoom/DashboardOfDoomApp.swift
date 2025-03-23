@@ -9,7 +9,7 @@ struct DashboardOfDoomApp: App {
     @State var levelPresenter = LevelPresenter()
     @State var radiationPresenter = RadiationPresenter()
     @State var particlePresenter = ParticlePresenter()
-    @State var surveyViewModel = SurveyViewModel()
+    @State var surveyPresenter = SurveyPresenter()
     @State var pointOfInterestViewModel = PointOfInterestViewModel()
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -25,7 +25,7 @@ struct DashboardOfDoomApp: App {
                 .environment(levelPresenter)
                 .environment(radiationPresenter)
                 .environment(particlePresenter)
-                .environment(surveyViewModel)
+                .environment(surveyPresenter)
                 .environment(pointOfInterestViewModel)
 
         } label: {

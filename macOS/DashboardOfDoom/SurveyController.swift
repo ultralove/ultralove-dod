@@ -18,25 +18,30 @@ private struct Parliament {
     let name: String
 }
 
-struct SurveyDescriptor {
+struct Descriptor {
     let shortcut: String
     let name: String
 }
 
-class SurveyController {
+class SurveyController: ProcessControllerProtocol {
     private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
 
-    let officialFascists = [7, 9, 11, 14, 16, 22, 25]
-    let realFascists = [1, 7, 8, 9, 11, 14, 16, 22, 25, 101, 102]
-    let officialClowns = [3]
-    let realClowns = [3, 18, 23]
-    let cducsu = [1, 101, 102]
-    let afd = [7]
-    let fdp = [3]
-    let bsw = [23]
+    let officialFascists: [ProcessSelector] = [
+        .survey(.afd), .survey(.npd), .survey(.bayernpartei), .survey(.bvb_fw), .survey(.biw), .survey(.bfth), .survey(.bsw), .survey(.werte_union)
+    ]
+    let realFascists: [ProcessSelector] = [
+        .survey(.cducsu), .survey(.afd), .survey(.freie_waehler), .survey(.npd), .survey(.bayernpartei), .survey(.bvb_fw), .survey(.biw),
+        .survey(.bfth), .survey(.bsw), .survey(.werte_union), .survey(.cdu), .survey(.csu)
+    ]
+    let officialClowns: [ProcessSelector] = [.survey(.fdp)]
+    let realClowns: [ProcessSelector] = [.survey(.fdp), .survey(.volt)]
 
-    func refreshFederalSurveys(for location: Location) async throws -> SurveySensor? {
-        var sensor: SurveySensor? = nil
+    func refreshData(for location: Location) async throws -> ProcessSensor? {
+        return try await self.refreshFederalSurveys(for: location)
+    }
+
+    private func refreshFederalSurveys(for location: Location) async throws -> ProcessSensor? {
+        var sensor: ProcessSensor? = nil
         let sensorName = germany.name
         let sensorLocation = germany.location
         let parliamentId = 0  // Bundestag
@@ -46,33 +51,44 @@ class SurveyController {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(47).reversed())
-                    var measurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
+                    var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
                     var values: [ProcessValue<Dimension>] = []
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
-                        measurements[.fascists] = values
+                        measurements[.survey(.fascists)] = values
                     }
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
-                        measurements[.clowns] = values
+                        measurements[.survey(.clowns)] = values
                     }
 
-                    let descriptors = try await parseParties(from: data)
+                    let constraints = [
+                        ProcessSelector.survey(.linke).rawValue,
+                        ProcessSelector.survey(.gruene).rawValue,
+                        ProcessSelector.survey(.spd).rawValue,
+                        ProcessSelector.survey(.afd).rawValue,
+                        ProcessSelector.survey(.fdp).rawValue,
+                        ProcessSelector.survey(.bsw).rawValue,
+                        ProcessSelector.survey(.cducsu).rawValue,
+                        ProcessSelector.survey(.sonstige).rawValue
+                    ]
+                    let descriptors = try await parseParties(from: data, constraints: constraints)
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
                         for poll in significantPolls {
-                            let measurement = Measurement<Dimension>(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
+                            let measurement = Measurement<Dimension>(
+                                value: Self.computeShare([selector], from: poll), unit: UnitPercentage.percent)
                             let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                             values.append(fascism)
                         }
@@ -81,9 +97,11 @@ class SurveyController {
                         }
                     }
 
+                    measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
                     if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
-                        sensor = SurveySensor(
-                            id: sensorName, placemark: placemark, customData: ["icon": "popcorn"], location: sensorLocation, measurements: measurements, timestamp: Date.now)
+                        sensor = ProcessSensor(
+                            name: sensorName, location: sensorLocation, placemark: placemark, customData: ["icon": "popcorn"],
+                            measurements: measurements, timestamp: Date.now)
                     }
                 }
             }
@@ -91,8 +109,8 @@ class SurveyController {
         return sensor
     }
 
-    func refreshLocalSurveys(for location: Location) async throws -> SurveySensor? {
-        var sensor: SurveySensor? = nil
+    private func refreshLocalSurveys(for location: Location) async throws -> ProcessSensor? {
+        var sensor: ProcessSensor? = nil
         var sensorName = germany.name
         var sensorLocation = germany.location
         var parliamentId = 0  // Bundestag
@@ -109,39 +127,40 @@ class SurveyController {
                 }
             }
         }
-        
+
         if let data = try await SurveyService.fetchPolls() {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(47).reversed())
-                    var measurements: [SurveySelector: [ProcessValue<Dimension>]] = [:]
+                    var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
                     var values: [ProcessValue<Dimension>] = []
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
-                        measurements[.fascists] = values
+                        measurements[.survey(.fascists)] = values
                     }
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
                     if values.count > 0 {
-                        measurements[.clowns] = values
+                        measurements[.survey(.clowns)] = values
                     }
 
-                    let descriptors = try await parseParties(from: data)
+                    let descriptors = try await parseParties(from: data, constraints: [])
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
                         for poll in significantPolls {
-                            let measurement = Measurement<Dimension>(value: computeShare([selector.rawValue], from: poll), unit: UnitPercentage.percent)
+                            let measurement = Measurement<Dimension>(
+                                value: Self.computeShare([selector], from: poll), unit: UnitPercentage.percent)
                             let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                             values.append(fascism)
                         }
@@ -151,8 +170,8 @@ class SurveyController {
                     }
 
                     if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
-                        sensor = SurveySensor(
-                            id: sensorName, placemark: placemark, location: sensorLocation, measurements: measurements, timestamp: Date.now)
+                        sensor = ProcessSensor(
+                            name: sensorName, location: sensorLocation, placemark: placemark, measurements: measurements, timestamp: Date.now)
                     }
                 }
             }
@@ -201,11 +220,11 @@ class SurveyController {
         return nearestConstituency
     }
 
-    private func computeShare(_ selector: [Int], from poll: Poll) -> Double {
+    private static func computeShare(_ selectors: [ProcessSelector], from poll: Poll) -> Double {
         var score = 0.0
-        let fascists = selector
-        for fascist in fascists {
-            if let result = poll.results[fascist] {
+        for selector in selectors {
+            let index: Int = selector.rawValue
+            if let result = poll.results[index] {
                 score += result
             }
         }
@@ -231,18 +250,20 @@ class SurveyController {
         return parliaments
     }
 
-    private func parseParties(from data: Data) async throws -> [SurveySelector: SurveyDescriptor] {
-        var parties: [SurveySelector: SurveyDescriptor] = [:]
+    private func parseParties(from data: Data, constraints: [Int]) async throws -> [ProcessSelector: Descriptor] {
+        var parties: [ProcessSelector: Descriptor] = [:]
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["Parties"] as? [String: Any] {
                 parties = [:]
                 for element in elements {
                     if let id = Int(element.key) {
-                        if let selector = SurveySelector(rawValue: id) {
-                            if let party = elements[element.key] as? [String: Any] {
-                                if let shortcut = party["Shortcut"] as? String {
-                                    if let name = party["Name"] as? String {
-                                        parties[selector] = SurveyDescriptor(shortcut: shortcut, name: name)
+                        if constraints.contains(id) {
+                        if let selector = ProcessSelector.Survey(rawValue: id) {
+                                if let party = elements[element.key] as? [String: Any] {
+                                    if let shortcut = party["Shortcut"] as? String {
+                                        if let name = party["Name"] as? String {
+                                            parties[.survey(selector)] = Descriptor(shortcut: shortcut, name: name)
+                                        }
                                     }
                                 }
                             }
@@ -296,7 +317,9 @@ class SurveyController {
                                                                 }
                                                             }
                                                             polls?.append(
-                                                                Poll(id: id, parliament: parliamentId, institute: instituteId, results: results, timestamp: timestamp))
+                                                                Poll(
+                                                                    id: id, parliament: parliamentId, institute: instituteId, results: results,
+                                                                    timestamp: timestamp))
                                                         }
                                                     }
                                                 }
@@ -323,4 +346,81 @@ class SurveyController {
         }
         return timestamp
     }
+
+    private func interpolateMeasurements(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) async -> [ProcessSelector: [ProcessValue<Dimension>]] {
+        var interpolatedMeasurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
+        for (selector, measurement) in measurements {
+            interpolatedMeasurements[selector] = await self.interpolateMeasurement(measurements: measurement)
+        }
+        return interpolatedMeasurements
+    }
+
+    private func interpolateMeasurement(measurements: [ProcessValue<Dimension>]) async -> [ProcessValue<Dimension>] {
+        var interpolatedMeasurement: [ProcessValue<Dimension>] = []
+        if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
+            var current = start
+            if var last = measurements.first {
+                while current <= end {
+                    if let match = measurements.first(where: { $0.timestamp == current }) {
+                        last = match
+                        interpolatedMeasurement.append(match)
+                    }
+                    else {
+                        interpolatedMeasurement
+                            .append(
+                                ProcessValue<Dimension>(
+                                    value: Measurement(value: last.value.value, unit: UnitPercentage.percent), quality: .uncertain,
+                                    timestamp: current))
+                    }
+                    current = current.addingTimeInterval(60 * 60 * 24)
+                }
+            }
+        }
+        if let forecast = Self.forecast(data: interpolatedMeasurement) {
+            interpolatedMeasurement.append(contentsOf: forecast)
+        }
+        return interpolatedMeasurement
+    }
+
+    private func aggregateMeasurements(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) async -> [ProcessSelector: [ProcessValue<Dimension>]] {
+        var aggregatedMeasurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
+        for (selector, measurement) in measurements {
+            let uniqueMeasurements = Dictionary(grouping: measurement) { $0.timestamp }
+                .map { timestamp, values in
+                    self.aggregateMeasurement(timestamp: timestamp, measurements: values, quality: .uncertain)
+                }.sorted(by: { $0.timestamp < $1.timestamp })
+            aggregatedMeasurements[selector] = uniqueMeasurements
+        }
+        return aggregatedMeasurements
+    }
+
+    private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessQuality) -> ProcessValue<Dimension> {
+        let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
+        let unit = measurements.count > 0 ? measurements[0].value.unit : UnitPercentage.percent // Use hardcoded unit if no measurements are available
+        return ProcessValue<Dimension>(value: Measurement<Dimension>(value: value, unit: unit), quality: quality, timestamp: timestamp)
+    }
+
+    private static func forecast(data: [ProcessValue<Dimension>]?) -> [ProcessValue<Dimension>]? {
+        var forecast: [ProcessValue<Dimension>]? = nil
+        guard let historicalData = data, historicalData.count > 0 else {
+            return nil
+        }
+        let unit = historicalData[0].value.unit
+        let historicalDataPoints = historicalData.map { incidence in
+            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+        }
+        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
+        do {
+            try predictor.addData(historicalDataPoints)
+            let prediction = try predictor.forecast(duration: 23 * 24 * 3600)  // 23 days
+            forecast = prediction.forecasts.map { forecast in
+                ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+            }
+        }
+        catch {
+            trace.error("Forecasting error: \(error)")
+        }
+        return forecast
+    }
+
 }
