@@ -1,6 +1,6 @@
 import Foundation
 
-class UnitIncidence: Dimension {
+class UnitIncidence: Dimension, @unchecked Sendable {
     static let casesPer100k = UnitIncidence(
         symbol: "\u{2081}\u{2080}\u{2080}\u{2096}",
         converter: UnitConverterLinear(coefficient: 1.0)

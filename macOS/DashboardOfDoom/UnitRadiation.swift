@@ -1,6 +1,6 @@
 import Foundation
 
-class UnitRadiation: Dimension {
+class UnitRadiation: Dimension, @unchecked Sendable {
     static let sieverts = UnitRadiation(
         symbol: "Sv/h",
         converter: UnitConverterLinear(coefficient: 1.0)

@@ -1,6 +1,6 @@
 import Foundation
 
-class UnitPercentage: Dimension {
+class UnitPercentage: Dimension, @unchecked Sendable {
     static let percent = UnitPercentage(
         symbol: "%",
         converter: UnitConverterLinear(coefficient: 1.0)

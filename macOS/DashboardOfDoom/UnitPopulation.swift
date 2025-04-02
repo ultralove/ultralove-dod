@@ -1,6 +1,6 @@
 import Foundation
 
-class UnitPopulation: Dimension {
+class UnitPopulation: Dimension, @unchecked Sendable {
     static let people = UnitPopulation(
         symbol: "n",
         converter: UnitConverterLinear(coefficient: 1.0)
