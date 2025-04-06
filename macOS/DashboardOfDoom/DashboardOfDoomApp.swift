@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 struct DashboardOfDoomApp: App {
-    @State var weatherViewModel = WeatherViewModel()
+    @State var weatherViewModel = WeatherPresenter()
     @State var forecastPresenter = ForecastPresenter()
     @State var covidPresenter = CovidPresenter()
     @State var levelPresenter = LevelPresenter()
@@ -29,7 +29,7 @@ struct DashboardOfDoomApp: App {
                 .environment(pointOfInterestViewModel)
 
         } label: {
-            Text(weatherViewModel.faceplate(selector: .actualTemperature))
+            Text(weatherViewModel.faceplate[.weather(.temperature)] ?? "n/a")
                 .font(.system(.body, design: .monospaced))
         }
         .menuBarExtraStyle(.window)

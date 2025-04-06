@@ -28,7 +28,7 @@ struct MapSizeModifier: ViewModifier {
 struct ContentView: View {
     @Environment(\.openSettings) private var openSettings
     @Environment(\.colorScheme) var colorScheme
-    @Environment(WeatherViewModel.self) private var viewModel
+    @Environment(WeatherPresenter.self) private var viewModel
 
     var body: some View {
         VStack {

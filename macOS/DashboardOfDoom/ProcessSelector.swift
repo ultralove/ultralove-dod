@@ -10,33 +10,33 @@ enum ProcessSelector: Hashable {
     case survey(Survey)
 
     enum Weather: Int, CaseIterable {
-        case cloudCover = 0
-        case dewPoint = 1
-        case humidity = 2
-        case precipitationChance = 3
-        case precipitationAmount = 4
-        case snowfallAmount = 5
-        case pressure = 6
-        case temperature = 7
-        case apparentTemperature = 8
-        case visibility = 9
-        case windDirection = 10
+        case temperature = 0
+        case apparentTemperature = 1
+        case dewPoint = 2
+        case humidity = 3
+        case precipitationIntensity = 4
+        case pressure = 5
+        case visibility = 6
+        case cloudCover = 7
+        case cloudCoverLow = 8
+        case cloudCoverMedium = 9
+        case cloudCoverHigh = 10
         case windSpeed = 11
         case windGust = 12
     }
 
     enum Forecast: Int, CaseIterable {
-        case temperature = 7
-        case apparentTemperature = 8
-        case dewPoint = 1
-        case humidity = 2
-        case precipitationChance = 3
-        case precipitationAmount = 4
+        case temperature = 0
+        case apparentTemperature = 1
+        case dewPoint = 2
+        case humidity = 3
+        case precipitationChance = 4
+        case precipitationAmount = 5
         case pressure = 6
-        case visibility = 9
-        case cloudCover = 0
-        case windSpeed = 11
-        case windGust = 12
+        case visibility = 7
+        case cloudCover = 8
+        case windSpeed = 9
+        case windGust = 10
     }
 
     enum Covid: Int, CaseIterable {

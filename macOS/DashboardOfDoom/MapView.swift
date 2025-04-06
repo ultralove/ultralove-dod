@@ -186,7 +186,7 @@ struct PulsatingImage: View {
 }
 
 struct MapView: View {
-    @Environment(WeatherViewModel.self) private var weather
+    @Environment(WeatherPresenter.self) private var weather
     @Environment(CovidPresenter.self) private var incidence
     @Environment(LevelPresenter.self) private var water
     @Environment(RadiationPresenter.self) private var radiation
@@ -268,9 +268,11 @@ struct MapView: View {
                     }
                 }
                 if let sensor = weather.sensor {
-                    Faceplate(
-                        sensor: sensor, user: true, label: weather.faceplate(selector: .actualTemperature), icon: weather.icon,
-                        anchor: .topTrailing)
+//                    Faceplate(
+//                        sensor: sensor, user: true, label: weather.faceplate(selector: .temperature), icon: weather.icon,
+//                        anchor: .topTrailing)
+                    Faceplate2(
+                        sensor: sensor, label: weather.faceplate[.weather(.temperature)], icon: weather.icon, anchor: .topTrailing)
                 }
                 if let sensor = incidence.sensor {
                     Faceplate2(sensor: sensor, label: incidence.faceplate[.covid(.incidence)], icon: incidence.icon, anchor: .bottomLeading)
