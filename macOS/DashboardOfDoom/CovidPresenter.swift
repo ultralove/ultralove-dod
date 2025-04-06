@@ -4,11 +4,6 @@ import Foundation
     private let processController = CovidController()
     private let processTransformer = CovidTransformer()
 
-    var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
-    var faceplate: [ProcessSelector: String] = [:]
-    var range: [ProcessSelector: ClosedRange<Double>] = [:]
-    var trend: [ProcessSelector: String] = [:]
-
     override init() {
         super.init()
         let processManager = ProcessManager.shared

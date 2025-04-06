@@ -4,11 +4,6 @@ import SwiftUI
     private let processController = RadiationController()
     private let processTransformer = RadiationTransformer()
 
-    var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
-    var faceplate: [ProcessSelector: String] = [:]
-    var range: [ProcessSelector: ClosedRange<Double>] = [:]
-    var trend: [ProcessSelector: String] = [:]
-
     override init() {
         super.init()
         let processManager = ProcessManager.shared

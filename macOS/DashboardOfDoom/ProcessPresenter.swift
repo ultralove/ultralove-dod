@@ -6,6 +6,12 @@ import Foundation
     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
     var timestamp: Date? = nil
 
+    var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
+    var faceplate: [ProcessSelector: String] = [:]
+    var range: [ProcessSelector: ClosedRange<Double>] = [:]
+    var trend: [ProcessSelector: String] = [:]
+
+
     var label: String {
         if let customData = sensor?.customData {
             if let label = customData["label"] as? String {
