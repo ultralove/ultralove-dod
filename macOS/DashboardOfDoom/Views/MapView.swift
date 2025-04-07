@@ -72,7 +72,7 @@ struct MapView: View {
     @Environment(SurveyPresenter.self) private var surveys
     @Environment(PointOfInterestPresenter.self) private var pointsOfInterest
 
-    private var viewModel = MapViewModel.shared
+    private var viewModel = MapPresenter.shared
 
     //    private var cameraPosition: Binding<MapCameraPosition> {
     //        Binding(

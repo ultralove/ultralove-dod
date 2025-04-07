@@ -1,6 +1,10 @@
 import CoreLocation
 import Foundation
 
+protocol LocationManagerDelegate: Identifiable where ID == UUID {
+    func locationManager(didUpdateLocation location: Location) -> Void
+}
+
 class LocationManager: NSObject, CLLocationManagerDelegate {
     private static let houseOfWorldCultures = Location(latitude: 52.5186, longitude: 13.3644)
     private var locationManager = CLLocationManager()

@@ -31,6 +31,6 @@ import SwiftUI
         self.range = self.processTransformer.range
         self.trend = self.processTransformer.trend
 
-        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+        MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 import MapKit
 import SwiftUI
 
-@Observable class MapViewModel {
+@Observable class MapPresenter {
     var visibleRegion: [UUID: Location] = [:]
     var visibleRectangle = MKMapRect.null
 
@@ -10,7 +10,7 @@ import SwiftUI
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 54.1318, longitude: 8.8557), span: MKCoordinateSpan(latitudeDelta: 0.0167, longitudeDelta: 0.0167)))
 
-    static let shared = MapViewModel()
+    static let shared = MapPresenter()
     private init() {}
 
 #if os(macOS)
@@ -65,9 +65,9 @@ import SwiftUI
 
 }
 
-extension MapViewModel {
+extension MapPresenter {
     // Creates a binding for any property
-    func binding<Value>(for keyPath: ReferenceWritableKeyPath<MapViewModel, Value>) -> Binding<Value> {
+    func binding<Value>(for keyPath: ReferenceWritableKeyPath<MapPresenter, Value>) -> Binding<Value> {
         Binding(
             get: { self[keyPath: keyPath] },
             set: { self[keyPath: keyPath] = $0 }
