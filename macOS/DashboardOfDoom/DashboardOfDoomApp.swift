@@ -10,7 +10,7 @@ struct DashboardOfDoomApp: App {
     @State var radiationPresenter = RadiationPresenter()
     @State var particlePresenter = ParticlePresenter()
     @State var surveyPresenter = SurveyPresenter()
-    @State var pointOfInterestViewModel = PointOfInterestViewModel()
+    @State var pointOfInterestViewModel = PointOfInterestPresenter()
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 

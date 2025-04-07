@@ -1,9 +1,6 @@
 import Foundation
 
 func calculateBoundingBox(center: Location, radiusInMeters: Double) -> (minLatitude: Double, minLongitude: Double, maxLatitude: Double, maxLongitude: Double) {
-    // Earth's radius in meters
-    // let earthRadius = 6378137.0
-
     // Convert radius from meters to degrees (approximate)
     // 1 degree of latitude is approximately 111,320 meters
     let radiusLat = radiusInMeters / 111320.0

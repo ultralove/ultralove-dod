@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-@Observable class PointOfInterestViewModel: Identifiable, LocationManagerDelegate {
+@Observable class PointOfInterestPresenter: Identifiable, LocationManagerDelegate {
     let id = UUID()
     
     private let pointOfInterestController = PointOfInterestController()
@@ -36,9 +36,9 @@ import SwiftUI
     }
 }
 
-extension PointOfInterestViewModel {
+extension PointOfInterestPresenter {
     // Creates a binding for any property
-    func binding<Value>(for keyPath: ReferenceWritableKeyPath<PointOfInterestViewModel, Value>) -> Binding<Value> {
+    func binding<Value>(for keyPath: ReferenceWritableKeyPath<PointOfInterestPresenter, Value>) -> Binding<Value> {
         Binding(
             get: { self[keyPath: keyPath] },
             set: { self[keyPath: keyPath] = $0 }

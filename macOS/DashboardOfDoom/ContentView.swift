@@ -25,6 +25,62 @@ struct MapSizeModifier: ViewModifier {
     }
 }
 
+struct ContentPanelStyle: DisclosureGroupStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        VStack(alignment: .leading) {
+            Button {
+                configuration.isExpanded.toggle()
+            } label: {
+                HStack {
+                    configuration.label
+                    Spacer()
+                    Image(systemName: configuration.isExpanded ? "arrowtriangle.down" : "arrowtriangle.forward")
+                        .fontWeight(.light)
+                }
+                .padding(.vertical, 8)
+                .padding(.trailing)
+                .frame(height: 23)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if configuration.isExpanded {
+                configuration.content
+                    .padding(.leading)
+            }
+        }
+        .focusable(false)
+    }
+}
+
+struct ContentPanelView<Content: View>: View {
+    let label: String
+    let icon: String
+    @State private var isExpanded: Bool = false
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        DisclosureGroup(
+            isExpanded: $isExpanded,
+            content: {
+                content()
+            },
+            label: {
+                HStack {
+                    Image(systemName: self.icon)
+                        .imageScale(.large)
+                        .frame(width: 23)
+                    Text(self.label)
+                }
+                .padding()
+                .fontWeight(.light)
+            }
+        )
+        .disclosureGroupStyle(ContentPanelStyle())
+    }
+}
+
+
 struct ContentView: View {
     @Environment(\.openSettings) private var openSettings
     @Environment(\.colorScheme) var colorScheme
@@ -76,29 +132,29 @@ struct ContentView: View {
                         .padding(.vertical, 5)
                         .modifier(MapSizeModifier())
                     Divider()
-                    SensorPanel(label: "Weather Forecast", icon: "cloud.sun") {
+                    ContentPanelView(label: "Weather Forecast", icon: "cloud.sun") {
                         ForecastView()
                     }
                     Divider()
-                    SensorPanel(label: "COVID-19", icon: "facemask") {
+                    ContentPanelView(label: "COVID-19", icon: "facemask") {
                         CovidView()
                     }
                     Divider()
-                    SensorPanel(label: "Water", icon: "water.waves") {
+                    ContentPanelView(label: "Water", icon: "water.waves") {
                         LevelView()
                     }
                     Divider()
-                    SensorPanel(label: "Radiation", icon: "atom") {
+                    ContentPanelView(label: "Radiation", icon: "atom") {
                         RadiationView()
 //                            .padding(.vertical, 5)
 //                            .frame(height: 200)
                     }
                     Divider()
-                    SensorPanel(label: "Particulate Matter", icon: "aqi.medium") {
+                    ContentPanelView(label: "Particulate Matter", icon: "aqi.medium") {
                         ParticleView()
                     }
                     Divider()
-                    SensorPanel(label: "Election Polls", icon: "popcorn") {
+                    ContentPanelView(label: "Election Polls", icon: "popcorn") {
                         SurveyView()
                     }
                 }

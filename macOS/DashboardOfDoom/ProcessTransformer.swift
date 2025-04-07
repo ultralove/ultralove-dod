@@ -59,5 +59,4 @@ class ProcessTransformer: ProcessTransformerProtocol {
         }
         return trend
     }
-
 }
