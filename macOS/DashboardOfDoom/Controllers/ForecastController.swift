@@ -2,7 +2,7 @@ import CoreLocation
 import Foundation
 import WeatherKit
 
-class ForecastController: ProcessControllerProtocol {
+class ForecastController: ProcessController {
     func refreshData(for location: Location) async throws -> ProcessSensor? {
         if let placemark = await LocationManager.reverseGeocodeLocation(location: location) {
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]

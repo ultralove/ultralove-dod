@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class ParticlePresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class ParticlePresenter: ProcessPresenter, ProcessSubscriber {
     private let processController = ParticleController()
     private let processTransformer = ParticleTransformer()
 

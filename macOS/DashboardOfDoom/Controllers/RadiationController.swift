@@ -1,6 +1,6 @@
 import Foundation
 
-class RadiationController: ProcessControllerProtocol {
+class RadiationController: ProcessController {
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 

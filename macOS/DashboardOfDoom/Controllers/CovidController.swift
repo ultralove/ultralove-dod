@@ -1,6 +1,6 @@
 import Foundation
 
-class CovidController: ProcessControllerProtocol {
+class CovidController: ProcessController {
     private let measurementDistance: TimeInterval
     private let measurementDuration: Double
     private let forecastDuration: TimeInterval

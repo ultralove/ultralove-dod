@@ -2,7 +2,7 @@ import CoreLocation
 import Foundation
 import WeatherKit
 
-class WeatherController: ProcessControllerProtocol {
+class WeatherController: ProcessController {
     func refreshData(for location: Location) async throws -> ProcessSensor? {
         var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 

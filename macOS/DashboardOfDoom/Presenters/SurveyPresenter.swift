@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-@Observable class SurveyPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class SurveyPresenter: ProcessPresenter, ProcessSubscriber {
     private let controller = SurveyController()
     private let transformer = SurveyTransformer()
 

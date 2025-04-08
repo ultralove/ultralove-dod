@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class ForecastPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class ForecastPresenter: ProcessPresenter, ProcessSubscriber {
     private let processController = ForecastController()
     private let processTransformer = ForecastTransformer()
 

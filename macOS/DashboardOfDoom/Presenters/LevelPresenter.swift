@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class LevelPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class LevelPresenter: ProcessPresenter, ProcessSubscriber {
     private let processController = LevelController()
     private let processTransformer = LevelTransformer()
 

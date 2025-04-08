@@ -2,7 +2,7 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-@Observable class WeatherPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class WeatherPresenter: ProcessPresenter, ProcessSubscriber {
     private let processController = WeatherController()
     private let processTransformer = WeatherTransformer()
 

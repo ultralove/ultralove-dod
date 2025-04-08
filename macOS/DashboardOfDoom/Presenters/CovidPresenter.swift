@@ -1,6 +1,6 @@
 import Foundation
 
-@Observable class CovidPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class CovidPresenter: ProcessPresenter, ProcessSubscriber {
     private let processController = CovidController()
     private let processTransformer = CovidTransformer()
 

@@ -23,7 +23,7 @@ struct Descriptor {
     let name: String
 }
 
-class SurveyController: ProcessControllerProtocol {
+class SurveyController: ProcessController {
     private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
 
     let officialFascists: [ProcessSelector] = [

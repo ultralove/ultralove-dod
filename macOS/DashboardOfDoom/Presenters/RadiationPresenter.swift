@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class RadiationPresenter: ProcessPresenter, ProcessSubscriberProtocol {
+@Observable class RadiationPresenter: ProcessPresenter, ProcessSubscriber {
     private let processController = RadiationController()
     private let processTransformer = RadiationTransformer()
 

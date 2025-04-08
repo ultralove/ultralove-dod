@@ -1,6 +1,6 @@
 import Foundation
 
-class ParticleController: ProcessControllerProtocol {
+class ParticleController: ProcessController {
     private let measurementDuration: TimeInterval
     private let forecastDuration: TimeInterval
 
