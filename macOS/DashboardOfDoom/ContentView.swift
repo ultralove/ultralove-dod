@@ -146,8 +146,6 @@ struct ContentView: View {
                     Divider()
                     ContentPanelView(label: "Radiation", icon: "atom") {
                         RadiationView()
-//                            .padding(.vertical, 5)
-//                            .frame(height: 200)
                     }
                     Divider()
                     ContentPanelView(label: "Particulate Matter", icon: "aqi.medium") {

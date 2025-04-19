@@ -1,6 +1,6 @@
 import Foundation
 
-class ProcessTransformer: ProcessTransformerProtocol {
+class ProcessTransformer {
     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
     var current: [ProcessSelector: ProcessValue<Dimension>] = [:]
     var faceplate: [ProcessSelector: String] = [:]
