@@ -5,17 +5,17 @@ class ParticleController: ProcessController {
     private let forecastDuration: TimeInterval
 
     init() {
-        self.measurementDuration = 21 * 24 * 60 * 60  // 21 minutes
-        self.forecastDuration = 14 * 24 * 60 * 60  // 7 days
+        self.measurementDuration = 21 * 24 * 60 * 60  // 21 days
+        self.forecastDuration = 7 * 24 * 60 * 60  // 7 days
     }
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {
         do {
-            if let nearestStation = await Self.fetchNearestStation(location: location) {
-                if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                    if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
+            if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
+                if let nearestStation = await Self.fetchNearestStation(location: location, from: interval.from, to: interval.to) {
+                    if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                         if var measurements = try await Self.fetchMeasurements(station: nearestStation, from: interval.from, to: interval.to) {
-                            if let forecastInterval = Self.calculateForecastTimeInterval(span: self.forecastDuration) {  // 7 days
+                            if let forecastInterval = Self.calculateForecastTimeInterval(span: self.forecastDuration) {
                                 if let forecast = try await Self.fetchForecasts(
                                     station: nearestStation, from: forecastInterval.from, to: forecastInterval.to)
                                 {
@@ -26,7 +26,8 @@ class ParticleController: ProcessController {
                                     }
                                 }
                                 return ProcessSensor(
-                                    name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "aqi.medium"],
+                                    name: nearestStation.name, location: nearestStation.location, placemark: placemark,
+                                    customData: ["icon": "aqi.medium"],
                                     measurements: measurements,
                                     timestamp: Date.now)
                             }
@@ -99,13 +100,22 @@ class ParticleController: ProcessController {
         let location: Location
     }
 
-    private static func fetchNearestStation(location: Location) async -> Station? {
+    private static func fetchNearestStation(location: Location, from: Date, to: Date) async -> Station? {
         var nearestStation: Station? = nil
         do {
-            if let data = try await ParticleService.fetchStations() {
-                let stations = try await Self.parseStations(from: data)
-                if stations.count > 0 {
-                    nearestStation = Self.nearestStation(stations: stations, location: location)
+            if let data = try await ParticleService.fetchStations(from: from, to: to) {
+                let unsortedStations = try await Self.parseStations(from: data)
+                if unsortedStations.count > 0 {
+                    let sortedStations = unsortedStations.sorted {
+                        haversineDistance(location_0: location, location_1: $0.location)
+                            < haversineDistance(location_0: location, location_1: $1.location)
+                    }
+                    if let selectedStation = await Self.selectStation(stations: sortedStations) {
+                        nearestStation = selectedStation
+                    }
+                    else {
+                        nearestStation = sortedStations.first
+                    }
                 }
             }
         }
@@ -136,17 +146,26 @@ class ParticleController: ProcessController {
         return stations
     }
 
-    private static func nearestStation(stations: [Station], location: Location) -> Station? {
-        var nearestStation: Station? = nil
-        var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
+    private static func selectStation(stations: [Station]) async -> Station? {
+        var selectedStation: Station? = nil
+        let to = Date.now.addingTimeInterval(-1 * 24 * 60 * 60)
+        let from = to.addingTimeInterval(-1 * 24 * 60 * 60)
         for station in stations {
-            let distance = haversineDistance(location_0: station.location, location_1: location)
-            if distance < minDistance {
-                minDistance = distance
-                nearestStation = station
+            if let measurements = try? await fetchMeasurements(station: station, from: from, to: to) {
+                if stationHasRelevantMeasurements(measurements) == true {
+                    selectedStation = station
+                    break
+                }
             }
         }
-        return nearestStation
+        return selectedStation
+    }
+
+    private static func stationHasRelevantMeasurements(_ measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> Bool {
+        let relevantSelectors: Set<ProcessSelector> = [
+            .particle(.pm10), .particle(.pm25), .particle(.no2), .particle(.o3)
+        ]
+        return relevantSelectors.isSubset(of: Set(measurements.keys))
     }
 
     private static func fetchMeasurements(station: Station, from: Date, to: Date) async throws -> [ProcessSelector: [ProcessValue<Dimension>]]? {
