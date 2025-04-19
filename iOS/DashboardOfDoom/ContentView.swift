@@ -39,6 +39,16 @@ struct MapSizeModifier: ViewModifier {
     }
 }
 
+struct SettingsView: View {
+    var body: some View {
+        VStack {
+            Text("Settings")
+                .font(.largeTitle)
+                .padding()
+        }
+    }
+}
+
 struct ContentView: View {
     @State private var selectedScreen = Screen.home
     @State private var navigationVisible = Visibility.hidden
@@ -48,8 +58,8 @@ struct ContentView: View {
         case home
         case weather
         case covid
-        case environment
-        case airQuality
+        case particles
+        case surveys
         case settings
     }
 
@@ -57,19 +67,22 @@ struct ContentView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 10) {
+                    HStack {
+                        Image("dashboard-of-doom-logo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 200, height: 34)
+                            .padding(.top, 10)
+                            .padding(.leading, 5)
+                        Spacer()
+                    }
                     switch selectedScreen {
                         case .home:
                             VStack {
                                 MapView()
                                     .modifier(MapSizeModifier())
-                                IncidenceView()
-                                    .frame(height: 233)
                                 LevelView()
-                                    .frame(height: 233)
                                 RadiationView()
-                                    .frame(height: 233)
-                                ParticleView(selector: .pm10)
-                                    .frame(height: 233)
                             }
                             .onAppear {
                                 navigationVisible = .visible
@@ -77,58 +90,34 @@ struct ContentView: View {
                             }
                         case .weather:
                             VStack {
-                                ForecastView(header: "Temperature (actual)", selector: .actual)
-                                    .frame(height: 233)
-                                ForecastView(header: "Temperature (feels like)", selector: .apparent)
-                                    .frame(height: 233)
-                                ForecastView(header: "Dew point", selector: .dewPoint)
-                                    .frame(height: 233)
-                                ForecastView(header: "Humidity", selector: .humidity)
-                                    .frame(height: 233)
-                                ForecastView(header: "Precipitation chance", selector: .precipitationChance)
-                                    .frame(height: 233)
-                                ForecastView(header: "Precipitation amount", selector: .precipitationAmount)
-                                    .frame(height: 233)
-                                ForecastView(header: "Pressure", selector: .pressure)
-                                    .frame(height: 233)
-                                ForecastView(header: "Visibility", selector: .visibility)
-                                    .frame(height: 233)
+                                ForecastView()
                             }
                             .onAppear {
                                 navigationVisible = .visible
-                                navigationTitle = "Weather forecast"
+                                navigationTitle = "Weather Forecast"
                             }
                         case .covid:
                             VStack {
-                                IncidenceView()
-                                    .frame(height: 233)
+                                CovidView()
                             }
                             .onAppear {
                                 navigationVisible = .visible
-                                navigationTitle = "COVID-19 situation"
+                                navigationTitle = "COVID-19 Situation"
                             }
-                        case .environment:
+                        case .particles:
                             VStack {
-                                LevelView()
-                                    .frame(height: 233)
-                                RadiationView()
-                                    .frame(height: 233)
+                                ParticleView()
                             }
                             .onAppear {
                                 navigationVisible = .visible
-                                navigationTitle = "Environmental data"
+                                navigationTitle = "Particulate Matter"
                             }
-                        case .airQuality:
-                            VStack {
-                                ForEach(ParticleSelector.allCases, id: \.self) { selector in
-                                    ParticleView(selector: selector)
-                                        .frame(height: 233)
+                        case .surveys:
+                            SurveyView()
+                                .onAppear {
+                                    navigationVisible = .visible
+                                    navigationTitle = "Election Polls"
                                 }
-                            }
-                            .onAppear {
-                                navigationVisible = .visible
-                                navigationTitle = "Particulate matter"
-                            }
                         case .settings:
                             SettingsView()
                                 .onAppear {
@@ -166,15 +155,15 @@ struct ContentView: View {
                                     .foregroundColor(selectedScreen == .covid ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
-                            Button(action: { selectedScreen = .environment }) {
-                                Image(systemName: selectedScreen == .environment ? "tornado" : "ladybug")
-                                    .foregroundColor(selectedScreen == .environment ? .accentColor : .accentColor.opacity(0.5))
+                            Button(action: { selectedScreen = .particles }) {
+                                Image(systemName: selectedScreen == .particles ? "aqi.medium" : "aqi.low")
+                                    .foregroundColor(selectedScreen == .particles ? .accentColor : .accentColor.opacity(0.5))
+                                    .fontWeight(.black)  // Workaround for "aqi.medium" icon being rather thin
                             }
                             Spacer()
-                            Button(action: { selectedScreen = .airQuality }) {
-                                Image(systemName: selectedScreen == .airQuality ? "aqi.medium" : "aqi.low")
-                                    .foregroundColor(selectedScreen == .airQuality ? .accentColor : .accentColor.opacity(0.5))
-                                    .fontWeight(.black) // Workaround for "aqi.medium" icon being rather thin
+                            Button(action: { selectedScreen = .surveys }) {
+                                Image(systemName: selectedScreen == .surveys ? "popcorn.fill" : "popcorn")
+                                    .foregroundColor(selectedScreen == .surveys ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
                             Button(action: { selectedScreen = .settings }) {
@@ -193,9 +182,9 @@ struct ContentView: View {
                         traitCollection.userInterfaceStyle == .dark ? .black : .white
                     }), for: .bottomBar
             )
-            .refreshable {
-                SubscriptionManager.shared.refresh()
-            }
+            //            .refreshable {
+            //                SubscriptionManager.shared.refresh()
+            //            }
         }
     }
 }

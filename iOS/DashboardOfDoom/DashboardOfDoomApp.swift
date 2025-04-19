@@ -2,12 +2,13 @@ import SwiftUI
 
 @main
 struct DashboardOfDoomApp: App {
-    @State var weatherViewModel = WeatherViewModel()
-    @State var forecastViewModel = ForecastViewModel()
-    @State var incidenceViewModel = IncidenceViewModel()
-    @State var levelViewModel = LevelViewModel()
-    @State var radiationViewModel = RadiationViewModel()
-    @State var particleViewModel = ParticleViewModel()
+    @State var weatherViewModel = WeatherPresenter()
+    @State var forecastPresenter = ForecastPresenter()
+    @State var covidPresenter = CovidPresenter()
+    @State var levelPresenter = LevelPresenter()
+    @State var radiationPresenter = RadiationPresenter()
+    @State var particlePresenter = ParticlePresenter()
+    @State var surveyPresenter = SurveyPresenter()
 
     var body: some Scene {
         WindowGroup {
@@ -15,11 +16,12 @@ struct DashboardOfDoomApp: App {
                 .preferredColorScheme(.dark) 
 //                .accentColor(.init(light: .blue, dark: .orange))
                 .environment(weatherViewModel)
-                .environment(forecastViewModel)
-                .environment(incidenceViewModel)
-                .environment(levelViewModel)
-                .environment(radiationViewModel)
-                .environment(particleViewModel)
+                .environment(forecastPresenter)
+                .environment(covidPresenter)
+                .environment(levelPresenter)
+                .environment(radiationPresenter)
+                .environment(particlePresenter)
+                .environment(surveyPresenter)
         }
     }
 }

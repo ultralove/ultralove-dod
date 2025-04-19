@@ -3,16 +3,22 @@ import Foundation
 struct ProcessValue<T: Dimension>: Identifiable {
     let id = UUID()
     let value: Measurement<T>
-    let quality: ProcessValueQuality
+    let customData: [String: Any]?
+    let quality: ProcessQuality
     let timestamp: Date
 
-    init(value: Measurement<T>, quality: ProcessValueQuality, timestamp: Date) {
+    init(value: Measurement<T>, customData: [String: Any]?, quality: ProcessQuality, timestamp: Date) {
         self.value = value
+        self.customData = customData
         self.quality = quality
         self.timestamp = timestamp
     }
 
-    init(value: Measurement<T>, quality: ProcessValueQuality) {
+    init(value: Measurement<T>, quality: ProcessQuality, timestamp: Date) {
+        self.init(value: value, customData: nil, quality: quality, timestamp: timestamp)
+    }
+
+    init(value: Measurement<T>, quality: ProcessQuality) {
         self.init(value: value, quality: quality, timestamp: Date.now)
     }
 
@@ -22,18 +28,6 @@ struct ProcessValue<T: Dimension>: Identifiable {
 
     init() {
         self.init(value: Measurement<T>(value: 0, unit: T.baseUnit()), quality: .unknown)
-    }
-
-    init(value: Double, quality: ProcessValueQuality, timestamp: Date) {
-        self.init(value: Measurement<T>(value: value, unit: T.baseUnit()), quality: quality, timestamp: timestamp)
-    }
-
-    init(value: Double, quality: ProcessValueQuality) {
-        self.init(value: Measurement<T>(value: value, unit: T.baseUnit()), quality: quality)
-    }
-
-    init(value: Double) {
-        self.init(value: Measurement<T>(value: value, unit: T.baseUnit()))
     }
 }
 
