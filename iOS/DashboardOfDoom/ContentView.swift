@@ -62,7 +62,7 @@ struct ContentView: View {
                             VStack {
                                 MapView()
                                     .padding(5)
-                                    .padding(.trailing, 3)
+                                    .padding(.trailing, 5)
                                     .modifier(MapSizeModifier())
                                 Divider()
                                     .padding(.horizontal, 5)
