@@ -48,7 +48,5 @@ struct ForecastView: View {
                 }
             }
         }
-        .padding(5)
-        .padding(.trailing, 3)
     }
 }

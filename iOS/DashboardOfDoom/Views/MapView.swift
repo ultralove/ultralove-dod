@@ -88,6 +88,7 @@ struct MapView: View {
                 Image(systemName: "stethoscope")
                     .imageScale(.large)
                     .frame(width: 23)
+                Text("Environmental conditions:")
                 Spacer()
             }
             .fontWeight(.light)
@@ -130,8 +131,6 @@ struct MapView: View {
                 _view()
             }
         }
-        .padding(5)
-        .padding(.trailing, 3)
     }
 
     func _view() -> some View {

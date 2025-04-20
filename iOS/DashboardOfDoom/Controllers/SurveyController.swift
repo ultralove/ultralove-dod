@@ -50,7 +50,7 @@ class SurveyController: ProcessController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(47).reversed())
+                    let significantPolls = Array(sortedPolls.prefix(167).reversed())
                     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
                     var values: [ProcessValue<Dimension>] = []
@@ -375,7 +375,7 @@ class SurveyController: ProcessController {
                 }
             }
         }
-        if let forecast = Self.forecast(data: interpolatedMeasurement) {
+        if let forecast = Self.forecast(data: interpolatedMeasurement, duration: 31) {
             interpolatedMeasurement.append(contentsOf: forecast)
         }
         return interpolatedMeasurement
@@ -399,7 +399,7 @@ class SurveyController: ProcessController {
         return ProcessValue<Dimension>(value: Measurement<Dimension>(value: value, unit: unit), quality: quality, timestamp: timestamp)
     }
 
-    private static func forecast(data: [ProcessValue<Dimension>]?) -> [ProcessValue<Dimension>]? {
+    private static func forecast(data: [ProcessValue<Dimension>]?, duration: TimeInterval) -> [ProcessValue<Dimension>]? {
         var forecast: [ProcessValue<Dimension>]? = nil
         guard let historicalData = data, historicalData.count > 0 else {
             return nil
@@ -411,7 +411,7 @@ class SurveyController: ProcessController {
         let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
         do {
             try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: 23 * 24 * 3600)  // 23 days
+            let prediction = try predictor.forecast(duration: duration * 24 * 60 * 60)  // days
             forecast = prediction.forecasts.map { forecast in
                 ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }

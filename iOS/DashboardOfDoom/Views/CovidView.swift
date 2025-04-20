@@ -48,7 +48,5 @@ struct CovidView: View {
                 }
             }
         }
-        .padding(5)
-        .padding(.trailing, 3)
     }
 }

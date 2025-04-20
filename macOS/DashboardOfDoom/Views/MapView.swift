@@ -83,6 +83,7 @@ struct MapView: View {
 
     var body: some View {
         VStack {
+            #if os(macOS)
             HStack {
                 Image(systemName: "stethoscope")
                     .imageScale(.large)
@@ -91,8 +92,10 @@ struct MapView: View {
                 Spacer()
             }
             .fontWeight(.light)
+            #endif
 
             if let sensor = weather.sensor {
+                #if os(macOS)
                 HStack(alignment: .bottom) {
                     Image(systemName: "safari")
                     Text(String(format: "%@", sensor.placemark ?? "<Unknown>"))
@@ -104,6 +107,21 @@ struct MapView: View {
                 .padding(.vertical, 5)
                 .padding(.leading, 5)
                 .font(.footnote)
+                #else
+                VStack(alignment: .leading) {
+                    HStack(alignment: .bottom) {
+                        Image(systemName: "safari")
+                        Text(String(format: "%@", sensor.placemark ?? "<Unknown>"))
+                        Spacer()
+                    }
+                    HStack {
+                        Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
+                            .foregroundColor(.gray)
+                        Spacer()
+                    }
+                }
+                .font(.footnote)
+                #endif
             }
 
             if weather.timestamp == nil {
@@ -113,8 +131,6 @@ struct MapView: View {
                 _view()
             }
         }
-        .padding(.horizontal)
-        .cornerRadius(13)
     }
 
     func _view() -> some View {
