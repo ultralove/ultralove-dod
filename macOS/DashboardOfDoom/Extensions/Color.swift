@@ -30,6 +30,7 @@ extension Color {
     static let faceplate = Self.accentColor
     static let chart = Self.accentColor
     static let spaeti = Self.accentColor
+    static let treshold = Self.accentColor.opacity(0.5)
     #endif
 
     static let brandPrimary = Color(hex: "#FF5733") // Using hex code

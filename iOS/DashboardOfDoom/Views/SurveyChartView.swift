@@ -126,3 +126,4 @@ struct SurveyChartView: View {
         }
     }
 }
+

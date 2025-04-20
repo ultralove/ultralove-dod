@@ -10,6 +10,7 @@ struct LevelView: View {
                 ActivityIndicator()
             }
             else {
+                #if os(macOS)
                 HStack(alignment: .bottom) {
                     HStack {
                         Image(systemName: "safari")
@@ -20,6 +21,21 @@ struct LevelView: View {
                         .foregroundColor(.gray)
                 }
                 .font(.footnote)
+                #else
+                VStack(alignment: .leading) {
+                    HStack {
+                        Image(systemName: "safari")
+                        Text(String(format: "%@", self.presenter.placemark))
+                        Spacer()
+                    }
+                    HStack {
+                        Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
+                            .foregroundColor(.gray)
+                        Spacer()
+                    }
+                }
+                .font(.footnote)
+                #endif
 
                 ForEach(ProcessSelector.Water.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .water(selector)) {
@@ -32,8 +48,5 @@ struct LevelView: View {
                 }
             }
         }
-        .padding(5)
-        .padding(.trailing, 10)
-        .cornerRadius(13)
     }
 }

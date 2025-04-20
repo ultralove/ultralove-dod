@@ -129,31 +129,45 @@ struct ContentView: View {
             ScrollView {
                 VStack {
                     MapView()
+                        .padding(.horizontal)
+                        .cornerRadius(13)
                         .padding(.vertical, 5)
                         .modifier(MapSizeModifier())
                     Divider()
                     ContentPanelView(label: "Weather Forecast", icon: "cloud.sun") {
                         ForecastView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "COVID-19", icon: "facemask") {
                         CovidView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "Water", icon: "water.waves") {
                         LevelView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "Radiation", icon: "atom") {
                         RadiationView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "Particulate Matter", icon: "aqi.medium") {
                         ParticleView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "Election Polls", icon: "popcorn") {
                         SurveyView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                 }
             }

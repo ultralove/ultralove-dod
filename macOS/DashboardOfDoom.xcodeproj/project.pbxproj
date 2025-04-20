@@ -14,22 +14,9 @@
 		42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DashboardOfDoom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		420E8B512D7B7C1200647C8B /* Exceptions for "DashboardOfDoom" folder in "DashboardOfDoom" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 42EADC222D5D0EF100CC3BF3 /* DashboardOfDoom */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		42EADC252D5D0EF100CC3BF3 /* DashboardOfDoom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				420E8B512D7B7C1200647C8B /* Exceptions for "DashboardOfDoom" folder in "DashboardOfDoom" target */,
-			);
 			path = DashboardOfDoom;
 			sourceTree = "<group>";
 		};
@@ -284,7 +271,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = DashboardOfDoom/Info.plist;
+				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -320,7 +307,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = DashboardOfDoom/Info.plist;
+				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

@@ -2,25 +2,6 @@ import Charts
 import MapKit
 import SwiftUI
 
-//struct MapSizeModifier: ViewModifier {
-//    @Environment(\.horizontalSizeClass) var sizeClass
-//
-//    func body(content: Content) -> some View {
-//        content.frame(height: sizeClassBasedHeight)
-//    }
-//
-//    private var sizeClassBasedHeight: CGFloat {
-//        switch sizeClass {
-//            case .compact:
-//                return 300
-//            case .regular:
-//                return 500
-//            default:
-//                return 400
-//        }
-//    }
-//}
-
 struct MapSizeModifier: ViewModifier {
     func body(content: Content) -> some View {
         #if os(iOS)
@@ -80,9 +61,21 @@ struct ContentView: View {
                         case .home:
                             VStack {
                                 MapView()
+                                    .padding(5)
+                                    .padding(.trailing, 5)
                                     .modifier(MapSizeModifier())
+                                Divider()
+                                    .padding(.horizontal, 5)
+                                    .padding(.trailing, 5)
                                 LevelView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
+                                Divider()
+                                    .padding(.horizontal, 5)
+                                    .padding(.trailing, 5)
                                 RadiationView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
                             }
                             .onAppear {
                                 navigationVisible = .visible
@@ -91,6 +84,8 @@ struct ContentView: View {
                         case .weather:
                             VStack {
                                 ForecastView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
                             }
                             .onAppear {
                                 navigationVisible = .visible
@@ -99,6 +94,8 @@ struct ContentView: View {
                         case .covid:
                             VStack {
                                 CovidView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
                             }
                             .onAppear {
                                 navigationVisible = .visible
@@ -107,23 +104,31 @@ struct ContentView: View {
                         case .particles:
                             VStack {
                                 ParticleView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
                             }
                             .onAppear {
                                 navigationVisible = .visible
                                 navigationTitle = "Particulate Matter"
                             }
                         case .surveys:
-                            SurveyView()
-                                .onAppear {
-                                    navigationVisible = .visible
-                                    navigationTitle = "Election Polls"
-                                }
+                            VStack {
+                                SurveyView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "Election Polls"
+                            }
                         case .settings:
-                            SettingsView()
-                                .onAppear {
-                                    navigationVisible = .visible
-                                    navigationTitle = "Settings"
-                                }
+                            VStack {
+                                SettingsView()
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "Settings"
+                            }
                     }
                 }
                 .frame(maxWidth: .infinity)
