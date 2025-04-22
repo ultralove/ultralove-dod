@@ -6,7 +6,7 @@ class LevelController: ProcessController {
 
     init() {
         self.measurementDistance = 900  // 15 minutes
-        self.forecastDuration = 36 * 4 * self.measurementDistance  // 3 days
+        self.forecastDuration = 12 * 4 * self.measurementDistance  // 12 hours
     }
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {

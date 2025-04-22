@@ -12,7 +12,8 @@ class SurveyTransformer: ProcessTransformer {
     override func renderFaceplate(current: [ProcessSelector: ProcessValue<Dimension>]) -> [ProcessSelector: String] {
         var faceplate: [ProcessSelector: String] = [:]
         for (selector, current) in current {
-            faceplate[selector] = String(format: "\(MathematicalSymbols.mathematicalBoldCapitalNu.rawValue):%.0f%@", current.value.value, current.value.unit.symbol)
+            faceplate[selector] = String(
+                format: "\(MathematicalSymbols.mathematicalBoldCapitalNu.rawValue):%.0f%@", current.value.value, current.value.unit.symbol)
         }
         return faceplate
     }
@@ -23,5 +24,26 @@ class SurveyTransformer: ProcessTransformer {
             scale[selector] = 0.0 ... 66.7
         }
         return scale
+    }
+
+    override func renderTrend(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: String] {
+        var trend: [ProcessSelector: String] = [:]
+        for (selector, values) in measurements {
+            trend[selector] = "questionmark.circle"
+            if let current = values.last(where: { ($0.timestamp <= Date.now) }) {
+                if let past = values.last(where: { $0.timestamp < current.timestamp }) {
+                    if past.value < current.value {
+                        trend[selector] = "arrow.up.forward.circle"
+                    }
+                    else if past.value > current.value {
+                        trend[selector] = "arrow.down.forward.circle"
+                    }
+                    else {
+                        trend[selector] = "arrow.right.circle"
+                    }
+                }
+            }
+        }
+        return trend
     }
 }

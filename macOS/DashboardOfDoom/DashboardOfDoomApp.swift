@@ -10,7 +10,6 @@ struct DashboardOfDoomApp: App {
     @State var radiationPresenter = RadiationPresenter()
     @State var particlePresenter = ParticlePresenter()
     @State var surveyPresenter = SurveyPresenter()
-//    @State var pointOfInterestViewModel = PointOfInterestPresenter()
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
@@ -18,7 +17,6 @@ struct DashboardOfDoomApp: App {
         MenuBarExtra {
             ContentView()
                 .preferredColorScheme(.dark)
-//                .accentColor(.init(light: .blue, dark: .orange))
                 .environment(weatherViewModel)
                 .environment(forecastPresenter)
                 .environment(covidPresenter)
@@ -26,7 +24,6 @@ struct DashboardOfDoomApp: App {
                 .environment(radiationPresenter)
                 .environment(particlePresenter)
                 .environment(surveyPresenter)
-//                .environment(pointOfInterestViewModel)
 
         } label: {
             Text(weatherViewModel.faceplate[.weather(.temperature)] ?? "n/a")
@@ -53,4 +50,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 }
-

@@ -10,6 +10,16 @@ enum RoundingStrategy {
 }
 
 extension Date {
+    static func diff(from: Date, to: Date) -> Int? {
+        var delta: Int?
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.day], from: from, to: to)
+        if let days = components.day {
+            delta = abs(days)
+        }
+        return delta
+    }
+
     static func round(from: Date, strategy: RoundingStrategy) -> Date? {
         switch strategy {
             case .previousQuarterHour:

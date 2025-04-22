@@ -10,6 +10,36 @@ struct Faceplate: MapContent {
 
     var body: some MapContent {
         Annotation("", coordinate: self.sensor.location.coordinate, anchor: self.anchor) {
+            #if os(iOS)
+            VStack {
+                Spacer()
+                if let icon = self.icon {
+                    if user == true {
+                        Image(systemName: icon)
+                    }
+                    else {
+                        Image(systemName: icon)
+                    }
+                }
+                Spacer()
+                if let label = self.label {
+                    VStack(alignment: .leading) {
+                        Text(label)
+                            .font(.footnote)
+                    }
+                    Spacer()
+                }
+            }
+            .padding(5)
+            .padding(.horizontal, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 13)
+                    .fill(Color.faceplate)
+                    .opacity(0.33)
+            )
+            .font(.title)
+            .foregroundStyle(.black)
+            #else
             VStack {
                 Spacer()
                 if let icon = self.icon {
@@ -39,6 +69,7 @@ struct Faceplate: MapContent {
                     .opacity(0.77)
             )
             .foregroundStyle(.black)
+            #endif
         }
         Annotation("", coordinate: self.sensor.location.coordinate, anchor: .center) {
             VStack {
@@ -70,7 +101,6 @@ struct MapView: View {
     @Environment(RadiationPresenter.self) private var radiation
     @Environment(ParticlePresenter.self) private var particle
     @Environment(SurveyPresenter.self) private var surveys
-//    @Environment(PointOfInterestPresenter.self) private var pointsOfInterest
 
     private var viewModel = MapPresenter.shared
 
@@ -83,17 +113,6 @@ struct MapView: View {
 
     var body: some View {
         VStack {
-            #if os(macOS)
-            HStack {
-                Image(systemName: "stethoscope")
-                    .imageScale(.large)
-                    .frame(width: 23)
-                Text("Environmental conditions:")
-                Spacer()
-            }
-            .fontWeight(.light)
-            #endif
-
             if let sensor = weather.sensor {
                 #if os(macOS)
                 HStack(alignment: .bottom) {
@@ -136,31 +155,6 @@ struct MapView: View {
     func _view() -> some View {
         VStack {
             Map(position: viewModel.binding(for: \.region), interactionModes: []) {
-//                if let liquorStores = pointsOfInterest.liquorStores {
-//                    ForEach(liquorStores, id: \.id) { liquorStore in
-//                        PointOfInterestView(pointOfInterest: liquorStore, color: .green)
-//                    }
-//                }
-//                if let pharmacies = parsePointsOfInterest.pharmacies {
-//                    ForEach(pharmacies, id: \.id) { pharmacy in
-//                        PointOfInterestView(pointOfInterest: pharmacy, color: .orange)
-//                    }
-//                }
-//                if let hospitals = pointsOfInterest.hospitals {
-//                    ForEach(hospitals, id: \.id) { hospital in
-//                        PointOfInterestView(pointOfInterest: hospital, color: .red)
-//                    }
-//                }
-//                if let funeralDirectors = pointsOfInterest.funeralDirectors {
-//                    ForEach(funeralDirectors, id: \.id) { funeralDirector in
-//                        PointOfInterestView(pointOfInterest: funeralDirector, color: .purple)
-//                    }
-//                }
-//                if let cemeteries = pointsOfInterest.cemeteries {
-//                    ForEach(cemeteries, id: \.id) { cemetery in
-//                        PointOfInterestView(pointOfInterest: cemetery, color: .gray)
-//                    }
-//                }
                 if let sensor = weather.sensor {
                     Faceplate(
                         sensor: sensor, user:true, label: weather.faceplate[.weather(.temperature)], icon: weather.icon, anchor: .topTrailing)
@@ -169,7 +163,7 @@ struct MapView: View {
                     Faceplate(sensor: sensor, label: incidence.faceplate[.covid(.incidence)], icon: incidence.icon, anchor: .bottomLeading)
                 }
                 if let sensor = particle.sensor {
-                    Faceplate(sensor: sensor, label: particle.faceplate[.particle(.pm10)], icon: particle.icon, anchor: .topLeading)
+                    Faceplate(sensor: sensor, label: particle.faceplate[.particle(.pm10)], icon: particle.icon, anchor: .bottomTrailing)
                 }
                 if let sensor = water.sensor {
                     Faceplate(sensor: sensor, label: water.faceplate[.water(.level)], icon: water.icon, anchor: .bottomLeading)
@@ -177,9 +171,9 @@ struct MapView: View {
                 if let sensor = radiation.sensor {
                     Faceplate(sensor: sensor, label: radiation.faceplate[.radiation(.total)], icon: radiation.icon, anchor: .bottomLeading)
                 }
-//                if let sensor = surveys.sensor {
-//                    Faceplate(sensor: sensor, label: surveys.faceplate(selector: .fascists), icon: surveys.icon, anchor: .bottomLeading)
-//                }
+                if let sensor = surveys.sensor {
+                    Faceplate(sensor: sensor, label: surveys.faceplate[.survey(.fascists)], icon: surveys.icon, anchor: .topLeading)
+                }
             }
             .allowsHitTesting(false)
         }

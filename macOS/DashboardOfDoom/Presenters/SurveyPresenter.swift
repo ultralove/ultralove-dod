@@ -25,6 +25,10 @@ import SwiftUI
                 return Gradient.clowns
             case .survey(.cducsu):
                 return Gradient.fascists
+            case .survey(.cdu):
+                return Gradient.fascists
+            case .survey(.csu):
+                return Gradient.fascists
             case .survey(.spd):
                 return Gradient.spd
             case .survey(.gruene):
@@ -61,7 +65,7 @@ import SwiftUI
         self.trend = self.transformer.trend
 
 //        This messes up the map display if it adds the location of the Bundestag election polls
-//        MapViewModel.shared.updateRegion(for: self.id, with: sensor.location)
+        MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
     }
 
 

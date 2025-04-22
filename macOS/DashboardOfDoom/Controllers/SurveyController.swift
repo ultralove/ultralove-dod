@@ -25,9 +25,15 @@ struct Descriptor {
 
 class SurveyController: ProcessController {
     private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
+    #if os(iOS)
+    private static let smoothingFactor = 50
+    #else
+    private static let smoothingFactor = 33
+    #endif
 
     let officialFascists: [ProcessSelector] = [
-        .survey(.afd), .survey(.npd), .survey(.bayernpartei), .survey(.bvb_fw), .survey(.biw), .survey(.bfth), .survey(.bsw), .survey(.werte_union)
+        .survey(.afd), .survey(.npd), .survey(.bayernpartei), .survey(.bvb_fw), .survey(.biw), .survey(.bfth), .survey(.bsw),
+        .survey(.werte_union)
     ]
     let realFascists: [ProcessSelector] = [
         .survey(.cducsu), .survey(.afd), .survey(.freie_waehler), .survey(.npd), .survey(.bayernpartei), .survey(.bvb_fw), .survey(.biw),
@@ -37,7 +43,7 @@ class SurveyController: ProcessController {
     let realClowns: [ProcessSelector] = [.survey(.fdp), .survey(.volt)]
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {
-        return try await self.refreshFederalSurveys(for: location)
+        return try await self.refreshLocalSurveys(for: location)
     }
 
     private func refreshFederalSurveys(for location: Location) async throws -> ProcessSensor? {
@@ -55,7 +61,8 @@ class SurveyController: ProcessController {
 
                     var values: [ProcessValue<Dimension>] = []
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(
+                            value: Self.computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
@@ -65,7 +72,8 @@ class SurveyController: ProcessController {
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(
+                            value: Self.computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
@@ -73,16 +81,17 @@ class SurveyController: ProcessController {
                         measurements[.survey(.clowns)] = values
                     }
 
-                    let constraints = [
-                        ProcessSelector.survey(.linke).rawValue,
-                        ProcessSelector.survey(.gruene).rawValue,
-                        ProcessSelector.survey(.spd).rawValue,
-                        ProcessSelector.survey(.afd).rawValue,
-                        ProcessSelector.survey(.fdp).rawValue,
-                        ProcessSelector.survey(.bsw).rawValue,
-                        ProcessSelector.survey(.cducsu).rawValue
-                    ]
-                    let descriptors = try await parseParties(from: data, constraints: constraints)
+                    //                    let constraints = [
+                    //                        ProcessSelector.survey(.linke).rawValue,
+                    //                        ProcessSelector.survey(.gruene).rawValue,
+                    //                        ProcessSelector.survey(.spd).rawValue,
+                    //                        ProcessSelector.survey(.afd).rawValue,
+                    //                        ProcessSelector.survey(.fdp).rawValue,
+                    //                        ProcessSelector.survey(.bsw).rawValue,
+                    //                        ProcessSelector.survey(.cducsu).rawValue
+                    //                    ]
+                    //                    let descriptors = try await parseParties(from: data, constraints: constraints)
+                    let descriptors = try await parseParties(from: data, constraints: [])
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
                         for poll in significantPolls {
@@ -131,12 +140,13 @@ class SurveyController: ProcessController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(47).reversed())
+                    let significantPolls = Array(sortedPolls.prefix(167).reversed())
                     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
                     var values: [ProcessValue<Dimension>] = []
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(
+                            value: Self.computeShare(self.realFascists, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
@@ -146,7 +156,8 @@ class SurveyController: ProcessController {
 
                     values.removeAll(keepingCapacity: true)
                     for poll in significantPolls {
-                        let measurement = Measurement<Dimension>(value: Self.computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
+                        let measurement = Measurement<Dimension>(
+                            value: Self.computeShare(self.realClowns, from: poll), unit: UnitPercentage.percent)
                         let fascism = ProcessValue<Dimension>(value: measurement, quality: .uncertain, timestamp: poll.timestamp)
                         values.append(fascism)
                     }
@@ -168,9 +179,11 @@ class SurveyController: ProcessController {
                         }
                     }
 
+                    measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
                     if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = ProcessSensor(
-                            name: sensorName, location: sensorLocation, placemark: placemark, measurements: measurements, timestamp: Date.now)
+                            name: sensorName, location: sensorLocation, placemark: placemark, customData: ["icon": "popcorn"],
+                            measurements: measurements, timestamp: Date.now)
                     }
                 }
             }
@@ -256,7 +269,7 @@ class SurveyController: ProcessController {
                 parties = [:]
                 for element in elements {
                     if let id = Int(element.key) {
-                        if constraints.contains(id) {
+                        if constraints.isEmpty == true || constraints.contains(id) {
                         if let selector = ProcessSelector.Survey(rawValue: id) {
                                 if let party = elements[element.key] as? [String: Any] {
                                     if let shortcut = party["Shortcut"] as? String {
@@ -346,7 +359,9 @@ class SurveyController: ProcessController {
         return timestamp
     }
 
-    private func interpolateMeasurements(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) async -> [ProcessSelector: [ProcessValue<Dimension>]] {
+    private func interpolateMeasurements(
+        measurements: [ProcessSelector: [ProcessValue<Dimension>]]
+    ) async -> [ProcessSelector: [ProcessValue<Dimension>]] {
         var interpolatedMeasurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
         for (selector, measurement) in measurements {
             interpolatedMeasurements[selector] = await self.interpolateMeasurement(measurements: measurement)
@@ -375,13 +390,15 @@ class SurveyController: ProcessController {
                 }
             }
         }
-        if let forecast = Self.forecast(data: interpolatedMeasurement, duration: 31) {
+        if let forecast = Self.forecast(data: interpolatedMeasurement, duration: 100) {
             interpolatedMeasurement.append(contentsOf: forecast)
         }
-        return interpolatedMeasurement
+        return movingAverage(data: interpolatedMeasurement, windowSize: Self.smoothingFactor)
     }
 
-    private func aggregateMeasurements(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) async -> [ProcessSelector: [ProcessValue<Dimension>]] {
+    private func aggregateMeasurements(
+        measurements: [ProcessSelector: [ProcessValue<Dimension>]]
+    ) async -> [ProcessSelector: [ProcessValue<Dimension>]] {
         var aggregatedMeasurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
         for (selector, measurement) in measurements {
             let uniqueMeasurements = Dictionary(grouping: measurement) { $0.timestamp }
@@ -393,7 +410,8 @@ class SurveyController: ProcessController {
         return aggregatedMeasurements
     }
 
-    private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessQuality) -> ProcessValue<Dimension> {
+    private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessQuality) -> ProcessValue<Dimension>
+    {
         let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
         let unit = measurements.count > 0 ? measurements[0].value.unit : UnitPercentage.percent // Use hardcoded unit if no measurements are available
         return ProcessValue<Dimension>(value: Measurement<Dimension>(value: value, unit: unit), quality: quality, timestamp: timestamp)
@@ -404,6 +422,8 @@ class SurveyController: ProcessController {
         guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
+        if let maxTimestamp = historicalData.map(\.timestamp).max() {
+            let delta = Date.diff(from: maxTimestamp, to: Date.now) ?? 0
         let unit = historicalData[0].value.unit
         let historicalDataPoints = historicalData.map { incidence in
             TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
@@ -411,7 +431,7 @@ class SurveyController: ProcessController {
         let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
         do {
             try predictor.addData(historicalDataPoints)
-            let prediction = try predictor.forecast(duration: duration * 24 * 60 * 60)  // days
+                let prediction = try predictor.forecast(duration: (duration + Double(delta)) * 24 * 60 * 60)  // days
             forecast = prediction.forecasts.map { forecast in
                 ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
             }
@@ -419,7 +439,7 @@ class SurveyController: ProcessController {
         catch {
             trace.error("Forecasting error: \(error)")
         }
+        }
         return forecast
     }
-
 }

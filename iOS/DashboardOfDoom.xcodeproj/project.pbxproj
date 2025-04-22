@@ -10,9 +10,22 @@
 		42A9BFA82D1B1636000E11D7 /* DashboardOfDoom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DashboardOfDoom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		42C1B9272DB5A3990019D05B /* Exceptions for "DashboardOfDoom" folder in "DashboardOfDoom" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 42A9BFA72D1B1636000E11D7 /* DashboardOfDoom */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		42A9BFAA2D1B1636000E11D7 /* DashboardOfDoom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				42C1B9272DB5A3990019D05B /* Exceptions for "DashboardOfDoom" folder in "DashboardOfDoom" target */,
+			);
 			path = DashboardOfDoom;
 			sourceTree = "<group>";
 		};
@@ -258,8 +271,9 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Weather data requires location access";
+				INFOPLIST_FILE = DashboardOfDoom/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app requires background location access for sensor data updates";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app requires location access for sensor data updates";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -290,8 +304,9 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Weather data requires location access";
+				INFOPLIST_FILE = DashboardOfDoom/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app requires background location access for sensor data updates";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app requires location access for sensor data updates";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

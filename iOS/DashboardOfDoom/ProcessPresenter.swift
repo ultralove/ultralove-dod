@@ -43,10 +43,18 @@ import Foundation
     }
 
     func isAvailable(selector: ProcessSelector) -> Bool {
-        guard let measurements = self.measurements[selector] else {
-            return false
+        if let measurements = self.measurements[selector] {
+            if measurements.count > 0 {
+                for measurement in measurements {
+                    if measurement.quality != .unknown {
+                        if measurement.value.value > 0.0 {
+                            return true
+                        }
+                    }
+                }
+            }
         }
-        return measurements.count > 0
+        return false
     }
 }
 
