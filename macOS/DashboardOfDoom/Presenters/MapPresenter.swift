@@ -16,7 +16,7 @@ import SwiftUI
 #if os(macOS)
     static let frameOffset = 0.0
 #else
-    static let frameOffset = 4_250.0
+    static let frameOffset = 10_000.0
 #endif
 
     @MainActor func updateRegion(for id: UUID, with location: Location) -> Void {

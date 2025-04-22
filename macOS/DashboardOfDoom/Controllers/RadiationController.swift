@@ -6,7 +6,7 @@ class RadiationController: ProcessController {
 
     init() {
         self.measurementDistance = 3600  // 1 hour
-        self.forecastDuration = 3 * 24 * self.measurementDistance  // 3 days
+        self.forecastDuration = 1 * 24 * self.measurementDistance  // 1 day
     }
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {

@@ -89,7 +89,8 @@ enum ProcessSelector: Hashable {
         case afd = 7
         case bsw = 23
         case cducsu = 1
-        case sonstige = 0
+        case cdu = 101
+        case csu = 102
         case piraten = 6
         case freie_waehler = 8
         case npd = 9
@@ -106,8 +107,7 @@ enum ProcessSelector: Hashable {
         case bfth = 22
         case plus_brandenburg = 24
         case werte_union = 25
-        case cdu = 101
-        case csu = 102
+        case sonstige = 0
     }
 
     static func survey(from rawValue: Int) -> ProcessSelector? {

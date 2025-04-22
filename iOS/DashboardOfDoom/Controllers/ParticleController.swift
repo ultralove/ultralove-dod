@@ -3,6 +3,11 @@ import Foundation
 class ParticleController: ProcessController {
     private let measurementDuration: TimeInterval
     private let forecastDuration: TimeInterval
+    #if os(iOS)
+    private static let smoothingFactor = 13
+    #else
+    private static let smoothingFactor = 4
+    #endif
 
     init() {
         self.measurementDuration = 21 * 24 * 60 * 60  // 21 days
@@ -22,7 +27,7 @@ class ParticleController: ProcessController {
                                     for (selector, values) in measurements {
                                         var actual = self.interpolateMeasurement(measurements: values)
                                         actual.append(contentsOf: forecast[selector] ?? [])
-                                        measurements[selector] = actual
+                                        measurements[selector] = movingAverage(data: actual, windowSize: Self.smoothingFactor)
                                     }
                                 }
                                 return ProcessSensor(

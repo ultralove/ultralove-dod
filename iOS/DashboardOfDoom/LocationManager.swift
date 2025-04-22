@@ -6,7 +6,7 @@ protocol LocationManagerDelegate: Identifiable where ID == UUID {
 }
 
 class LocationManager: NSObject, CLLocationManagerDelegate {
-    private static let houseOfWorldCultures = Location(latitude: 52.5186, longitude: 13.3644)
+    private static let houseOfWorldCultures = Location(latitude: 52.51889, longitude: 13.36528)
     private var locationManager = CLLocationManager()
     private var location: Location?
     var delegate: (any LocationManagerDelegate)?
@@ -15,8 +15,17 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         super.init()
         self.location = Self.houseOfWorldCultures
         self.locationManager.delegate = self
+        #if os(iOS)
+        self.locationManager.requestAlwaysAuthorization()
+        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+
+        self.locationManager.allowsBackgroundLocationUpdates = true
+        self.locationManager.pausesLocationUpdatesAutomatically = false
+        self.locationManager.showsBackgroundLocationIndicator = true
+        #else
         self.locationManager.requestWhenInUseAuthorization()
         self.locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+        #endif
         self.locationManager.startUpdatingLocation()
     }
 
