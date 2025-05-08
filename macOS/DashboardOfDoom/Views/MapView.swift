@@ -155,25 +155,12 @@ struct MapView: View {
     func _view() -> some View {
         VStack {
             Map(position: viewModel.binding(for: \.region), interactionModes: []) {
-                if let sensor = weather.sensor {
-                    Faceplate(
-                        sensor: sensor, user:true, label: weather.faceplate[.weather(.temperature)], icon: weather.icon, anchor: .topTrailing)
-                }
-                if let sensor = incidence.sensor {
-                    Faceplate(sensor: sensor, label: incidence.faceplate[.covid(.incidence)], icon: incidence.icon, anchor: .bottomLeading)
-                }
-                if let sensor = particle.sensor {
-                    Faceplate(sensor: sensor, label: particle.faceplate[.particle(.pm10)], icon: particle.icon, anchor: .bottomTrailing)
-                }
-                if let sensor = water.sensor {
-                    Faceplate(sensor: sensor, label: water.faceplate[.water(.level)], icon: water.icon, anchor: .bottomLeading)
-                }
-                if let sensor = radiation.sensor {
-                    Faceplate(sensor: sensor, label: radiation.faceplate[.radiation(.total)], icon: radiation.icon, anchor: .bottomLeading)
-                }
-                if let sensor = surveys.sensor {
-                    Faceplate(sensor: sensor, label: surveys.faceplate[.survey(.fascists)], icon: surveys.icon, anchor: .topLeading)
-                }
+                MapAnnotation(presenter: weather, selector: .weather(.temperature), user:true, anchor: .topTrailing)
+                MapAnnotation(presenter: incidence, selector: .covid(.incidence), anchor: .bottomLeading)
+                MapAnnotation(presenter: particle, selector: .particle(.pm10), anchor: .bottomTrailing)
+                MapAnnotation(presenter: water, selector: .water(.level), anchor: .bottomLeading)
+                MapAnnotation(presenter: radiation, selector: .radiation(.total), anchor: .bottomLeading)
+                MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
             }
             .allowsHitTesting(false)
         }

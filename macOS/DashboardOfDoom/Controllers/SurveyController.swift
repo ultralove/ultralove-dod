@@ -140,7 +140,7 @@ class SurveyController: ProcessController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(167).reversed())
+                    let significantPolls = Array(sortedPolls.prefix(33).reversed())
                     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
                     var values: [ProcessValue<Dimension>] = []
@@ -390,10 +390,11 @@ class SurveyController: ProcessController {
                 }
             }
         }
+
         if let forecast = Self.forecast(data: interpolatedMeasurement, duration: 100) {
             interpolatedMeasurement.append(contentsOf: forecast)
         }
-        return movingAverage(data: interpolatedMeasurement, windowSize: Self.smoothingFactor)
+        return gaussianSmoothing(data: interpolatedMeasurement, windowSize: 51, sigma: 13)
     }
 
     private func aggregateMeasurements(

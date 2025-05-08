@@ -34,8 +34,8 @@ import Foundation
         return sensor?.name ?? "<Unknown>"
     }
 
-    var location: Location? {
-        return sensor?.location
+    var location: Location {
+        return sensor?.location ?? Location(latitude: 0.0, longitude: 0.0)
     }
 
     var placemark: String {

@@ -21,8 +21,8 @@ extension Gradient {
 
     static let fascists = LinearGradient(
         gradient: Gradient(colors: [
-            Color(red: 0.4, green: 0.2, blue: 0.1).opacity(1.0),
-            Color(red: 0.4, green: 0.2, blue: 0.1).opacity(0.33)
+            Color.fascists.opacity(1.0),
+            Color.fascists.opacity(0.33)
         ]),
         startPoint: .top,
         endPoint: .bottom
@@ -30,8 +30,8 @@ extension Gradient {
 
     static let clowns = LinearGradient(
         gradient: Gradient(colors: [
-            Color(red: 0.8, green: 0.6, blue: 0.0).opacity(1.0),
-            Color(red: 0.8, green: 0.6, blue: 0.0).opacity(0.33)
+            Color.clowns.opacity(1.0),
+            Color.clowns.opacity(0.33)
         ]),
         startPoint: .top,
         endPoint: .bottom

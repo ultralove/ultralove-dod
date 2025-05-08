@@ -1,7 +1,7 @@
 import SwiftUI
 
-#if os(macOS)
 extension Color {
+#if os(macOS)
     init(light: Color, dark: Color) {
         self.init(NSColor(name: nil, dynamicProvider: { appearance in
             if let appearance = NSApp.appearance, appearance.name == .darkAqua {
@@ -13,8 +13,18 @@ extension Color {
     }
 
     static let blendedBlue = Color(red: 0.33, green: 0.67, blue: 1.0)
+#else
+    init(light: Color, dark: Color) {
+        self.init(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+            ? UIColor(dark)
+            : UIColor(light)
+        })
 }
+
+    static let blendedBlue = Color(red: 0.33, green: 0.67, blue: 1.0)
 #endif
+}
 
 extension Color {
     #if os(macOS)
@@ -58,5 +68,35 @@ extension Color {
             blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
+    }
+
+    static let fascists = Color(red: 0.4, green: 0.2, blue: 0.1)
+    static let clowns = Color(red: 0.8, green: 0.6, blue: 0.0)
+
+
+    static let weather = Color(hex: "#E1E4E1")
+    static let covid = Color(hex: "#BFA07A")
+    static let water = Color(hex: "#9C9C9C")
+    static let particle = Color(hex: "#D9C3B0")
+    static let radiation = Color(hex: "#AAB7BF")
+    static let survey = Color(hex: "#CC6324")
+
+    static func faceplate(selector: ProcessSelector) -> Color {
+        switch selector {
+            case .weather:
+                return Self.weather
+            case .forecast:
+                return Self.weather
+            case .covid:
+                return Self.covid
+            case .water:
+                return Self.water
+            case .particle:
+                return Self.particle
+            case .radiation:
+                return Self.radiation
+            case .survey:
+                return Self.survey
+        }
     }
 }
