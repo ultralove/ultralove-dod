@@ -20,17 +20,8 @@ struct MapSizeModifier: ViewModifier {
     }
 }
 
-struct SettingsView: View {
-    var body: some View {
-        VStack {
-            Text("Settings")
-                .font(.largeTitle)
-                .padding()
-        }
-    }
-}
-
 struct ContentView: View {
+    @AppStorage("enableElectionPolls") private var enableElectionPolls: Bool = false
     @State private var selectedScreen = Screen.home
     @State private var navigationVisible = Visibility.hidden
     @State private var navigationTitle = ""
@@ -39,6 +30,7 @@ struct ContentView: View {
         case home
         case weather
         case covid
+        case environment
         case particles
         case surveys
         case settings
@@ -65,15 +57,39 @@ struct ContentView: View {
                                     .padding(.trailing, 5)
                                     .modifier(MapSizeModifier())
                                 Divider()
-                                    .padding(.horizontal, 5)
-                                    .padding(.trailing, 5)
-                                LevelView()
+//                                RadiationChartView(selector: .radiation(.total), icon: true)
+//                                    .frame(height: 167)
+//                                    .padding(5)
+//                                    .padding(.trailing, 5)
+//                                Divider()
+//                                LevelChartView(selector: .water(.level), icon: true)
+//                                    .frame(height: 167)
+//                                    .padding(5)
+//                                    .padding(.trailing, 5)
+//                                Divider()
+//                                CovidChartView(selector: .covid(.incidence), icon: true)
+//                                    .frame(height: 167)
+//                                    .padding(5)
+//                                    .padding(.trailing, 5)
+//                                Divider()
+//                                ParticleChartView(selector: .particle(.pm10), icon: true)
+//                                    .frame(height: 167)
+//                                    .padding(5)
+//                                    .padding(.trailing, 5)
+//                                if enableElectionPolls == true {
+//                                    Divider()
+//                                    SurveyChartView(selector: .survey(.fascists), icon: true)
+//                                        .frame(height: 167)
+//                                        .padding(5)
+//                                        .padding(.trailing, 5)
+//                                }
+                                RadiationView()
                                     .padding(5)
                                     .padding(.trailing, 3)
                                 Divider()
                                     .padding(.horizontal, 5)
                                     .padding(.trailing, 5)
-                                RadiationView()
+                                LevelView()
                                     .padding(5)
                                     .padding(.trailing, 3)
                             }
@@ -101,6 +117,22 @@ struct ContentView: View {
                                 navigationVisible = .visible
                                 navigationTitle = "COVID-19 Situation"
                             }
+                        case .environment:
+                            VStack {
+                                RadiationView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
+                                Divider()
+                                    .padding(.horizontal, 5)
+                                    .padding(.trailing, 5)
+                                LevelView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
+                            }
+                            .onAppear {
+                                navigationVisible = .visible
+                                navigationTitle = "Environmental Conditions"
+                            }
                         case .particles:
                             VStack {
                                 ParticleView()
@@ -112,18 +144,22 @@ struct ContentView: View {
                                 navigationTitle = "Particulate Matter"
                             }
                         case .surveys:
-                            VStack {
-                                SurveyView()
-                                    .padding(5)
-                                    .padding(.trailing, 3)
-                            }
-                            .onAppear {
-                                navigationVisible = .visible
-                                navigationTitle = "Election Polls"
+                            if enableElectionPolls == true {
+                                VStack {
+                                    SurveyView()
+                                        .padding(5)
+                                        .padding(.trailing, 3)
+                                }
+                                .onAppear {
+                                    navigationVisible = .visible
+                                    navigationTitle = "Election Polls"
+                                }
                             }
                         case .settings:
                             VStack {
                                 SettingsView()
+                                    .padding(5)
+                                    .padding(.trailing, 3)
                             }
                             .onAppear {
                                 navigationVisible = .visible
@@ -151,7 +187,7 @@ struct ContentView: View {
                             }
                             Spacer()
                             Button(action: { selectedScreen = .weather }) {
-                                Image(systemName: selectedScreen == .weather ? "cloud.bolt.fill" : "cloud.sun")
+                                Image(systemName: selectedScreen == .weather ? "cloud.bolt.fill" : "cloud.bolt")
                                     .foregroundColor(selectedScreen == .weather ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
@@ -160,15 +196,22 @@ struct ContentView: View {
                                     .foregroundColor(selectedScreen == .covid ? .accentColor : .accentColor.opacity(0.5))
                             }
                             Spacer()
+                            Button(action: { selectedScreen = .environment }) {
+                                Image(systemName: selectedScreen == .environment ? "leaf.fill" : "leaf")
+                                    .foregroundColor(selectedScreen == .environment ? .accentColor : .accentColor.opacity(0.5))
+                            }
+                            Spacer()
                             Button(action: { selectedScreen = .particles }) {
                                 Image(systemName: selectedScreen == .particles ? "aqi.medium" : "aqi.low")
                                     .foregroundColor(selectedScreen == .particles ? .accentColor : .accentColor.opacity(0.5))
                                     .fontWeight(.black)  // Workaround for "aqi.medium" icon being rather thin
                             }
-                            Spacer()
-                            Button(action: { selectedScreen = .surveys }) {
-                                Image(systemName: selectedScreen == .surveys ? "popcorn.fill" : "popcorn")
-                                    .foregroundColor(selectedScreen == .surveys ? .accentColor : .accentColor.opacity(0.5))
+                            if enableElectionPolls == true {
+                                Spacer()
+                                Button(action: { selectedScreen = .surveys }) {
+                                    Image(systemName: selectedScreen == .surveys ? "popcorn.fill" : "popcorn")
+                                        .foregroundColor(selectedScreen == .surveys ? .accentColor : .accentColor.opacity(0.5))
+                                }
                             }
                             Spacer()
                             Button(action: { selectedScreen = .settings }) {
@@ -187,9 +230,11 @@ struct ContentView: View {
                         traitCollection.userInterfaceStyle == .dark ? .black : .white
                     }), for: .bottomBar
             )
-            //            .refreshable {
-            //                SubscriptionManager.shared.refresh()
-            //            }
+            .refreshable {
+                if self.selectedScreen != .settings {
+                    ProcessManager.shared.refreshSubscriptions()
+                }
+            }
         }
     }
 }

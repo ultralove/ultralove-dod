@@ -5,12 +5,9 @@ import SwiftUI
 @Observable class MapPresenter {
     var visibleRegion: [UUID: Location] = [:]
     var visibleRectangle = MKMapRect.null
+    var region = MapCameraPosition.region(MKCoordinateRegion(MKMapRect.null))
 
-    var region = MapCameraPosition.region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 54.1318, longitude: 8.8557), span: MKCoordinateSpan(latitudeDelta: 0.0167, longitudeDelta: 0.0167)))
-
-    static let shared = MapPresenter()
+    public static let shared = MapPresenter()
     private init() {}
 
 #if os(macOS)
@@ -19,10 +16,28 @@ import SwiftUI
     static let frameOffset = 10_000.0
 #endif
 
+    @MainActor func resetRegion() -> Void {
+        self.visibleRectangle = MKMapRect.null
+        self.region = MapCameraPosition.region(MKCoordinateRegion(self.visibleRectangle))
+    }
+
     @MainActor func updateRegion(for id: UUID, with location: Location) -> Void {
         self.visibleRegion[id] = location
+        self.refreshRegion()
+    }
+
+    @MainActor func updateRegion(remove id: UUID) -> Void {
+        if self.visibleRegion[id] != nil {
+            self.visibleRegion.removeValue(forKey: id)
+            self.resetRegion()
+            self.refreshRegion()
+        }
+    }
+
+    @MainActor private func refreshRegion() -> Void {
         let maxDistance = Self.greatestDistance(locations: Array(self.visibleRegion.values))
         for location in self.visibleRegion.values {
+            trace.debug("MapPresenter.refreshRegion: \(location)")
             let boundingRectangle = Self.makeBoundingRectangle(
                 centerCoordinate: location.coordinate, widthMeters: (maxDistance.value / 2) + Self.frameOffset, heightMeters: (maxDistance.value / 2) + Self.frameOffset)
             self.visibleRectangle = self.visibleRectangle.union(boundingRectangle)

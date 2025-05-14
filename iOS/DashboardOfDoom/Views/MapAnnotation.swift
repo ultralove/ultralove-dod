@@ -38,6 +38,7 @@ struct MapAnnotation: MapContent {
                 }
                 Spacer()
             }
+            .frame(width: 81, height: 57)
             .padding(5)
             .padding(.horizontal, 5)
             .background(

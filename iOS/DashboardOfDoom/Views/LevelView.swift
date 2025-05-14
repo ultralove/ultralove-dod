@@ -28,11 +28,12 @@ struct LevelView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -40,7 +41,7 @@ struct LevelView: View {
                 ForEach(ProcessSelector.Water.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .water(selector)) {
                         VStack {
-                            LevelChartView(selector: .water(selector), rounding: .previousQuarterHour)
+                            LevelChartView(selector: .water(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

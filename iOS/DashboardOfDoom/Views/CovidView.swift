@@ -28,11 +28,12 @@ struct CovidView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -40,7 +41,7 @@ struct CovidView: View {
                 ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .covid(selector)) {
                         VStack {
-                            CovidChartView(selector: .covid(selector), rounding: .lastDayChange)
+                            CovidChartView(selector: .covid(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

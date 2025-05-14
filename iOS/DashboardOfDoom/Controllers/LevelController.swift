@@ -39,27 +39,35 @@ class LevelController: ProcessController {
         var nearestStation: Station? = nil
         if let data = try await LevelService.fetchStations() {
             if let stations = try Self.parseStations(from: data) {
-                if let waterways = try await fetchNearestWaterways(for: location) {
-                    if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
-                        trace.debug("Nearest waterway: \(nearestWaterway)")
-                        if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
-                            if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
-                                nearestStation = Station(
-                                    id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
+                if UserDefaults.standard.bool(forKey: "nearestLevelSensor") == true {
+                    if let station = Self.nearestStation(stations: stations, location: location) {
+                        nearestStation = Station(
+                            id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                    }
+                }
+                else {
+                    if let waterways = try await fetchNearestWaterways(for: location) {
+                        if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
+                            trace.debug("Nearest waterway: \(nearestWaterway)")
+                            if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
+                                if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
+                                    nearestStation = Station(
+                                        id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
+                                }
                             }
-                        }
-                        else {
-                            trace.warning("No synchronized stations found, falling back to nearest station")
-                            if let station = Self.nearestStation(stations: stations, location: location) {
-                                nearestStation = Station(
-                                    id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                            else {
+                                trace.warning("No synchronized stations found, falling back to nearest station")
+                                if let station = Self.nearestStation(stations: stations, location: location) {
+                                    nearestStation = Station(
+                                        id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                                }
                             }
-                        }
-                        if let nearestStation = nearestStation {
-                            trace.debug("Nearest station: \(nearestStation)")
-                        }
-                        else {
-                            trace.error("No station found")
+                            if let nearestStation = nearestStation {
+                                trace.debug("Nearest station: \(nearestStation)")
+                            }
+                            else {
+                                trace.error("No station found")
+                            }
                         }
                     }
                 }

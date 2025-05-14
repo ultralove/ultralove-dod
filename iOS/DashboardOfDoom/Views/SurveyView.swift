@@ -28,11 +28,12 @@ struct SurveyView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -40,7 +41,7 @@ struct SurveyView: View {
                 ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .survey(selector)) {
                         VStack {
-                            SurveyChartView(selector: .survey(selector), rounding: .lastUTCDayChange)
+                            SurveyChartView(selector: .survey(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

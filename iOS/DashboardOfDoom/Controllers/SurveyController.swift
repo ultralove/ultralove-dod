@@ -24,7 +24,8 @@ struct Descriptor {
 }
 
 class SurveyController: ProcessController {
-    private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
+//    private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
+    private let germany = Constituency(name: "Deutschland", location: Location(latitude: 52.5186, longitude: 13.3763))
     #if os(iOS)
     private static let smoothingFactor = 50
     #else
@@ -43,7 +44,13 @@ class SurveyController: ProcessController {
     let realClowns: [ProcessSelector] = [.survey(.fdp), .survey(.volt)]
 
     func refreshData(for location: Location) async throws -> ProcessSensor? {
-        return try await self.refreshLocalSurveys(for: location)
+        let scope = UserDefaults.standard.integer(forKey: "electionPollScope")
+        if scope == 0 {
+            return try await self.refreshFederalSurveys(for: location)
+        }
+        else {
+            return try await self.refreshLocalSurveys(for: location)
+        }
     }
 
     private func refreshFederalSurveys(for location: Location) async throws -> ProcessSensor? {
@@ -56,7 +63,7 @@ class SurveyController: ProcessController {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
-                    let significantPolls = Array(sortedPolls.prefix(167).reversed())
+                    let significantPolls = Array(sortedPolls.prefix(367).reversed())
                     var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
                     var values: [ProcessValue<Dimension>] = []
@@ -80,17 +87,6 @@ class SurveyController: ProcessController {
                     if values.count > 0 {
                         measurements[.survey(.clowns)] = values
                     }
-
-                    //                    let constraints = [
-                    //                        ProcessSelector.survey(.linke).rawValue,
-                    //                        ProcessSelector.survey(.gruene).rawValue,
-                    //                        ProcessSelector.survey(.spd).rawValue,
-                    //                        ProcessSelector.survey(.afd).rawValue,
-                    //                        ProcessSelector.survey(.fdp).rawValue,
-                    //                        ProcessSelector.survey(.bsw).rawValue,
-                    //                        ProcessSelector.survey(.cducsu).rawValue
-                    //                    ]
-                    //                    let descriptors = try await parseParties(from: data, constraints: constraints)
                     let descriptors = try await parseParties(from: data, constraints: [])
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)

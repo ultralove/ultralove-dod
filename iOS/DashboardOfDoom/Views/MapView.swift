@@ -1,99 +1,6 @@
 import MapKit
 import SwiftUI
 
-struct Faceplate: MapContent {
-    let sensor: ProcessSensor
-    var user: Bool = false
-    let label: String?
-    let icon: String?
-    let anchor: UnitPoint
-
-    var body: some MapContent {
-        Annotation("", coordinate: self.sensor.location.coordinate, anchor: self.anchor) {
-            #if os(iOS)
-            VStack {
-                Spacer()
-                if let icon = self.icon {
-                    if user == true {
-                        Image(systemName: icon)
-                    }
-                    else {
-                        Image(systemName: icon)
-                    }
-                }
-                Spacer()
-                if let label = self.label {
-                    VStack(alignment: .leading) {
-                        Text(label)
-                            .font(.footnote)
-                    }
-                    Spacer()
-                }
-            }
-            .padding(5)
-            .padding(.horizontal, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 13)
-                    .fill(Color.faceplate)
-                    .opacity(0.33)
-            )
-            .font(.title)
-            .foregroundStyle(.black)
-            #else
-            VStack {
-                Spacer()
-                if let icon = self.icon {
-                    if user == true {
-                        Image(systemName: icon)
-                            .font(.largeTitle)
-                    }
-                    else {
-                        Image(systemName: icon)
-                            .font(.title)
-                    }
-                }
-                Spacer()
-                if let label = self.label {
-                    VStack(alignment: .leading) {
-                        Text(label)
-                    }
-                    Spacer()
-                }
-            }
-            .frame(height: 57)
-            .padding(5)
-            .padding(.horizontal, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 13)
-                    .fill(Color.faceplate)
-                    .opacity(0.77)
-            )
-            .foregroundStyle(.black)
-            #endif
-        }
-        Annotation("", coordinate: self.sensor.location.coordinate, anchor: .center) {
-            VStack {
-                if user == true {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 15, height: 15)
-                        Circle()
-                            .fill(Color.location)
-                            .frame(width: 11, height: 11)
-                    }
-                }
-                else {
-                    Circle()
-                        .fill(Color.location)
-                        .frame(width: 11, height: 11)
-
-                }
-            }
-        }
-    }
-}
-
 struct MapView: View {
     @Environment(WeatherPresenter.self) private var weather
     @Environment(CovidPresenter.self) private var incidence
@@ -118,10 +25,10 @@ struct MapView: View {
                 HStack(alignment: .bottom) {
                     Image(systemName: "safari")
                     Text(String(format: "%@", sensor.placemark ?? "<Unknown>"))
+                        .foregroundColor(.accentColor)
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
                         .foregroundColor(.gray)
-
                 }
                 .padding(.vertical, 5)
                 .padding(.leading, 5)
@@ -133,11 +40,12 @@ struct MapView: View {
                         Text(String(format: "%@", sensor.placemark ?? "<Unknown>"))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -147,22 +55,27 @@ struct MapView: View {
                 ActivityIndicator()
             }
             else {
-                _view()
+                VStack {
+                    Map(position: viewModel.binding(for: \.region), interactionModes: []) {
+                        MapAnnotation(presenter: weather, selector: .weather(.temperature), user: true, anchor: .topTrailing)
+                        MapAnnotation(presenter: incidence, selector: .covid(.incidence), anchor: .bottomLeading)
+                        MapAnnotation(presenter: particle, selector: .particle(.pm10), anchor: .bottomTrailing)
+                        MapAnnotation(presenter: water, selector: .water(.level), anchor: .bottomLeading)
+                        MapAnnotation(presenter: radiation, selector: .radiation(.total), anchor: .bottomLeading)
+                        if UserDefaults.standard.bool(forKey: "enableElectionPolls") == true {
+                            if UserDefaults.standard.integer(forKey: "electionPollScope") == 0 {
+                                if UserDefaults.standard.bool(forKey: "showFederalElectionPolls") == true {
+                                    MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
+                                }
+                            }
+                            else {
+                                MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
+                            }
+                        }
+                    }
+                    .allowsHitTesting(false)
+                }
             }
-        }
-    }
-
-    func _view() -> some View {
-        VStack {
-            Map(position: viewModel.binding(for: \.region), interactionModes: []) {
-                MapAnnotation(presenter: weather, selector: .weather(.temperature), user:true, anchor: .topTrailing)
-                MapAnnotation(presenter: incidence, selector: .covid(.incidence), anchor: .bottomLeading)
-                MapAnnotation(presenter: particle, selector: .particle(.pm10), anchor: .bottomTrailing)
-                MapAnnotation(presenter: water, selector: .water(.level), anchor: .bottomLeading)
-                MapAnnotation(presenter: radiation, selector: .radiation(.total), anchor: .bottomLeading)
-                MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
-            }
-            .allowsHitTesting(false)
         }
     }
 }

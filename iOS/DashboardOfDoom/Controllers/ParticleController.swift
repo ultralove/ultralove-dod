@@ -115,11 +115,17 @@ class ParticleController: ProcessController {
                         haversineDistance(location_0: location, location_1: $0.location)
                             < haversineDistance(location_0: location, location_1: $1.location)
                     }
-                    if let selectedStation = await Self.selectStation(stations: sortedStations) {
-                        nearestStation = selectedStation
+
+                    if UserDefaults.standard.bool(forKey: "nearestParticleSensor") == true {
+                        nearestStation = sortedStations.first
                     }
                     else {
-                        nearestStation = sortedStations.first
+                        if let selectedStation = await Self.selectStation(stations: sortedStations) {
+                            nearestStation = selectedStation
+                        }
+                        else {
+                            nearestStation = sortedStations.first
+                        }
                     }
                 }
             }

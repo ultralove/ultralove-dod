@@ -11,7 +11,6 @@ import Foundation
     var range: [ProcessSelector: ClosedRange<Double>] = [:]
     var trend: [ProcessSelector: String] = [:]
 
-
     var label: String {
         if let customData = sensor?.customData {
             if let label = customData["label"] as? String {

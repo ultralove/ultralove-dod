@@ -22,6 +22,9 @@ import Foundation
         }
     }
 
+    func resetData() async {
+    }
+
     @MainActor func publishData(sensor: ProcessSensor) async {
         self.sensor = sensor
         self.timestamp = sensor.timestamp

@@ -5,7 +5,7 @@ struct LevelChartView: View {
     @Environment(LevelPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    let rounding: RoundingStrategy
+    var icon = false
 
     private let labels: [ProcessSelector: String] = [
         .water(.level): "Level"
@@ -14,9 +14,15 @@ struct LevelChartView: View {
     var body: some View {
         VStack {
             HStack(alignment: .bottom) {
+                if self.icon == true {
+                    Image(systemName: presenter.icon)
+                        .font(.title)
+                }
                 Text("\(self.presenter.name) \(self.labels[selector] ?? "<Unknown>")")
                 Spacer()
             }
+            .font(.headline)
+            .foregroundColor(.accentColor)
             Chart {
                 ForEach(presenter.measurements[selector] ?? []) { level in
                     LineMark(
@@ -100,7 +106,7 @@ struct LevelChartView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                if let target = Date.round(from: source, strategy: .previousQuarterHour) {
                                                     self.timestamp = target
                                                 }
                                             }

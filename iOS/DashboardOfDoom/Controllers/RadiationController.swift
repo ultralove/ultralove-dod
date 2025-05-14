@@ -99,9 +99,9 @@ class RadiationController: ProcessController {
                         if let dateString = properties["end_measure"] as? String {
                             let isoFormatter = ISO8601DateFormatter()
                             if let timestamp = isoFormatter.date(from: dateString) {
-                                if let value = properties["value"] as? Double {
+                                if let value = properties["value"] as? Double, let validated = properties["validated"] as? Int {
                                     let measurement = ProcessValue<Dimension>(
-                                        value: Measurement(value: value, unit: UnitRadiation.microsieverts), quality: .good, timestamp: timestamp)
+                                        value: Measurement(value: value, unit: UnitRadiation.microsieverts), quality: (validated == 1) ? .good : .uncertain, timestamp: timestamp)
                                     measurements.append(measurement)
                                 }
                             }

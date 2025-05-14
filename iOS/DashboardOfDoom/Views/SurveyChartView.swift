@@ -5,7 +5,7 @@ struct SurveyChartView: View {
     @Environment(SurveyPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    let rounding: RoundingStrategy
+    var icon = false
 
     private let shortLabels: [ProcessSelector: String] = [
         .survey(.fascists): "Fascists",
@@ -73,7 +73,14 @@ struct SurveyChartView: View {
         VStack {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading) {
-                    Text("\(self.shortLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
+                    HStack {
+                        if self.icon == true {
+                            Image(systemName: presenter.icon)
+                                .font(.title)
+                        }
+                        Text("\(self.shortLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
+                        Spacer()
+                    }
                     if selector != .survey(.fascists) && selector != .survey(.clowns) && selector != .survey(.sonstige) {
                         #if os(iOS)
                         Text("\(String.truncate(self.fullLabels[selector], maxLength: 53) ?? String(format: "%d <Unknown>", selector.rawValue))")
@@ -88,6 +95,8 @@ struct SurveyChartView: View {
                 }
                 Spacer()
             }
+            .font(.headline)
+            .foregroundColor(.accentColor)
             Chart {
                 ForEach(presenter.measurements[selector] ?? []) { measurement in
                     if selector != .survey(.fascists) && selector != .survey(.clowns) && selector != .survey(.sonstige) {
@@ -173,7 +182,7 @@ struct SurveyChartView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                if let target = Date.round(from: source, strategy: .lastUTCDayChange) {
                                                     self.timestamp = target
                                                 }
                                             }

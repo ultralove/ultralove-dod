@@ -9,12 +9,13 @@ struct DashboardOfDoomApp: App {
     @State var radiationPresenter = RadiationPresenter()
     @State var particlePresenter = ParticlePresenter()
     @State var surveyPresenter = SurveyPresenter()
+    @State var colorPresenter = ColorPresenter()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(.dark) 
-//                .accentColor(.init(light: .blue, dark: .orange))
+                .preferredColorScheme(colorPresenter.colorScheme)
+                .tint(colorPresenter.tintColor)
                 .environment(weatherViewModel)
                 .environment(forecastPresenter)
                 .environment(covidPresenter)
@@ -22,6 +23,7 @@ struct DashboardOfDoomApp: App {
                 .environment(radiationPresenter)
                 .environment(particlePresenter)
                 .environment(surveyPresenter)
+                .environment(colorPresenter)
         }
     }
 }

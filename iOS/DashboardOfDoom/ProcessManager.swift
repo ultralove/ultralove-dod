@@ -1,8 +1,8 @@
 import Foundation
 
-class ProcessManager: Identifiable, LocationManagerDelegate {
-    let id = UUID()
-    static let shared = ProcessManager()
+public class ProcessManager: Identifiable, LocationManagerDelegate {
+    public let id = UUID()
+    public static let shared = ProcessManager()
 
     private let locationManager = LocationManager()
     private var location: Location?
@@ -32,7 +32,7 @@ class ProcessManager: Identifiable, LocationManagerDelegate {
         }
     }
 
-    private func refreshSubscriptions() {
+    public func refreshSubscriptions() {
         if let location = self.location {
             for delegate in self.subscribers.values {
                 Task {
@@ -43,11 +43,30 @@ class ProcessManager: Identifiable, LocationManagerDelegate {
         }
     }
 
+    public func refreshSubscription(subscriber: any ProcessSubscriber) {
+        if let location = self.location {
+            if let delegate = self.subscribers[subscriber.id] {
+                Task {
+                    await delegate.refreshData(location: location)
+                }
+            }
+        }
+    }
+
     private func resetSubscriptions() {
         for subscription in self.subscriptions {
             subscription.reset()
         }
     }
+
+    public func resetSubscription(subscriber: any ProcessSubscriber) {
+        if let delegate = self.subscribers[subscriber.id] {
+            Task {
+                await delegate.resetData()
+            }
+        }
+    }
+
 
     func locationManager(didUpdateLocation location: Location) {
         self.location = location

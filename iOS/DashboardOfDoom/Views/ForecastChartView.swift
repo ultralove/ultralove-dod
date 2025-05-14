@@ -18,7 +18,7 @@ struct ForecastChartView: View {
         .forecast(.visibility): "Visibility",
         .forecast(.cloudCover): "Cloud Cover",
         .forecast(.windSpeed): "Wind Speed",
-        .forecast(.windGust): "Wind Gust"
+        .forecast(.windGust): "Wind Gusts"
     ]
 
     var body: some View {
@@ -27,6 +27,8 @@ struct ForecastChartView: View {
                 Text("\(self.labels[selector] ?? "<Unknown>")")
                 Spacer()
             }
+            .font(.headline)
+            .foregroundColor(.accentColor)
             Chart {
                 ForEach(presenter.measurements[selector] ?? []) { measurement in
                     AreaMark(
