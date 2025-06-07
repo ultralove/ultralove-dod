@@ -11,7 +11,7 @@ import SwiftUI
     private init() {}
 
 #if os(macOS)
-    static let frameOffset = 0.0
+    static let frameOffset = 5_000.0
 #else
     static let frameOffset = 10_000.0
 #endif

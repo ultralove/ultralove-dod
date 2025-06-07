@@ -28,11 +28,12 @@ struct ParticleView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -40,7 +41,7 @@ struct ParticleView: View {
                 ForEach(ProcessSelector.Particle.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .particle(selector)) {
                         VStack {
-                            ParticleChartView(selector: .particle(selector), rounding: .previousHour)
+                            ParticleChartView(selector: .particle(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

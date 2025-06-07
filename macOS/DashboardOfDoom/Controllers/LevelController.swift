@@ -39,6 +39,13 @@ class LevelController: ProcessController {
         var nearestStation: Station? = nil
         if let data = try await LevelService.fetchStations() {
             if let stations = try Self.parseStations(from: data) {
+                if UserDefaults.standard.bool(forKey: "nearestLevelSensor") == true {
+                    if let station = Self.nearestStation(stations: stations, location: location) {
+                        nearestStation = Station(
+                            id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                    }
+                }
+                else {
                 if let waterways = try await fetchNearestWaterways(for: location) {
                     if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
                         trace.debug("Nearest waterway: \(nearestWaterway)")
@@ -64,6 +71,7 @@ class LevelController: ProcessController {
                     }
                 }
             }
+        }
         }
         return nearestStation
     }

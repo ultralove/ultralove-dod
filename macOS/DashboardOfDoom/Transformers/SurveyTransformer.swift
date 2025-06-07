@@ -21,7 +21,7 @@ class SurveyTransformer: ProcessTransformer {
     override func renderRange(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: ClosedRange<Double>] {
         var scale: [ProcessSelector: ClosedRange<Double>] = [:]
         for (selector, _) in measurements {
-            scale[selector] = 0.0 ... 66.7
+            scale[selector] = 0.0 ... 100.0
         }
         return scale
     }

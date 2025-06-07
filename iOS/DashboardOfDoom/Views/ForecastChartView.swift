@@ -5,7 +5,6 @@ struct ForecastChartView: View {
     @Environment(ForecastPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    let rounding: RoundingStrategy
 
     private let labels: [ProcessSelector: String] = [
         .forecast(.temperature): "Temperature (actual)",

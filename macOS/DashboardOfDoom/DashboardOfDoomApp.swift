@@ -10,6 +10,7 @@ struct DashboardOfDoomApp: App {
     @State var radiationPresenter = RadiationPresenter()
     @State var particlePresenter = ParticlePresenter()
     @State var surveyPresenter = SurveyPresenter()
+    @State var colorPresenter = ColorPresenter()
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
@@ -24,12 +25,20 @@ struct DashboardOfDoomApp: App {
                 .environment(radiationPresenter)
                 .environment(particlePresenter)
                 .environment(surveyPresenter)
+                .environment(colorPresenter)
 
         } label: {
             Text(weatherViewModel.faceplate[.weather(.temperature)] ?? "n/a")
                 .font(.system(.body, design: .monospaced))
         }
         .menuBarExtraStyle(.window)
+
+        Window("Settings", id: "settings") {
+            SettingsView()
+                .frame(minWidth: 480, minHeight: 400)
+        }
+//        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
     }
 }
 

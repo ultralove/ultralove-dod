@@ -20,7 +20,7 @@ struct MapSizeModifier: ViewModifier {
         }
         #else
         content
-            .frame(height: 723)
+            .frame(height: 500)
         #endif
     }
 }
@@ -96,13 +96,6 @@ struct ContentView: View {
                     .padding(.top, 10)
                 Spacer()
                 HStack(alignment: .bottom) {
-                    HStack(alignment: .bottom) {
-                        Image(systemName: "ladybug")
-                            .foregroundColor(.red)
-                            .imageScale(.large)
-                        Text("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")")
-                        Text("Build: \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown")")
-                    }
                     Menu {
                         Button("Settings...") {
                         }
@@ -169,11 +162,17 @@ struct ContentView: View {
                             .padding(5)
                             .padding(.trailing, 10)
                     }
+                    Divider()
+                    ContentPanelView(label: "Settings", icon: "gear") {
+                        SettingsView()
+                            .padding(5)
+                            .padding(.trailing, 10)
+                    }
                 }
             }
             .padding(.bottom, 10)
         }
-        .frame(width: 1024, height: 1024)
+        .frame(width: 600, height: 800)
         .preferredColorScheme(.dark)
         .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
         .background(colorScheme == .dark ? Color.black : Color.white)

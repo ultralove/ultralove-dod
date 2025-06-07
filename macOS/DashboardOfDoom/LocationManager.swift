@@ -6,9 +6,9 @@ protocol LocationManagerDelegate: Identifiable where ID == UUID {
 }
 
 class LocationManager: NSObject, CLLocationManagerDelegate {
-    private static let houseOfWorldCultures = Location(latitude: 52.51889, longitude: 13.36528)
+    public static let houseOfWorldCultures = Location(latitude: 52.51889, longitude: 13.36528)
     private var locationManager = CLLocationManager()
-    private var location: Location?
+    public var location: Location?
     var delegate: (any LocationManagerDelegate)?
 
     override init() {

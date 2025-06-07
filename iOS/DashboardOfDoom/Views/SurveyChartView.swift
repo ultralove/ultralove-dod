@@ -5,7 +5,6 @@ struct SurveyChartView: View {
     @Environment(SurveyPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    var icon = false
 
     private let shortLabels: [ProcessSelector: String] = [
         .survey(.fascists): "Fascists",
@@ -74,10 +73,6 @@ struct SurveyChartView: View {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading) {
                     HStack {
-                        if self.icon == true {
-                            Image(systemName: presenter.icon)
-                                .font(.title)
-                        }
                         Text("\(self.shortLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
                         Spacer()
                     }

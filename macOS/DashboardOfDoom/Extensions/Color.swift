@@ -74,12 +74,21 @@ extension Color {
     static let clowns = Color(red: 0.8, green: 0.6, blue: 0.0)
 
 
+    #if os(macOS)
     static let weather = Color(hex: "#E1E4E1")
     static let covid = Color(hex: "#BFA07A")
     static let water = Color(hex: "#9C9C9C")
     static let particle = Color(hex: "#D9C3B0")
     static let radiation = Color(hex: "#AAB7BF")
     static let survey = Color(hex: "#CC6324")
+    #else
+    static let weather = Color.blue
+    static let covid = Color.purple
+    static let water = Color.yellow
+    static let particle = Color.green
+    static let radiation = Color.orange
+    static let survey = Color.pink
+    #endif
 
     static func faceplate(selector: ProcessSelector) -> Color {
         switch selector {

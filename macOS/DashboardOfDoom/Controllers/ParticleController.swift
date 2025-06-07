@@ -69,7 +69,7 @@ class ParticleController: ProcessController {
                 }
             }
         }
-        return interpolatedMeasurement
+        return gaussianSmoothing(data: interpolatedMeasurement, windowSize: 11, sigma: 2.3)
     }
 
     private static func calculateMeasurementTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
@@ -115,6 +115,11 @@ class ParticleController: ProcessController {
                         haversineDistance(location_0: location, location_1: $0.location)
                             < haversineDistance(location_0: location, location_1: $1.location)
                     }
+
+                    if UserDefaults.standard.bool(forKey: "nearestParticleSensor") == true {
+                        nearestStation = sortedStations.first
+                    }
+                    else {
                     if let selectedStation = await Self.selectStation(stations: sortedStations) {
                         nearestStation = selectedStation
                     }
@@ -123,6 +128,7 @@ class ParticleController: ProcessController {
                     }
                 }
             }
+        }
         }
         catch {
             trace.error("Error fetching stations: %@", error.localizedDescription)

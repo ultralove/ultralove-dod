@@ -28,11 +28,12 @@ struct RadiationView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -40,7 +41,7 @@ struct RadiationView: View {
                 ForEach(ProcessSelector.Radiation.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .radiation(selector)) {
                         VStack {
-                            RadiationChartView(selector: .radiation(selector), rounding: .previousHour)
+                            RadiationChartView(selector: .radiation(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

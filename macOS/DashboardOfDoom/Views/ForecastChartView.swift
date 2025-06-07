@@ -5,7 +5,6 @@ struct ForecastChartView: View {
     @Environment(ForecastPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    let rounding: RoundingStrategy
 
     private let labels: [ProcessSelector: String] = [
         .forecast(.temperature): "Temperature (actual)",
@@ -18,7 +17,7 @@ struct ForecastChartView: View {
         .forecast(.visibility): "Visibility",
         .forecast(.cloudCover): "Cloud Cover",
         .forecast(.windSpeed): "Wind Speed",
-        .forecast(.windGust): "Wind Gust"
+        .forecast(.windGust): "Wind Gusts"
     ]
 
     var body: some View {
@@ -30,7 +29,7 @@ struct ForecastChartView: View {
             Chart {
                 ForEach(presenter.measurements[selector] ?? []) { measurement in
                     AreaMark(
-                        x: .value("Date", Date.round(from: measurement.timestamp, strategy: self.rounding) ?? Date.now),
+                        x: .value("Date", Date.round(from: measurement.timestamp, strategy: .previousHour) ?? Date.now),
                         yStart: .value("Forecast", presenter.range[selector]?.lowerBound ?? 0.0),
                         yEnd: .value("Forecast", measurement.value.value)
                     )
@@ -69,7 +68,7 @@ struct ForecastChartView: View {
 
                 if let timestamp = self.timestamp {
                     if let measurement = presenter.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
-                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: self.rounding) ?? Date.now))
+                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: .previousHour) ?? Date.now))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
                             x: .value("Date", timestamp),
@@ -110,7 +109,7 @@ struct ForecastChartView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                if let target = Date.round(from: source, strategy: .previousHour) {
                                                     self.timestamp = target
                                                 }
                                             }

@@ -5,7 +5,6 @@ struct CovidChartView: View {
     @Environment(CovidPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    var icon = false
 
     private let labels: [ProcessSelector: String] = [
         .covid(.incidence): "Weekly Incidence",
@@ -17,10 +16,6 @@ struct CovidChartView: View {
     var body: some View {
         VStack {
             HStack(alignment: .bottom) {
-                if self.icon == true {
-                    Image(systemName: presenter.icon)
-                        .font(.title)
-                }
                 Text("\(self.presenter.name) \(self.labels[selector] ?? "<Unknown>")")
                 Spacer()
             }

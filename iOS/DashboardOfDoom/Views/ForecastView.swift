@@ -41,7 +41,7 @@ struct ForecastView: View {
                 ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .forecast(selector)) {
                         VStack {
-                            ForecastChartView(selector: .forecast(selector), rounding: .previousHour)
+                            ForecastChartView(selector: .forecast(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

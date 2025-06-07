@@ -5,7 +5,6 @@ struct LevelChartView: View {
     @Environment(LevelPresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    let rounding: RoundingStrategy
 
     private let labels: [ProcessSelector: String] = [
         .water(.level): "Level"
@@ -100,7 +99,7 @@ struct LevelChartView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                if let target = Date.round(from: source, strategy: .previousQuarterHour) {
                                                     self.timestamp = target
                                                 }
                                             }

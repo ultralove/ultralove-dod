@@ -28,11 +28,12 @@ struct ForecastView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
+                    .foregroundColor(.accentColor)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                            .foregroundColor(.gray)
                         Spacer()
                     }
+                    .foregroundColor(.gray)
                 }
                 .font(.footnote)
                 #endif
@@ -40,7 +41,7 @@ struct ForecastView: View {
                 ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
                     if self.presenter.isAvailable(selector: .forecast(selector)) {
                         VStack {
-                            ForecastChartView(selector: .forecast(selector), rounding: .previousHour)
+                            ForecastChartView(selector: .forecast(selector))
                         }
                         .padding(.vertical, 5)
                         .frame(height: 167)

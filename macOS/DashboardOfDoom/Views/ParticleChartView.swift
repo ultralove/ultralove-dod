@@ -5,7 +5,6 @@ struct ParticleChartView: View {
     @Environment(ParticlePresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    let rounding: RoundingStrategy
 
     enum ParticleSymbol: String, CaseIterable {
         case pm10 = "\u{1D40F}\u{1D40C}\u{2081}\u{2080}"  // PM10, Particulate matter < 10µm
@@ -109,7 +108,7 @@ struct ParticleChartView: View {
 
                 if let timestamp = self.timestamp {
                     if let measurement = presenter.measurements[selector]?.first(where: { $0.timestamp == timestamp }) {
-                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: self.rounding) ?? Date.now))
+                        RuleMark(x: .value("Date", Date.round(from: timestamp, strategy: .previousHour) ?? Date.now))
                             .lineStyle(StrokeStyle(lineWidth: 1))
                         PointMark(
                             x: .value("Date", timestamp),
@@ -147,7 +146,7 @@ struct ParticleChartView: View {
                                         if let plotFrame = geometryProxy.plotFrame {
                                             let x = value.location.x - geometryReader[plotFrame].origin.x
                                             if let source: Date = geometryProxy.value(atX: x) {
-                                                if let target = Date.round(from: source, strategy: self.rounding) {
+                                                if let target = Date.round(from: source, strategy: .previousHour) {
                                                     self.timestamp = target
                                                 }
                                             }

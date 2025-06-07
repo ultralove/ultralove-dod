@@ -22,6 +22,9 @@ import SwiftUI
         }
     }
 
+    func resetData() async {
+    }
+
     @MainActor func publishData(sensor: ProcessSensor) async -> Void {
         self.sensor = sensor
         self.timestamp = sensor.timestamp

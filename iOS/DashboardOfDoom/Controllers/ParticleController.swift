@@ -69,7 +69,7 @@ class ParticleController: ProcessController {
                 }
             }
         }
-        return interpolatedMeasurement
+        return gaussianSmoothing(data: interpolatedMeasurement, windowSize: 11, sigma: 2.3)
     }
 
     private static func calculateMeasurementTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {

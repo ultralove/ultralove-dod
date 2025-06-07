@@ -5,7 +5,6 @@ struct ParticleChartView: View {
     @Environment(ParticlePresenter.self) private var presenter
     @State private var timestamp: Date?
     let selector: ProcessSelector
-    var icon = false
 
     enum ParticleSymbol: String, CaseIterable {
         case pm10 = "\u{1D40F}\u{1D40C}\u{2081}\u{2080}"  // PM10, Particulate matter < 10µm
@@ -40,10 +39,6 @@ struct ParticleChartView: View {
     var body: some View {
         VStack {
             HStack(alignment: .bottom) {
-                if self.icon == true {
-                    Image(systemName: presenter.icon)
-                        .font(.title)
-                }
                 Text("\((symbols[selector] ?? .pm10).rawValue)")
                 Spacer()
             }

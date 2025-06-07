@@ -43,6 +43,7 @@ import SwiftUI
     }
 
     func refreshData(location: Location) async -> Void {
+        if UserDefaults.standard.bool(forKey: "enableElectionPolls") == true {
         do {
             if let sensor = try await controller.refreshData(for: location) {
                 try self.transformer.renderData(sensor: sensor)
@@ -52,6 +53,11 @@ import SwiftUI
         catch {
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
+    }
+    }
+
+    func resetData() async {
+        await MapPresenter.shared.updateRegion(remove: self.id)
     }
 
     @MainActor func publishData(sensor: ProcessSensor) async -> Void {
@@ -64,9 +70,16 @@ import SwiftUI
         self.range = self.transformer.range
         self.trend = self.transformer.trend
 
-//        This messes up the map display if it adds the location of the Bundestag election polls
+        if UserDefaults.standard.integer(forKey: "electionPollScope") == 0 {
+            if UserDefaults.standard.bool(forKey: "showFederalElectionPolls") == true {
         MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
     }
-
-
+            else {
+                MapPresenter.shared.updateRegion(remove: self.id)
+            }
+        }
+        else {
+            MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
+        }
+    }
 }
